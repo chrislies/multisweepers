@@ -91,6 +91,13 @@ function generateHard() {
   }
 }
 
+function generateBg() {
+  let r = Math.floor(Math.random() * 200);
+  let g = Math.floor(Math.random() * 200);
+  let b = Math.floor(Math.random() * 200);
+  document.body.style.backgroundColor = "rgb(" +r+ "," +g+ "," +b+ ")";
+}
+
 const selectDifficulty = document.getElementById("choice");
 selectDifficulty.addEventListener("change", () => {
   const selectedValue = selectDifficulty.value;
@@ -98,14 +105,17 @@ selectDifficulty.addEventListener("change", () => {
     case "easy":
       // console.log("Easy");
       generateEasy();
+      generateBg();
       break;
     case "medium":
       // console.log("Medium");
       generateMedium();
+      generateBg();
       break
     case "hard":
       // console.log("Hard");
       generateHard();
+      generateBg();
       break;
     default:
       console.log("Select difficulty!")
@@ -114,7 +124,7 @@ selectDifficulty.addEventListener("change", () => {
 
 function leftClick() {
   console.log("left click");
-  this.style.backgroundColor = "red";
+  this.style.backgroundColor = "#707070"; //gray=808080
   // let cell = event.target;
   // cell.style.backgroundColor = "blue";
 }
