@@ -23,8 +23,11 @@ td {
   text-align: center;
   background-color: lightgray;
   border-style: solid;
-  border-color: black;
+  border-color: gray;
   border-width: 1px;
+}
+td:hover {
+  background-color: rgba(200, 200, 200, 1);
 }
 .selection {
   text-align: center;
