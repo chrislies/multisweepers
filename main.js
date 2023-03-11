@@ -16,7 +16,17 @@ function generateEasy() {
       row.appendChild(data);
     }
     gw.appendChild(row);
-    console.log(Math.floor(Math.random() * (n+1)));
+  }
+  // generate bombs
+  let cell = document.getElementsByTagName("td");
+  let numBombs = 10; // # of bombs
+  let radnomBombs = [];
+  while (radnomBombs.length < numBombs) {
+    let randomNum = Math.floor(Math.random() * (n*n-1)+1);
+    if (!radnomBombs.includes(randomNum)){
+      radnomBombs.push(randomNum);
+      cell[randomNum].style.backgroundColor = "red";
+    } 
   }
 }
 
@@ -36,7 +46,17 @@ function generateMedium() {
       row.appendChild(data);
     }
     gw.appendChild(row);
-    console.log(Math.floor(Math.random() * (n+1)));
+  }
+  // generate bombs
+  let cell = document.getElementsByTagName("td");
+  let numBombs = 40; // # of bombs
+  let radnomBombs = [];
+  while (radnomBombs.length < numBombs) {
+    let randomNum = Math.floor(Math.random() * (n*n-1)+1);
+    if (!radnomBombs.includes(randomNum)){
+      radnomBombs.push(randomNum);
+      cell[randomNum].style.backgroundColor = "red";
+    } 
   }
 }
 
@@ -57,7 +77,17 @@ function generateHard() {
       row.appendChild(data);
     }
     gw.appendChild(row);
-    console.log(Math.floor(Math.random() * (n+1)));
+  }
+  // generate bombs
+  let cell = document.getElementsByTagName("td");
+  let numBombs = 99; // # of bombs
+  let radnomBombs = [];
+  while (radnomBombs.length < numBombs) {
+    let randomNum = Math.floor(Math.random() * (n*m-1)+1);
+    if (!radnomBombs.includes(randomNum)){
+      radnomBombs.push(randomNum);
+      cell[randomNum].style.backgroundColor = "red";
+    } 
   }
 }
 
