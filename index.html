@@ -8,12 +8,15 @@
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-  <!-- <p>text</p> -->
-  <table>
-    <tr>
-      <td></td>
-    </tr>
-  </table>
+  <div class="selection">
+    <label><strong>Choose difficulty:</strong></label>
+    <select id="choice">
+      <option value="easy" selected>Easy</option>
+      <option value="medium">Medium</option>
+      <option value="hard">Hard</option>
+    </select>
+  </div>
+  <table id="game-window"></table>
   <script src="./main.js"></script>
 </body>
 </html>
