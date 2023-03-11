@@ -7,14 +7,16 @@ function generateEasy() {
       gw.deleteRow(0);
     }
   } 
-  let n = 7; // n x n grid
+  let n = 9; // n x n grid
   for (let i=0; i<n; i++) {
     let row = document.createElement("tr");
     for (let j=0; j<n; j++) {
       let data = document.createElement("td");
+      data.addEventListener("click", leftClick);
       row.appendChild(data);
     }
     gw.appendChild(row);
+    console.log(Math.floor(Math.random() * (n+1)));
   }
 }
 
@@ -24,15 +26,17 @@ function generateMedium() {
     while (gw.rows.length > 0) {
       gw.deleteRow(0);
     }
-  } 
-  let n = 10; // n x n grid
+  }
+  let n = 16; // n x n grid
   for (let i=0; i<n; i++) {
     let row = document.createElement("tr");
     for (let j=0; j<n; j++) {
       let data = document.createElement("td");
+      data.addEventListener("click", leftClick);
       row.appendChild(data);
     }
     gw.appendChild(row);
+    console.log(Math.floor(Math.random() * (n+1)));
   }
 }
 
@@ -43,14 +47,17 @@ function generateHard() {
       gw.deleteRow(0);
     }
   } 
-  let n = 13; // n x n grid
+  let n = 16; // n x m grid
+  let m = 30
   for (let i=0; i<n; i++) {
     let row = document.createElement("tr");
-    for (let j=0; j<n; j++) {
+    for (let j=0; j<m; j++) {
       let data = document.createElement("td");
+      data.addEventListener("click", leftClick);
       row.appendChild(data);
     }
     gw.appendChild(row);
+    console.log(Math.floor(Math.random() * (n+1)));
   }
 }
 
@@ -75,4 +82,11 @@ selectDifficulty.addEventListener("change", () => {
   }
 });
 
-generateMedium();
+function leftClick() {
+  console.log("left click");
+  this.style.backgroundColor = "red";
+  // let cell = event.target;
+  // cell.style.backgroundColor = "blue";
+}
+
+generateEasy();
