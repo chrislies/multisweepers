@@ -8,25 +8,18 @@ function generateEasy() {
     }
   } 
   let n = 9; // n x n grid
+  let tileCounter = 0;
   for (let i=0; i<n; i++) {
     let row = document.createElement("tr");
     for (let j=0; j<n; j++) {
       let data = document.createElement("td");
-      data.addEventListener("click", leftClick);
+      data.classList.add("tile-" + tileCounter);
+      data.dataset.value = tileCounter;
+      data.addEventListener("click", initialClick);
       row.appendChild(data);
+      tileCounter++;
     }
     gw.appendChild(row);
-  }
-  // generate bombs
-  let cell = document.getElementsByTagName("td");
-  let numBombs = 10; // # of bombs
-  let radnomBombs = [];
-  while (radnomBombs.length < numBombs) {
-    let randomNum = Math.floor(Math.random() * (n*n-1)+1);
-    if (!radnomBombs.includes(randomNum)){
-      radnomBombs.push(randomNum);
-      cell[randomNum].style.backgroundColor = "red";
-    } 
   }
 }
 
@@ -42,7 +35,7 @@ function generateMedium() {
     let row = document.createElement("tr");
     for (let j=0; j<n; j++) {
       let data = document.createElement("td");
-      data.addEventListener("click", leftClick);
+      data.addEventListener("click", initialClick);
       row.appendChild(data);
     }
     gw.appendChild(row);
@@ -73,7 +66,7 @@ function generateHard() {
     let row = document.createElement("tr");
     for (let j=0; j<m; j++) {
       let data = document.createElement("td");
-      data.addEventListener("click", leftClick);
+      data.addEventListener("click", initialClick);
       row.appendChild(data);
     }
     gw.appendChild(row);
@@ -96,6 +89,7 @@ function generateBg() {
   let g = Math.floor(Math.random() * 200);
   let b = Math.floor(Math.random() * 200);
   document.body.style.backgroundColor = "rgb(" +r+ "," +g+ "," +b+ ")";
+  console.log("backgroundColor: " + "rgb(" +r+ "," +g+ "," +b+ ")");
 }
 
 const selectDifficulty = document.getElementById("choice");
@@ -122,8 +116,74 @@ selectDifficulty.addEventListener("change", () => {
   }
 });
 
+function initialClick() { // clear x surrounding tiles upon inital click on one of the tiles
+  let initialTile = this;
+  let tableSize = document.querySelectorAll("td").length - 1; // get the last td element to determine tableSize
+  let numRandomTiles = Math.round(Math.random() * (25-8)+8);  // generate random # between [8-25)
+  console.log("[initial click] Number of random tiles: " + numRandomTiles);
+  let tdElements = document.querySelectorAll("td");
+  let visitedTiles = [];
+  let possibleMove = [9,1,-9,-1];  // can either move [up,right,down,left] by adding possibleMove[x] current tile
+  visitedTiles.push(initialTile);
+  initialTile.style.backgroundColor = "#707070";
+  // console.log(parseInt(initialTile.dataset.value) + possibleMove[0]); // parseInt() converts string to int
+  
+  while (visitedTiles.length < numRandomTiles) {
+    let randomMove = Math.round(Math.random() * 3);
+    let nextTileValue = parseInt(initialTile.dataset.value) + possibleMove[randomMove];
+    let nextTile = document.querySelector(`[data-value="${nextTileValue}"]`);
+    while (nextTileValue === null || nextTileValue < 0 || nextTileValue >= tableSize) {
+      randomMove = Math.round(Math.random() * 3);
+      nextTileValue = parseInt(initialTile.dataset.value) + possibleMove[randomMove];
+      nextTile = document.querySelector(`[data-value="${nextTileValue}"]`);
+    }
+    while ((visitedTiles.includes(nextTile) || nextTile === initialTile)) { // add check for nextTile not being initialTile and not already visited
+      randomMove = Math.round(Math.random() * 3);
+      nextTileValue += possibleMove[randomMove];
+      nextTile = document.querySelector(`[data-value="${nextTileValue}"]`);
+      while (nextTileValue === null || nextTileValue < 0 || nextTileValue >= tableSize) {
+        randomMove = Math.round(Math.random() * 3);
+        nextTileValue = parseInt(initialTile.dataset.value) + possibleMove[randomMove];
+        nextTile = document.querySelector(`[data-value="${nextTileValue}"]`);
+      }
+    }
+    visitedTiles.push(nextTile);
+    nextTile.style.backgroundColor = "#707070";
+  }
+  
+  // convert the string dataset.value of each visitedTiles[] into int
+  let valueVisitedTiles = visitedTiles.map(td => parseInt(td.dataset.value));
+  // alternative version w/o map:
+  // let valueVisitedTiles = []
+  // visitedTiles.forEach(function(td){
+  //   valueVisitedTiles.push(parseInt(td.dataset.value));
+  // }); 
+
+  // Generate mines
+  let numMines = 10; // # of mines
+  let tile = document.getElementsByTagName("td");
+  let randomMines = [];
+  while (randomMines.length < numMines) {
+    let randomNum =  Math.round(Math.random() * tableSize); // generate random # between [0-tableSize)
+    while (randomMines.includes(randomNum) || valueVisitedTiles.includes(randomNum)) {
+      randomNum =  Math.round(Math.random() * tableSize); // generate random # between [0-tableSize)
+    }
+    randomMines.push(randomNum);
+    tile[randomNum].style.backgroundColor = "red";
+    tile[randomNum].className += "-mine";
+  }
+
+  // after doing initial click, for each td element:
+  // remove "initialClick" event listener 
+  // add "leftClick" event listener
+  tdElements.forEach(function(td){
+    td.removeEventListener("click", initialClick);
+    td.addEventListener("click", leftClick);
+  });
+}
+
 function leftClick() {
-  console.log("left click");
+  console.log("[left click]");
   this.style.backgroundColor = "#707070"; //gray=808080
   // let cell = event.target;
   // cell.style.backgroundColor = "blue";
