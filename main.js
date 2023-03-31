@@ -44,17 +44,6 @@ function generateMedium() {
     }
     gw.appendChild(row);
   }
-  // generate bombs
-  // let cell = document.getElementsByTagName("td");
-  // let numBombs = 40; // # of bombs
-  // let radnomBombs = [];
-  // while (radnomBombs.length < numBombs) {
-  //   let randomNum = Math.floor(Math.random() * (n * n - 1) + 1);
-  //   if (!radnomBombs.includes(randomNum)) {
-  //     radnomBombs.push(randomNum);
-  //     cell[randomNum].style.backgroundColor = "red";
-  //   }
-  // }
 }
 
 function generateHard() {
@@ -79,17 +68,6 @@ function generateHard() {
     }
     gw.appendChild(row);
   }
-  // generate bombs
-  // let cell = document.getElementsByTagName("td");
-  // let numBombs = 99; // # of bombs
-  // let radnomBombs = [];
-  // while (radnomBombs.length < numBombs) {
-  //   let randomNum = Math.floor(Math.random() * (n * m - 1) + 1);
-  //   if (!radnomBombs.includes(randomNum)) {
-  //     radnomBombs.push(randomNum);
-  //     cell[randomNum].style.backgroundColor = "red";
-  //   }
-  // }
 }
 
 function generateBg() {
@@ -218,8 +196,6 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
 function leftClick() {
   console.log("[left click]");
   this.style.backgroundColor = "#707070"; //gray=808080
-  // let cell = event.target;
-  // cell.style.backgroundColor = "blue";
 }
 
 generateEasy();
