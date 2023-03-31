@@ -1,5 +1,5 @@
 body {
-  background-color: lightslategray;
+  background-color: #79b799;
 }
 * {
   padding: 0;
@@ -7,6 +7,9 @@ body {
 }
 .selection {
   margin-top: 20px;
+}
+label {
+  color: white;
 }
 table {
   margin-top: 20px;
