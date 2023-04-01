@@ -102,6 +102,8 @@ selectDifficulty.addEventListener("change", () => {
   }
 });
 
+let randomMines = [];
+
 function initialClick() { // clear x surrounding tiles upon inital click on one of the tiles
   let initialTile = this;
   let tableSize = document.querySelectorAll("td").length - 1; // get the last td element to determine tableSize
@@ -169,33 +171,40 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
 
   // Generate mines
   let tile = document.getElementsByTagName("td");
-  let randomMines = [];
+  randomMines = [];
+
   while (randomMines.length < numMines) {
     let randomNum = Math.round(Math.random() * tableSize); // generate random # between [0-tableSize)
     while (randomMines.includes(randomNum) || valueVisitedTiles.includes(randomNum)) {
       randomNum = Math.round(Math.random() * tableSize); // generate random # between [0-tableSize)
     }
     randomMines.push(randomNum);
-    tile[randomNum].style.backgroundColor = "red";
-    tile[randomNum].className += "-mine";
+    tile[randomNum].style.backgroundColor = "blue";
+    // tile[randomNum].className += "-mine";
   }
-
-  // clear/empty visitedTiles[] and randomMines[]
-  visitedTiles.length = 0;
-  randomMines.length = 0;
 
   // after doing initial click, for each td element:
   // remove "initialClick" event listener 
   // add "leftClick" event listener
-  tdElements.forEach(function (td) {
+  tdElements.forEach(td => {
     td.removeEventListener("click", initialClick);
     td.addEventListener("click", leftClick);
   });
 }
 
+
 function leftClick() {
+  let currTile = this;
+  if (randomMines.includes(parseInt(currTile.dataset.value))) {
+    let mines = document.querySelectorAll("td");
+    console.log("[GAME OVER!]");
+    randomMines.forEach(td => {
+      mines[td].style.backgroundColor = "red";
+    });
+    return;
+  }
   console.log("[left click]");
-  this.style.backgroundColor = "#707070"; //gray=808080
+  currTile.style.backgroundColor = "#707070"; //gray=808080
 }
 
 generateEasy();
