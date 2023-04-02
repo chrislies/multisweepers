@@ -102,7 +102,12 @@ selectDifficulty.addEventListener("change", () => {
   }
 });
 
+let visitedTiles = [];
 let randomMines = [];
+let possibleMove = [];
+let mineRadiusNB = [];
+let mineRadiusLB = [];
+let mineRadiusRB = [];
 
 function initialClick() { // clear x surrounding tiles upon inital click on one of the tiles
   let initialTile = this;
@@ -110,8 +115,9 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
   console.log("tableSize = " + tableSize);
   let tdElements = document.querySelectorAll("td");
   let numRandomTiles = 0;
-  let visitedTiles = [];
-  let possibleMove = [];  // can either move [up,right,down,left] by adding possibleMove[x] current tile
+  possibleMove = [];  // can either move [up,right,down,left] by adding possibleMove[x] current tile
+  visitedTiles = [];
+  randomMines = [];
   visitedTiles.push(initialTile);
   initialTile.style.backgroundColor = "#707070";
   // console.log(parseInt(initialTile.dataset.value) + possibleMove[0]); // parseInt() converts string to int
@@ -121,18 +127,27 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
     case "easy":
       numMines = 10;
       possibleMove = [9, 1, -9, -1];  // can either move [up,right,down,left] by adding possibleMove[x] current tile
+      mineRadiusNB = [-10, -9, -8, -1, 1, 8, 9, 10];  // possible mine locations for each NON-BORDER tile
+      mineRadiusLB = [-9, -8, 1, 9, 10];  // possible mine locations for each left border tile
+      mineRadiusRB = [-10, -9, -1, 8, 9];  // possible mine locations for each right border tile
       numRandomTiles = Math.round(Math.random() * (25 - 8) + 8);  // generate random # between [8-25)
       console.log("[initial click] Number of random tiles: " + numRandomTiles);
       break;
     case "medium":
       numMines = 40;
       possibleMove = [16, 1, -16, -1];  // can either move [up,right,down,left] by adding possibleMove[x] current tile
+      mineRadiusNB = [-17, -16, -15, -1, 1, 15, 16, 17];  // possible mine locations for each NON-BORDER tile
+      mineRadiusLB = [-16, -15, 1, 16, 17];  // possible mine locations for each left border tile
+      mineRadiusRB = [-17, -16, -1, 15, 16];  // possible mine locations for each right border tile
       numRandomTiles = Math.round(Math.random() * (34 - 17) + 17);  // generate random # between [17-34)
       console.log("[initial click] Number of random tiles: " + numRandomTiles);
       break;
     case "hard":
       numMines = 99;
       possibleMove = [30, 1, -30, -1];  // can either move [up,right,down,left] by adding possibleMove[x] current tile
+      mineRadiusNB = [-31, -30, -29, -1, 1, 29, 30, 31];  // possible mine locations for each NON-BORDER tile
+      mineRadiusLB = [-30, -29, 1, 30, 31];  // possible mine locations for each left border tile
+      mineRadiusRB = [-31, -30, 1, 29, 30];  // possible mine locations for each right border tile
       numRandomTiles = Math.round(Math.random() * (48 - 31) + 31);  // generate random # between [31-48)
       console.log("[initial click] Number of random tiles: " + numRandomTiles);
       break;
@@ -171,8 +186,6 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
 
   // Generate mines
   let tile = document.getElementsByTagName("td");
-  randomMines = [];
-
   while (randomMines.length < numMines) {
     let randomNum = Math.round(Math.random() * tableSize); // generate random # between [0-tableSize)
     while (randomMines.includes(randomNum) || valueVisitedTiles.includes(randomNum)) {
@@ -183,6 +196,32 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
     // tile[randomNum].className += "-mine";
   }
 
+  // for each visited tile: check its surrounding tiles for mines
+  visitedTiles.forEach(td => {
+    let mineCounter = 0;
+    let mineRadius = [];
+    let tileValue = parseInt(td.dataset.value);
+
+    if (tileValue % gw.rows.length == 0) {
+      // If current tile is on the left border, mineRadius becomes limited to mineRadiusLB
+      mineRadius = mineRadiusLB;
+    } else if (tileValue % gw.rows.length == gw.rows.length - 1) {
+      // If current tile is on the right border, mineRadius becomes limited to mineRadiusRB
+      mineRadius = mineRadiusRB;
+    } else {
+      // If current tile is not on either border, mineRadius does not need to be limited
+      mineRadius = mineRadiusNB;
+    }
+    for (let i = 0; i < mineRadius.length; i++) {
+      if (randomMines.includes(tileValue + mineRadius[i])) {
+        mineCounter++;
+      }
+      if (mineCounter > 0) {
+        td.innerHTML = mineCounter;
+      }
+    }
+  });
+
   // after doing initial click, for each td element:
   // remove "initialClick" event listener 
   // add "leftClick" event listener
@@ -192,19 +231,41 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
   });
 }
 
-
 function leftClick() {
   let currTile = this;
   if (randomMines.includes(parseInt(currTile.dataset.value))) {
-    let mines = document.querySelectorAll("td");
     console.log("[GAME OVER!]");
+    let mines = document.querySelectorAll("td");
     randomMines.forEach(td => {
+      mines[td].innerHTML = "X";
       mines[td].style.backgroundColor = "red";
     });
     return;
   }
-  console.log("[left click]");
+  visitedTiles.push(currTile);
   currTile.style.backgroundColor = "#707070"; //gray=808080
+  let mineCounter = 0;
+  let mineRadius = [];
+  let tileValue = parseInt(currTile.dataset.value);
+
+  if (tileValue % gw.rows.length == 0) {
+    // If current tile is on the left border, mineRadius becomes limited to mineRadiusLB
+    mineRadius = mineRadiusLB;
+  } else if (tileValue % gw.rows.length == gw.rows.length - 1) {
+    // If current tile is on the right border, mineRadius becomes limited to mineRadiusRB
+    mineRadius = mineRadiusRB;
+  } else {
+    // If current tile is not on either border, mineRadius does not need to be limited
+    mineRadius = mineRadiusNB;
+  }
+  for (let i = 0; i < mineRadius.length; i++) {
+    if (randomMines.includes(tileValue + mineRadius[i])) {
+      mineCounter++;
+    }
+    if (mineCounter > 0) {
+      currTile.innerHTML = mineCounter;
+    }
+  }
 }
 
 generateEasy();
