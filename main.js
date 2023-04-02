@@ -113,7 +113,6 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
   let initialTile = this;
   let tableSize = document.querySelectorAll("td").length - 1; // get the last td element to determine tableSize
   console.log("tableSize = " + tableSize);
-  let tdElements = document.querySelectorAll("td");
   let numRandomTiles = 0;
   possibleMove = [];  // can either move [up,right,down,left] by adding possibleMove[x] current tile
   visitedTiles = [];
@@ -224,10 +223,13 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
 
   // after doing initial click, for each td element:
   // remove "initialClick" event listener 
-  // add "leftClick" event listener
+  // add "leftClick" event listener ONLY IF tile has not been visited
+  let tdElements = document.querySelectorAll("td");
   tdElements.forEach(td => {
     td.removeEventListener("click", initialClick);
-    td.addEventListener("click", leftClick);
+    if (!visitedTiles.includes(td)) {
+      td.addEventListener("click", leftClick);
+    }
   });
 }
 
@@ -240,8 +242,10 @@ function leftClick() {
       mines[td].innerHTML = "X";
       mines[td].style.backgroundColor = "red";
     });
+    gameOver();
     return;
   }
+  console.log("[left click]");
   visitedTiles.push(currTile);
   currTile.style.backgroundColor = "#707070"; //gray=808080
   let mineCounter = 0;
@@ -266,6 +270,14 @@ function leftClick() {
       currTile.innerHTML = mineCounter;
     }
   }
+  currTile.removeEventListener("click", leftClick);
+}
+
+function gameOver() {
+  let tdElements = document.querySelectorAll("td");
+  tdElements.forEach(td => {
+    td.removeEventListener("click", leftClick);
+  });
 }
 
 generateEasy();
