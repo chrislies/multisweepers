@@ -225,7 +225,7 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
   // after doing initial click, for each td element:
   // remove "initialClick" event listener 
   // add "leftClick" event listener
-  tdElements.forEach(function (td) {
+  tdElements.forEach(td => {
     td.removeEventListener("click", initialClick);
     td.addEventListener("click", leftClick);
   });
@@ -242,11 +242,30 @@ function leftClick() {
     });
     return;
   }
-  console.log("[left click]");
   visitedTiles.push(currTile);
-  // console.log(visitedTiles);
   currTile.style.backgroundColor = "#707070"; //gray=808080
-  currTile.innerHTML = "#";
+  let mineCounter = 0;
+  let mineRadius = [];
+  let tileValue = parseInt(currTile.dataset.value);
+
+  if (tileValue % gw.rows.length == 0) {
+    // If current tile is on the left border, mineRadius becomes limited to mineRadiusLB
+    mineRadius = mineRadiusLB;
+  } else if (tileValue % gw.rows.length == gw.rows.length - 1) {
+    // If current tile is on the right border, mineRadius becomes limited to mineRadiusRB
+    mineRadius = mineRadiusRB;
+  } else {
+    // If current tile is not on either border, mineRadius does not need to be limited
+    mineRadius = mineRadiusNB;
+  }
+  for (let i = 0; i < mineRadius.length; i++) {
+    if (randomMines.includes(tileValue + mineRadius[i])) {
+      mineCounter++;
+    }
+    if (mineCounter > 0) {
+      currTile.innerHTML = mineCounter;
+    }
+  }
 }
 
 generateEasy();
