@@ -104,6 +104,7 @@ selectDifficulty.addEventListener("change", () => {
 
 let visitedTiles = [];
 let randomMines = [];
+let possibleMove = [];
 let mineRadiusNB = [];
 let mineRadiusLB = [];
 let mineRadiusRB = [];
@@ -114,7 +115,7 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
   console.log("tableSize = " + tableSize);
   let tdElements = document.querySelectorAll("td");
   let numRandomTiles = 0;
-  let possibleMove = [];  // can either move [up,right,down,left] by adding possibleMove[x] current tile
+  possibleMove = [];  // can either move [up,right,down,left] by adding possibleMove[x] current tile
   visitedTiles = [];
   randomMines = [];
   visitedTiles.push(initialTile);
@@ -191,8 +192,8 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
       randomNum = Math.round(Math.random() * tableSize); // generate random # between [0-tableSize)
     }
     randomMines.push(randomNum);
-    tile[randomNum].style.backgroundColor = "red";
-    tile[randomNum].className += "-mine";
+    tile[randomNum].style.backgroundColor = "blue";
+    // tile[randomNum].className += "-mine";
   }
 
   // for each visited tile: check its surrounding tiles for mines
