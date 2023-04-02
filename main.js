@@ -8,25 +8,18 @@ function generateEasy() {
     }
   }
   let n = 9; // n x n grid
+  let tileCounter = 0;
   for (let i = 0; i < n; i++) {
     let row = document.createElement("tr");
     for (let j = 0; j < n; j++) {
       let data = document.createElement("td");
-      data.addEventListener("click", leftClick);
+      data.classList.add("tile-" + tileCounter);
+      data.dataset.value = tileCounter;
+      data.addEventListener("click", initialClick);
       row.appendChild(data);
+      tileCounter++;
     }
     gw.appendChild(row);
-  }
-  // generate bombs
-  let cell = document.getElementsByTagName("td");
-  let numBombs = 10; // # of bombs
-  let radnomBombs = [];
-  while (radnomBombs.length < numBombs) {
-    let randomNum = Math.floor(Math.random() * (n * n - 1) + 1);
-    if (!radnomBombs.includes(randomNum)) {
-      radnomBombs.push(randomNum);
-      cell[randomNum].style.backgroundColor = "red";
-    }
   }
 }
 
@@ -38,25 +31,18 @@ function generateMedium() {
     }
   }
   let n = 16; // n x n grid
+  let tileCounter = 0;
   for (let i = 0; i < n; i++) {
     let row = document.createElement("tr");
     for (let j = 0; j < n; j++) {
       let data = document.createElement("td");
-      data.addEventListener("click", leftClick);
+      data.classList.add("tile-" + tileCounter);
+      data.dataset.value = tileCounter;
+      data.addEventListener("click", initialClick);
       row.appendChild(data);
+      tileCounter++;
     }
     gw.appendChild(row);
-  }
-  // generate bombs
-  let cell = document.getElementsByTagName("td");
-  let numBombs = 40; // # of bombs
-  let radnomBombs = [];
-  while (radnomBombs.length < numBombs) {
-    let randomNum = Math.floor(Math.random() * (n * n - 1) + 1);
-    if (!radnomBombs.includes(randomNum)) {
-      radnomBombs.push(randomNum);
-      cell[randomNum].style.backgroundColor = "red";
-    }
   }
 }
 
@@ -69,25 +55,18 @@ function generateHard() {
   }
   let n = 16; // n x m grid
   let m = 30
+  let tileCounter = 0;
   for (let i = 0; i < n; i++) {
     let row = document.createElement("tr");
     for (let j = 0; j < m; j++) {
       let data = document.createElement("td");
-      data.addEventListener("click", leftClick);
+      data.classList.add("tile-" + tileCounter);
+      data.dataset.value = tileCounter;
+      data.addEventListener("click", initialClick);
       row.appendChild(data);
+      tileCounter++;
     }
     gw.appendChild(row);
-  }
-  // generate bombs
-  let cell = document.getElementsByTagName("td");
-  let numBombs = 99; // # of bombs
-  let radnomBombs = [];
-  while (radnomBombs.length < numBombs) {
-    let randomNum = Math.floor(Math.random() * (n * m - 1) + 1);
-    if (!radnomBombs.includes(randomNum)) {
-      radnomBombs.push(randomNum);
-      cell[randomNum].style.backgroundColor = "red";
-    }
   }
 }
 
@@ -96,12 +75,13 @@ function generateBg() {
   let g = Math.floor(Math.random() * 200);
   let b = Math.floor(Math.random() * 200);
   document.body.style.backgroundColor = "rgb(" + r + "," + g + "," + b + ")";
+  console.log("backgroundColor: " + "rgb(" + r + "," + g + "," + b + ")");
 }
 
 const selectDifficulty = document.getElementById("choice");
 selectDifficulty.addEventListener("change", () => {
-  const selectedValue = selectDifficulty.value;
-  switch (selectedValue) {
+  const difficulty = selectDifficulty.value;
+  switch (difficulty) {
     case "easy":
       // console.log("Easy");
       generateEasy();
@@ -118,7 +98,7 @@ selectDifficulty.addEventListener("change", () => {
       generateBg();
       break;
     default:
-      console.log("Select difficulty!")
+      console.log("Select difficulty!");
   }
 });
 
@@ -211,8 +191,8 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
       randomNum = Math.round(Math.random() * tableSize); // generate random # between [0-tableSize)
     }
     randomMines.push(randomNum);
-    tile[randomNum].style.backgroundColor = "blue";
-    // tile[randomNum].className += "-mine";
+    tile[randomNum].style.backgroundColor = "red";
+    tile[randomNum].className += "-mine";
   }
 
   // for each visited tile: check its surrounding tiles for mines
@@ -251,10 +231,21 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
 }
 
 function leftClick() {
-  console.log("left click");
-  this.style.backgroundColor = "#707070"; //gray=808080
-  // let cell = event.target;
-  // cell.style.backgroundColor = "blue";
+  let currTile = this;
+  if (randomMines.includes(parseInt(currTile.dataset.value))) {
+    console.log("[GAME OVER!]");
+    let mines = document.querySelectorAll("td");
+    randomMines.forEach(td => {
+      mines[td].innerHTML = "X";
+      mines[td].style.backgroundColor = "red";
+    });
+    return;
+  }
+  console.log("[left click]");
+  visitedTiles.push(currTile);
+  // console.log(visitedTiles);
+  currTile.style.backgroundColor = "#707070"; //gray=808080
+  currTile.innerHTML = "#";
 }
 
 generateEasy();
