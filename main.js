@@ -83,19 +83,31 @@ selectDifficulty.addEventListener("change", () => {
   const difficulty = selectDifficulty.value;
   switch (difficulty) {
     case "easy":
+      console.clear();
       // console.log("Easy");
       generateEasy();
       generateBg();
+      if (document.querySelector(".playAgainButton")) {
+        document.querySelector(".playAgainButton").remove();
+      }
       break;
     case "medium":
+      console.clear();
       // console.log("Medium");
       generateMedium();
       generateBg();
+      if (document.querySelector(".playAgainButton")) {
+        document.querySelector(".playAgainButton").remove();
+      }
       break
     case "hard":
+      console.clear();
       // console.log("Hard");
       generateHard();
       generateBg();
+      if (document.querySelector(".playAgainButton")) {
+        document.querySelector(".playAgainButton").remove();
+      }
       break;
     default:
       console.log("Select difficulty!");
@@ -278,6 +290,24 @@ function gameOver() {
   tdElements.forEach(td => {
     td.removeEventListener("click", leftClick);
   });
+  const playAgainButton = document.createElement("button");
+  const playAgainText = document.createTextNode("Play Again");
+  playAgainButton.appendChild(playAgainText);
+  document.body.append(playAgainButton);
+  playAgainButton.classList.add("playAgainButton");
+  playAgainButton.addEventListener("click", playAgain);
+}
+
+function playAgain() {
+  document.querySelector(".playAgainButton").remove();
+  if (selectDifficulty.value === "easy") {
+    generateEasy();
+  } else if (selectDifficulty.value === "medium") {
+    generateMedium();
+  } else {
+    generateHard();
+  }
+  console.clear();
 }
 
 generateEasy();
