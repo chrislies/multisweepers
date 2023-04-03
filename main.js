@@ -254,6 +254,10 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
 
 function leftClick() {
   let currTile = this;
+  // return if currTile is right clicked (flagged); otherwise proceed
+  if (currTile.getAttribute("rightClicked") === "true") {
+    return;
+  }
   if (randomMines.includes(parseInt(currTile.dataset.value))) {
     console.log(`[GAME OVER]`);
     let mines = document.querySelectorAll("td");
@@ -264,38 +268,34 @@ function leftClick() {
     gameOver();
     return;
   }
-  // Make sure current tilel is not right clicked (flagged) 
-  if (currTile.getAttribute("rightClicked") === "false") {
-    console.log(`[LEFT CLICK]` + " on tile " + currTile.dataset.value);
-    visitedTiles.push(currTile);
-    currTile.style.backgroundColor = "#707070"; //gray=808080
-    let mineCounter = 0;
-    let mineRadius = [];
-    let tileValue = parseInt(currTile.dataset.value);
+  // console.log(`[LEFT CLICK]` + " on tile " + currTile.dataset.value);
+  visitedTiles.push(currTile);
+  currTile.style.backgroundColor = "#707070"; //gray=808080
+  let mineCounter = 0;
+  let mineRadius = [];
+  let tileValue = parseInt(currTile.dataset.value);
 
-    if (tileValue % gw.rows.length == 0) {
-      // If current tile is on the left border, mineRadius becomes limited to mineRadiusLB
-      mineRadius = mineRadiusLB;
-    } else if (tileValue % gw.rows.length == gw.rows.length - 1) {
-      // If current tile is on the right border, mineRadius becomes limited to mineRadiusRB
-      mineRadius = mineRadiusRB;
-    } else {
-      // If current tile is not on either border, mineRadius does not need to be limited
-      mineRadius = mineRadiusNB;
-    }
-    for (let i = 0; i < mineRadius.length; i++) {
-      if (randomMines.includes(tileValue + mineRadius[i])) {
-        mineCounter++;
-      }
-      if (mineCounter > 0) {
-        currTile.innerHTML = mineCounter;
-      }
-    }
-    currTile.removeEventListener("click", leftClick);
+  if (tileValue % gw.rows.length == 0) {
+    // If current tile is on the left border, mineRadius becomes limited to mineRadiusLB
+    mineRadius = mineRadiusLB;
+  } else if (tileValue % gw.rows.length == gw.rows.length - 1) {
+    // If current tile is on the right border, mineRadius becomes limited to mineRadiusRB
+    mineRadius = mineRadiusRB;
+  } else {
+    // If current tile is not on either border, mineRadius does not need to be limited
+    mineRadius = mineRadiusNB;
   }
+  for (let i = 0; i < mineRadius.length; i++) {
+    if (randomMines.includes(tileValue + mineRadius[i])) {
+      mineCounter++;
+    }
+    if (mineCounter > 0) {
+      currTile.innerHTML = mineCounter;
+    }
+  }
+  currTile.removeEventListener("click", leftClick);
 }
 
-// let isClicked = false;
 const rightClickHandler = (event) => {
   event.preventDefault();
   // If game is over, ignore right click feature 
@@ -304,10 +304,9 @@ const rightClickHandler = (event) => {
   }
   let currTile = event.target;
   let valueVisitedTiles = visitedTiles.map(td => parseInt(td.dataset.value));
-  // console.log(currTile.getAttribute("rightClicked"));
   if (!valueVisitedTiles.includes(parseInt(currTile.dataset.value))) {
     if (currTile.getAttribute("rightClicked") === "false") {
-      console.log(`[RIGHT CLICK]` + " on tile " + currTile.dataset.value);
+      // console.log(`[RIGHT CLICK]` + " on tile " + currTile.dataset.value);
       currTile.style.backgroundColor = "orange";
       currTile.setAttribute("rightClicked", true);
     } else {
