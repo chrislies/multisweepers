@@ -1,4 +1,5 @@
 const gw = document.getElementById("game-window");
+let gameLost = false;
 
 function generateEasy() {
   // console.log(gw.rows.length);
@@ -15,7 +16,9 @@ function generateEasy() {
       let data = document.createElement("td");
       data.classList.add("tile-" + tileCounter);
       data.dataset.value = tileCounter;
+      data.setAttribute("rightClicked", false);
       data.addEventListener("click", initialClick);
+      data.addEventListener("contextmenu", rightClickHandler);
       row.appendChild(data);
       tileCounter++;
     }
@@ -38,7 +41,9 @@ function generateMedium() {
       let data = document.createElement("td");
       data.classList.add("tile-" + tileCounter);
       data.dataset.value = tileCounter;
+      data.setAttribute("rightClicked", false);
       data.addEventListener("click", initialClick);
+      data.addEventListener("contextmenu", rightClickHandler);
       row.appendChild(data);
       tileCounter++;
     }
@@ -62,7 +67,9 @@ function generateHard() {
       let data = document.createElement("td");
       data.classList.add("tile-" + tileCounter);
       data.dataset.value = tileCounter;
+      data.setAttribute("rightClicked", false);
       data.addEventListener("click", initialClick);
+      data.addEventListener("contextmenu", rightClickHandler);
       row.appendChild(data);
       tileCounter++;
     }
@@ -248,7 +255,7 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
 function leftClick() {
   let currTile = this;
   if (randomMines.includes(parseInt(currTile.dataset.value))) {
-    console.log("[GAME OVER!]");
+    console.log(`[GAME OVER]`);
     let mines = document.querySelectorAll("td");
     randomMines.forEach(td => {
       mines[td].innerHTML = "X";
@@ -257,35 +264,61 @@ function leftClick() {
     gameOver();
     return;
   }
-  console.log("[left click]");
-  visitedTiles.push(currTile);
-  currTile.style.backgroundColor = "#707070"; //gray=808080
-  let mineCounter = 0;
-  let mineRadius = [];
-  let tileValue = parseInt(currTile.dataset.value);
+  // Make sure current tilel is not right clicked (flagged) 
+  if (currTile.getAttribute("rightClicked") === "false") {
+    console.log(`[LEFT CLICK]` + " on tile " + currTile.dataset.value);
+    visitedTiles.push(currTile);
+    currTile.style.backgroundColor = "#707070"; //gray=808080
+    let mineCounter = 0;
+    let mineRadius = [];
+    let tileValue = parseInt(currTile.dataset.value);
 
-  if (tileValue % gw.rows.length == 0) {
-    // If current tile is on the left border, mineRadius becomes limited to mineRadiusLB
-    mineRadius = mineRadiusLB;
-  } else if (tileValue % gw.rows.length == gw.rows.length - 1) {
-    // If current tile is on the right border, mineRadius becomes limited to mineRadiusRB
-    mineRadius = mineRadiusRB;
-  } else {
-    // If current tile is not on either border, mineRadius does not need to be limited
-    mineRadius = mineRadiusNB;
-  }
-  for (let i = 0; i < mineRadius.length; i++) {
-    if (randomMines.includes(tileValue + mineRadius[i])) {
-      mineCounter++;
+    if (tileValue % gw.rows.length == 0) {
+      // If current tile is on the left border, mineRadius becomes limited to mineRadiusLB
+      mineRadius = mineRadiusLB;
+    } else if (tileValue % gw.rows.length == gw.rows.length - 1) {
+      // If current tile is on the right border, mineRadius becomes limited to mineRadiusRB
+      mineRadius = mineRadiusRB;
+    } else {
+      // If current tile is not on either border, mineRadius does not need to be limited
+      mineRadius = mineRadiusNB;
     }
-    if (mineCounter > 0) {
-      currTile.innerHTML = mineCounter;
+    for (let i = 0; i < mineRadius.length; i++) {
+      if (randomMines.includes(tileValue + mineRadius[i])) {
+        mineCounter++;
+      }
+      if (mineCounter > 0) {
+        currTile.innerHTML = mineCounter;
+      }
     }
+    currTile.removeEventListener("click", leftClick);
   }
-  currTile.removeEventListener("click", leftClick);
 }
 
+// let isClicked = false;
+const rightClickHandler = (event) => {
+  event.preventDefault();
+  // If game is over, ignore right click feature 
+  if (gameLost) {
+    return;
+  }
+  let currTile = event.target;
+  let valueVisitedTiles = visitedTiles.map(td => parseInt(td.dataset.value));
+  // console.log(currTile.getAttribute("rightClicked"));
+  if (!valueVisitedTiles.includes(parseInt(currTile.dataset.value))) {
+    if (currTile.getAttribute("rightClicked") === "false") {
+      console.log(`[RIGHT CLICK]` + " on tile " + currTile.dataset.value);
+      currTile.style.backgroundColor = "orange";
+      currTile.setAttribute("rightClicked", true);
+    } else {
+      currTile.style.backgroundColor = "lightgray";
+      currTile.setAttribute("rightClicked", false);
+    }
+  }
+};
+
 function gameOver() {
+  gameLost = true;
   let tdElements = document.querySelectorAll("td");
   tdElements.forEach(td => {
     td.removeEventListener("click", leftClick);
@@ -299,6 +332,7 @@ function gameOver() {
 }
 
 function playAgain() {
+  gameLost = false;
   document.querySelector(".playAgainButton").remove();
   if (selectDifficulty.value === "easy") {
     generateEasy();
