@@ -25,6 +25,7 @@ function generateEasy() {
     }
     gw.appendChild(row);
   }
+  createFlagButton();
 }
 
 function generateMedium() {
@@ -51,6 +52,7 @@ function generateMedium() {
     }
     gw.appendChild(row);
   }
+  createFlagButton();
 }
 
 function generateHard() {
@@ -78,6 +80,7 @@ function generateHard() {
     }
     gw.appendChild(row);
   }
+  createFlagButton();
 }
 
 function generateBg() {
@@ -97,6 +100,9 @@ selectDifficulty.addEventListener("change", () => {
       gameLost = false;
       generateEasy();
       generateBg();
+      if (document.querySelector(".flagButton")) {
+        document.querySelector(".flagButton").remove();
+      }
       if (document.querySelector(".playAgainButton")) {
         document.querySelector(".playAgainButton").remove();
       }
@@ -106,6 +112,9 @@ selectDifficulty.addEventListener("change", () => {
       gameLost = false;
       generateMedium();
       generateBg();
+      if (document.querySelector(".flagButton")) {
+        document.querySelector(".flagButton").remove();
+      }
       if (document.querySelector(".playAgainButton")) {
         document.querySelector(".playAgainButton").remove();
       }
@@ -115,6 +124,9 @@ selectDifficulty.addEventListener("change", () => {
       gameLost = false;
       generateHard();
       generateBg();
+      if (document.querySelector(".flagButton")) {
+        document.querySelector(".flagButton").remove();
+      }
       if (document.querySelector(".playAgainButton")) {
         document.querySelector(".playAgainButton").remove();
       }
@@ -258,9 +270,7 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
 function leftClick() {
   let currTile = this;
   // return if currTile is right clicked (flagged); otherwise proceed
-  if (currTile.getAttribute("rightClicked") === "true") {
-    return;
-  }
+  if (currTile.getAttribute("rightClicked") === "true") { return; }
   if (randomMines.includes(parseInt(currTile.dataset.value))) {
     console.log(`[GAME OVER]`);
     let mines = document.querySelectorAll("td");
@@ -302,9 +312,7 @@ function leftClick() {
 const rightClickHandler = (event) => {
   event.preventDefault();
   // If game is over, ignore right click feature 
-  if (gameLost) {
-    return;
-  }
+  if (gameLost) { return; }
   let currTile = event.target;
   let valueVisitedTiles = visitedTiles.map(td => parseInt(td.dataset.value));
   if (!valueVisitedTiles.includes(parseInt(currTile.dataset.value))) {
@@ -336,6 +344,7 @@ function gameOver() {
 function playAgain() {
   gameLost = false;
   document.querySelector(".playAgainButton").remove();
+  document.querySelector(".flagButton").remove();
   if (selectDifficulty.value === "easy") {
     generateEasy();
   } else if (selectDifficulty.value === "medium") {
@@ -344,6 +353,57 @@ function playAgain() {
     generateHard();
   }
   console.clear();
+}
+
+function createFlagButton() {
+  const fButton = document.createElement("button");
+  document.body.append(fButton);
+  fButton.classList.add("flagButton");
+  fButton.addEventListener("click", flagClick);
+  fButton.setAttribute("flagClicked", false);
+}
+
+function handleFlagClick() {
+  if (gameLost) { return; }
+  // handleFlagClick() should work in tandem with handleRightClick()
+  let currTile = this;
+  let valueVisitedTiles = visitedTiles.map(td => parseInt(td.dataset.value));
+  if (!valueVisitedTiles.includes(parseInt(currTile.dataset.value))) {
+    if (currTile.getAttribute("rightClicked") === "false") {
+      currTile.style.backgroundColor = "orange";
+      currTile.setAttribute("rightClicked", true);
+    } else {
+      currTile.style.backgroundColor = "lightgray";
+      currTile.setAttribute("rightClicked", false);
+    }
+  }
+}
+
+function flagClick() {
+  // If game is over, ignore flag button feature
+  if (gameLost) { return; }
+  const flagButton = this;
+  const tdElements = document.querySelectorAll("td");
+  if (flagButton.getAttribute("flagClicked") === "false") {
+    // console.log(`[FLAG BUTTON CLICKED]`);
+    flagButton.setAttribute("flagClicked", true);
+    flagButton.style.backgroundColor = "#707070";
+    tdElements.forEach(td => {
+      if (!visitedTiles.includes(td.dataset.value)) {
+        td.removeEventListener("click", leftClick);
+        td.addEventListener("click", handleFlagClick);
+      }
+    });
+  } else {
+    flagButton.setAttribute("flagClicked", false);
+    flagButton.style.backgroundColor = "lightgray";
+    tdElements.forEach(td => {
+      if (!visitedTiles.includes(td.dataset.value)) {
+        td.removeEventListener("click", handleFlagClick);
+        td.addEventListener("click", leftClick);
+      }
+    });
+  }
 }
 
 generateEasy();
