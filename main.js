@@ -235,6 +235,7 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
 
   // for each visited tile: check its surrounding tiles for mines
   visitedTiles.forEach(td => {
+    td.innerHTML = "";  // clears the innerHTML of each visited td element to account for any flag icons
     let mineCounter = 0;
     let mineRadius = [];
     let tileValue = parseInt(td.dataset.value);
