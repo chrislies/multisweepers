@@ -144,6 +144,10 @@ let mineRadiusLB = [];
 let mineRadiusRB = [];
 
 function initialClick() { // clear x surrounding tiles upon inital click on one of the tiles
+  // if flag button is clicked, return; otherwise proceed
+  if (document.querySelector(".flagButton").getAttribute("flagClicked") === "true") {
+    return;
+  }
   let initialTile = this;
   let tableSize = document.querySelectorAll("td").length - 1; // get the last td element to determine tableSize
   console.log("tableSize = " + tableSize);
@@ -327,6 +331,57 @@ const rightClickHandler = (event) => {
   }
 };
 
+function createFlagButton() {
+  const fButton = document.createElement("button");
+  document.body.append(fButton);
+  fButton.classList.add("flagButton");
+  fButton.addEventListener("click", flagClick);
+  fButton.setAttribute("flagClicked", false);
+}
+
+function flagClickHandler() {
+  if (gameLost) { return; }
+  // flagClickHandler() should work in tandem with rightClickHandler()
+  let currTile = this;
+  let valueVisitedTiles = visitedTiles.map(td => parseInt(td.dataset.value));
+  if (!valueVisitedTiles.includes(parseInt(currTile.dataset.value))) {
+    if (currTile.getAttribute("rightClicked") === "false") {
+      currTile.style.backgroundColor = "orange";
+      currTile.setAttribute("rightClicked", true);
+    } else {
+      currTile.style.backgroundColor = "lightgray";
+      currTile.setAttribute("rightClicked", false);
+    }
+  }
+}
+
+function flagClick() {
+  // If game is over, ignore flag button feature
+  if (gameLost) { return; }
+  const flagButton = this;
+  const tdElements = document.querySelectorAll("td");
+  if (flagButton.getAttribute("flagClicked") === "false") {
+    // console.log(`[FLAG BUTTON CLICKED]`);
+    flagButton.setAttribute("flagClicked", true);
+    flagButton.style.backgroundColor = "#707070";
+    tdElements.forEach(td => {
+      if (!visitedTiles.includes(td.dataset.value)) {
+        td.removeEventListener("click", leftClick);
+        td.addEventListener("click", flagClickHandler);
+      }
+    });
+  } else {
+    flagButton.setAttribute("flagClicked", false);
+    flagButton.style.backgroundColor = "lightgray";
+    tdElements.forEach(td => {
+      if (!visitedTiles.includes(td.dataset.value)) {
+        td.removeEventListener("click", flagClickHandler);
+        td.addEventListener("click", leftClick);
+      }
+    });
+  }
+}
+
 function gameOver() {
   gameLost = true;
   let tdElements = document.querySelectorAll("td");
@@ -353,57 +408,6 @@ function playAgain() {
     generateHard();
   }
   console.clear();
-}
-
-function createFlagButton() {
-  const fButton = document.createElement("button");
-  document.body.append(fButton);
-  fButton.classList.add("flagButton");
-  fButton.addEventListener("click", flagClick);
-  fButton.setAttribute("flagClicked", false);
-}
-
-function handleFlagClick() {
-  if (gameLost) { return; }
-  // handleFlagClick() should work in tandem with handleRightClick()
-  let currTile = this;
-  let valueVisitedTiles = visitedTiles.map(td => parseInt(td.dataset.value));
-  if (!valueVisitedTiles.includes(parseInt(currTile.dataset.value))) {
-    if (currTile.getAttribute("rightClicked") === "false") {
-      currTile.style.backgroundColor = "orange";
-      currTile.setAttribute("rightClicked", true);
-    } else {
-      currTile.style.backgroundColor = "lightgray";
-      currTile.setAttribute("rightClicked", false);
-    }
-  }
-}
-
-function flagClick() {
-  // If game is over, ignore flag button feature
-  if (gameLost) { return; }
-  const flagButton = this;
-  const tdElements = document.querySelectorAll("td");
-  if (flagButton.getAttribute("flagClicked") === "false") {
-    // console.log(`[FLAG BUTTON CLICKED]`);
-    flagButton.setAttribute("flagClicked", true);
-    flagButton.style.backgroundColor = "#707070";
-    tdElements.forEach(td => {
-      if (!visitedTiles.includes(td.dataset.value)) {
-        td.removeEventListener("click", leftClick);
-        td.addEventListener("click", handleFlagClick);
-      }
-    });
-  } else {
-    flagButton.setAttribute("flagClicked", false);
-    flagButton.style.backgroundColor = "lightgray";
-    tdElements.forEach(td => {
-      if (!visitedTiles.includes(td.dataset.value)) {
-        td.removeEventListener("click", handleFlagClick);
-        td.addEventListener("click", leftClick);
-      }
-    });
-  }
 }
 
 generateEasy();
