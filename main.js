@@ -2,6 +2,7 @@ const gw = document.getElementById("game-window");
 let gameLost = false;
 
 function generateEasy() {
+  visitedTiles = [];
   // console.log(gw.rows.length);
   if (gw.rows.length > 0) {
     while (gw.rows.length > 0) {
@@ -27,6 +28,7 @@ function generateEasy() {
 }
 
 function generateMedium() {
+  visitedTiles = [];
   // console.log(gw.rows.length);
   if (gw.rows.length > 0) {
     while (gw.rows.length > 0) {
@@ -52,6 +54,7 @@ function generateMedium() {
 }
 
 function generateHard() {
+  visitedTiles = [];
   // console.log(gw.rows.length);
   if (gw.rows.length > 0) {
     while (gw.rows.length > 0) {
