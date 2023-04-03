@@ -277,12 +277,6 @@ function leftClick() {
   // return if currTile is right clicked (flagged); otherwise proceed
   if (currTile.getAttribute("rightClicked") === "true") { return; }
   if (randomMines.includes(parseInt(currTile.dataset.value))) {
-    console.log(`[GAME OVER]`);
-    let mines = document.querySelectorAll("td");
-    randomMines.forEach(td => {
-      mines[td].innerHTML = "X";
-      mines[td].style.backgroundColor = "red";
-    });
     gameOver();
     return;
   }
@@ -389,7 +383,12 @@ function flagClick() {
 
 function gameOver() {
   gameLost = true;
+  console.log(`[GAME OVER]`);
   let tdElements = document.querySelectorAll("td");
+  randomMines.forEach(td => {
+    tdElements[td].innerHTML = "<img src = './img/bomb-icon.png'>";
+    tdElements[td].style.backgroundColor = "brown";
+  });
   tdElements.forEach(td => {
     td.removeEventListener("click", leftClick);
   });
