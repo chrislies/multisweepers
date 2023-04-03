@@ -94,7 +94,7 @@ selectDifficulty.addEventListener("change", () => {
   switch (difficulty) {
     case "easy":
       console.clear();
-      // console.log("Easy");
+      gameLost = false;
       generateEasy();
       generateBg();
       if (document.querySelector(".playAgainButton")) {
@@ -103,7 +103,7 @@ selectDifficulty.addEventListener("change", () => {
       break;
     case "medium":
       console.clear();
-      // console.log("Medium");
+      gameLost = false;
       generateMedium();
       generateBg();
       if (document.querySelector(".playAgainButton")) {
@@ -112,7 +112,7 @@ selectDifficulty.addEventListener("change", () => {
       break
     case "hard":
       console.clear();
-      // console.log("Hard");
+      gameLost = false;
       generateHard();
       generateBg();
       if (document.querySelector(".playAgainButton")) {
