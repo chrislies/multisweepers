@@ -322,10 +322,12 @@ const rightClickHandler = (event) => {
   if (!valueVisitedTiles.includes(parseInt(currTile.dataset.value))) {
     if (currTile.getAttribute("rightClicked") === "false") {
       // console.log(`[RIGHT CLICK]` + " on tile " + currTile.dataset.value);
-      currTile.style.backgroundColor = "orange";
+      currTile.innerHTML = "<img src = './img/flag-icon.png'>";
+      // currTile.style.backgroundColor = "orange";
       currTile.setAttribute("rightClicked", true);
     } else {
-      currTile.style.backgroundColor = "lightgray";
+      currTile.innerHTML = "";
+      // currTile.style.backgroundColor = "lightgray";
       currTile.setAttribute("rightClicked", false);
     }
   }
@@ -346,10 +348,12 @@ function flagClickHandler() {
   let valueVisitedTiles = visitedTiles.map(td => parseInt(td.dataset.value));
   if (!valueVisitedTiles.includes(parseInt(currTile.dataset.value))) {
     if (currTile.getAttribute("rightClicked") === "false") {
-      currTile.style.backgroundColor = "orange";
+      currTile.innerHTML = "<img src = './img/flag-icon.png'>";
+      // currTile.style.backgroundColor = "orange";
       currTile.setAttribute("rightClicked", true);
     } else {
-      currTile.style.backgroundColor = "lightgray";
+      currTile.innerHTML = "";
+      // currTile.style.backgroundColor = "lightgray";
       currTile.setAttribute("rightClicked", false);
     }
   }

@@ -71,5 +71,12 @@ button:hover {
   margin-top: 10px;
   background: lightgray url(./img/flag-icon.png);
   background-repeat: no-repeat;
-  background-position: 7px;
+  background-position: 50%;
+}
+
+img {
+  width: 70%;
+  margin: auto;
+  display: block;
+  pointer-events: none;
 }
