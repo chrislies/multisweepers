@@ -47,6 +47,7 @@ button {
   all: unset;
   margin: 0 auto;
   display: block;
+  position: relative;
   margin-top: 30px;
   cursor: pointer;
   border-style: solid;
@@ -72,6 +73,13 @@ button:hover {
   background: lightgray url(./img/flag-icon.png);
   background-repeat: no-repeat;
   background-position: 50%;
+}
+
+button .flagCounter {
+  font-size: 10px;
+  position: absolute;
+  top: 0px;
+  left: 2px;
 }
 
 img {
