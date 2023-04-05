@@ -187,7 +187,7 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
   // }); 
 
   // Generate mines
-  let tile = document.getElementsByTagName("td");
+  // let tile = document.getElementsByTagName("td");
   while (randomMines.length < numMines) {
     let randomNum = Math.round(Math.random() * tableSize); // generate random # between [0-tableSize)
     while (randomMines.includes(randomNum) || valueVisitedTiles.includes(randomNum)) {
