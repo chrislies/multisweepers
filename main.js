@@ -1,6 +1,10 @@
 const gw = document.getElementById("game-window");
+let gameLost = false;
+let numMines = 0;
+let buttonFlagCounter = 0;
 
 function generateEasy() {
+  visitedTiles = [];
   // console.log(gw.rows.length);
   if (gw.rows.length > 0) {
     while (gw.rows.length > 0) {
@@ -8,6 +12,8 @@ function generateEasy() {
     }
   }
   let n = 9; // n x n grid
+  numMines = 10;
+  buttonFlagCounter = numMines;
   let tileCounter = 0;
   for (let i = 0; i < n; i++) {
     let row = document.createElement("tr");
@@ -15,15 +21,19 @@ function generateEasy() {
       let data = document.createElement("td");
       data.classList.add("tile-" + tileCounter);
       data.dataset.value = tileCounter;
+      data.setAttribute("rightClicked", false);
       data.addEventListener("click", initialClick);
+      data.addEventListener("contextmenu", rightClickHandler);
       row.appendChild(data);
       tileCounter++;
     }
     gw.appendChild(row);
   }
+  createFlagButton();
 }
 
 function generateMedium() {
+  visitedTiles = [];
   // console.log(gw.rows.length);
   if (gw.rows.length > 0) {
     while (gw.rows.length > 0) {
@@ -31,6 +41,8 @@ function generateMedium() {
     }
   }
   let n = 16; // n x n grid
+  numMines = 40;
+  buttonFlagCounter = numMines;
   let tileCounter = 0;
   for (let i = 0; i < n; i++) {
     let row = document.createElement("tr");
@@ -38,15 +50,19 @@ function generateMedium() {
       let data = document.createElement("td");
       data.classList.add("tile-" + tileCounter);
       data.dataset.value = tileCounter;
+      data.setAttribute("rightClicked", false);
       data.addEventListener("click", initialClick);
+      data.addEventListener("contextmenu", rightClickHandler);
       row.appendChild(data);
       tileCounter++;
     }
     gw.appendChild(row);
   }
+  createFlagButton();
 }
 
 function generateHard() {
+  visitedTiles = [];
   // console.log(gw.rows.length);
   if (gw.rows.length > 0) {
     while (gw.rows.length > 0) {
@@ -55,6 +71,8 @@ function generateHard() {
   }
   let n = 16; // n x m grid
   let m = 30
+  numMines = 99;
+  buttonFlagCounter = numMines;
   let tileCounter = 0;
   for (let i = 0; i < n; i++) {
     let row = document.createElement("tr");
@@ -62,12 +80,15 @@ function generateHard() {
       let data = document.createElement("td");
       data.classList.add("tile-" + tileCounter);
       data.dataset.value = tileCounter;
+      data.setAttribute("rightClicked", false);
       data.addEventListener("click", initialClick);
+      data.addEventListener("contextmenu", rightClickHandler);
       row.appendChild(data);
       tileCounter++;
     }
     gw.appendChild(row);
   }
+  createFlagButton();
 }
 
 function generateBg() {
@@ -78,28 +99,11 @@ function generateBg() {
   console.log("backgroundColor: " + "rgb(" + r + "," + g + "," + b + ")");
 }
 
+// Changing selected difficulty
 const selectDifficulty = document.getElementById("choice");
 selectDifficulty.addEventListener("change", () => {
-  const difficulty = selectDifficulty.value;
-  switch (difficulty) {
-    case "easy":
-      // console.log("Easy");
-      generateEasy();
-      generateBg();
-      break;
-    case "medium":
-      // console.log("Medium");
-      generateMedium();
-      generateBg();
-      break
-    case "hard":
-      // console.log("Hard");
-      generateHard();
-      generateBg();
-      break;
-    default:
-      console.log("Select difficulty!");
-  }
+  playAgain();
+  generateBg();
 });
 
 let visitedTiles = [];
@@ -110,16 +114,15 @@ let mineRadiusLB = [];
 let mineRadiusRB = [];
 
 function initialClick() { // clear x surrounding tiles upon inital click on one of the tiles
+  // if flag button is clicked, return; otherwise proceed
+  if (document.querySelector(".flagButton").getAttribute("flagButtonClicked") === "true") {
+    return;
+  }
   let initialTile = this;
+  visitedTiles.push(initialTile);
   let tableSize = document.querySelectorAll("td").length - 1; // get the last td element to determine tableSize
   console.log("tableSize = " + tableSize);
-  let tdElements = document.querySelectorAll("td");
   let numRandomTiles = 0;
-  possibleMove = [];  // can either move [up,right,down,left] by adding possibleMove[x] current tile
-  visitedTiles = [];
-  randomMines = [];
-  visitedTiles.push(initialTile);
-  initialTile.style.backgroundColor = "#707070";
   // console.log(parseInt(initialTile.dataset.value) + possibleMove[0]); // parseInt() converts string to int
 
   let difficulty = selectDifficulty.value;  // Check selected difficulty
@@ -147,7 +150,7 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
       possibleMove = [30, 1, -30, -1];  // can either move [up,right,down,left] by adding possibleMove[x] current tile
       mineRadiusNB = [-31, -30, -29, -1, 1, 29, 30, 31];  // possible mine locations for each NON-BORDER tile
       mineRadiusLB = [-30, -29, 1, 30, 31];  // possible mine locations for each left border tile
-      mineRadiusRB = [-31, -30, 1, 29, 30];  // possible mine locations for each right border tile
+      mineRadiusRB = [-31, -30, -1, 29, 30];  // possible mine locations for each right border tile
       numRandomTiles = Math.round(Math.random() * (48 - 31) + 31);  // generate random # between [31-48)
       console.log("[initial click] Number of random tiles: " + numRandomTiles);
       break;
@@ -173,7 +176,6 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
       }
     }
     visitedTiles.push(nextTile);
-    nextTile.style.backgroundColor = "#707070";
   }
 
   // convert the string dataset.value of each visitedTiles[] into int
@@ -192,61 +194,199 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
       randomNum = Math.round(Math.random() * tableSize); // generate random # between [0-tableSize)
     }
     randomMines.push(randomNum);
-    tile[randomNum].style.backgroundColor = "blue";
+    tile[randomNum].style.backgroundColor = "red";
     // tile[randomNum].className += "-mine";
   }
 
-  // for each visited tile: check its surrounding tiles for mines
+  // for each visited tile: 
+  // 1. check and remove flag, and then change the tile's background color 
+  // 2. check its surrounding tiles for mines (scanMineRadius(tile))
   visitedTiles.forEach(td => {
-    let mineCounter = 0;
-    let mineRadius = [];
-    let tileValue = parseInt(td.dataset.value);
-
-    if (tileValue % gw.rows.length == 0) {
-      // If current tile is on the left border, mineRadius becomes limited to mineRadiusLB
-      mineRadius = mineRadiusLB;
-    } else if (tileValue % gw.rows.length == gw.rows.length - 1) {
-      // If current tile is on the right border, mineRadius becomes limited to mineRadiusRB
-      mineRadius = mineRadiusRB;
-    } else {
-      // If current tile is not on either border, mineRadius does not need to be limited
-      mineRadius = mineRadiusNB;
+    if (td.getAttribute("rightClicked") === "true") {
+      td.setAttribute("rightClicked", false);
+      td.innerHTML = "";  // clears the innerHTML of a td element to account for flag icon
+      buttonFlagCounter += 1; // update the total flag counter by 'returning' the flag to the counter
+      document.querySelector(".flagCounter").innerHTML = buttonFlagCounter;
     }
-    for (let i = 0; i < mineRadius.length; i++) {
-      if (randomMines.includes(tileValue + mineRadius[i])) {
-        mineCounter++;
-      }
-      if (mineCounter > 0) {
-        td.innerHTML = mineCounter;
-      }
-    }
+    td.style.backgroundColor = "#707070";
+    scanMineRadius(td);
   });
 
   // after doing initial click, for each td element:
   // remove "initialClick" event listener 
-  // add "leftClick" event listener
-  tdElements.forEach(function (td) {
+  // add "leftClick" event listener ONLY IF tile has not been visited
+  let tdElements = document.querySelectorAll("td");
+  tdElements.forEach(td => {
     td.removeEventListener("click", initialClick);
-    td.addEventListener("click", leftClick);
+    if (!visitedTiles.includes(td)) {
+      td.addEventListener("click", leftClick);
+    }
   });
+}
+
+function scanMineRadius(tile) {
+  let colLength = document.querySelector("tr").children.length; // the number of elements in a row
+  let mineCounter = 0;
+  let mineRadius = [];
+  let tileValue = parseInt(tile.dataset.value);
+
+  if (tileValue % colLength === 0) {
+    // If current tile is on the left border, mineRadius becomes limited to mineRadiusLB
+    mineRadius = mineRadiusLB;
+  } else if (tileValue % colLength === colLength - 1) {
+    // If current tile is on the right border, mineRadius becomes limited to mineRadiusRB
+    mineRadius = mineRadiusRB;
+  } else {
+    // If current tile is not on either border, mineRadius does not need to be limited
+    mineRadius = mineRadiusNB;
+  }
+  for (let i = 0; i < mineRadius.length; i++) {
+    if (randomMines.includes(tileValue + mineRadius[i])) {
+      mineCounter++;
+    }
+    if (mineCounter > 0) {
+      tile.innerHTML = mineCounter;
+    }
+  }
 }
 
 function leftClick() {
   let currTile = this;
+  // return if currTile is right clicked (flagged); otherwise proceed
+  if (currTile.getAttribute("rightClicked") === "true") { return; }
   if (randomMines.includes(parseInt(currTile.dataset.value))) {
-    console.log("[GAME OVER!]");
-    let mines = document.querySelectorAll("td");
-    randomMines.forEach(td => {
-      mines[td].innerHTML = "X";
-      mines[td].style.backgroundColor = "red";
-    });
+    gameOver();
     return;
   }
-  console.log("[left click]");
+  // console.log(`[LEFT CLICK]` + " on tile " + currTile.dataset.value);
   visitedTiles.push(currTile);
-  // console.log(visitedTiles);
   currTile.style.backgroundColor = "#707070"; //gray=808080
-  currTile.innerHTML = "#";
+  scanMineRadius(currTile);
+  currTile.removeEventListener("click", leftClick);
+}
+
+const rightClickHandler = (event) => {
+  event.preventDefault();
+  // If game is over, ignore right click feature 
+  if (gameLost) { return; }
+  let currTile = event.target;
+  let valueVisitedTiles = visitedTiles.map(td => parseInt(td.dataset.value));
+  if (!valueVisitedTiles.includes(parseInt(currTile.dataset.value))) {
+    if (currTile.getAttribute("rightClicked") === "false") {
+      // console.log(`[RIGHT CLICK]` + " on tile " + currTile.dataset.value);
+      currTile.innerHTML = "<img src='./img/flag-icon.png' alt='flag'>";
+      // currTile.style.backgroundColor = "orange";
+      currTile.setAttribute("rightClicked", true);
+      buttonFlagCounter -= 1;
+      document.querySelector(".flagCounter").innerHTML = buttonFlagCounter;
+    } else {
+      currTile.innerHTML = "";
+      // currTile.style.backgroundColor = "lightgray";
+      currTile.setAttribute("rightClicked", false);
+      buttonFlagCounter += 1;
+      document.querySelector(".flagCounter").innerHTML = buttonFlagCounter;
+    }
+  }
+};
+
+function createFlagButton() {
+  const fButton = document.createElement("button");
+  const fCounter = document.createElement("span");
+  const fCounterValue = document.createTextNode(numMines);
+  fCounter.appendChild(fCounterValue);
+  fButton.appendChild(fCounter);
+  document.body.append(fButton);
+  fButton.classList.add("flagButton");
+  fCounter.classList.add("flagCounter");
+  fButton.addEventListener("click", flagButtonClick);
+  fButton.setAttribute("flagButtonClicked", false);
+}
+
+function flagButtonClick() {
+  // If game is over, ignore flag button feature
+  if (gameLost) { return; }
+  const flagButton = this;
+  const tdElements = document.querySelectorAll("td");
+  if (flagButton.getAttribute("flagButtonClicked") === "false") {
+    // console.log(`[FLAG BUTTON CLICKED]`);
+    flagButton.setAttribute("flagButtonClicked", true);
+    flagButton.style.backgroundColor = "#707070";
+    tdElements.forEach(td => {
+      if (!visitedTiles.includes(td.dataset.value)) {
+        td.removeEventListener("click", leftClick);
+        td.addEventListener("click", setFlagHandler);
+      }
+    });
+  } else {
+    flagButton.setAttribute("flagButtonClicked", false);
+    flagButton.style.backgroundColor = "lightgray";
+    tdElements.forEach(td => {
+      if (!visitedTiles.includes(td.dataset.value)) {
+        td.removeEventListener("click", setFlagHandler);
+        td.addEventListener("click", leftClick);
+      }
+    });
+  }
+}
+
+// setFlagHandler() should work in tandem with rightClickHandler()
+function setFlagHandler() {
+  if (gameLost) { return; }
+  let currTile = this;
+  let valueVisitedTiles = visitedTiles.map(td => parseInt(td.dataset.value));
+  if (!valueVisitedTiles.includes(parseInt(currTile.dataset.value))) {
+    if (currTile.getAttribute("rightClicked") === "false") {
+      currTile.innerHTML = "<img src='./img/flag-icon.png' alt='flag'>";
+      // currTile.style.backgroundColor = "orange";
+      currTile.setAttribute("rightClicked", true);
+      buttonFlagCounter -= 1;
+      document.querySelector(".flagCounter").innerHTML = buttonFlagCounter;
+    } else {
+      currTile.innerHTML = "";
+      // currTile.style.backgroundColor = "lightgray";
+      currTile.setAttribute("rightClicked", false);
+      buttonFlagCounter += 1;
+      document.querySelector(".flagCounter").innerHTML = buttonFlagCounter;
+    }
+  }
+}
+
+function gameOver() {
+  gameLost = true;
+  console.log(`[GAME OVER]`);
+  let tdElements = document.querySelectorAll("td");
+  randomMines.forEach(td => {
+    tdElements[td].innerHTML = "<img src='./img/bomb-icon.png' alt='bomb'>";
+    tdElements[td].style.backgroundColor = "brown";
+  });
+  tdElements.forEach(td => {
+    td.removeEventListener("click", leftClick);
+  });
+  const playAgainButton = document.createElement("button");
+  const playAgainText = document.createTextNode("Play Again");
+  playAgainButton.appendChild(playAgainText);
+  document.body.append(playAgainButton);
+  playAgainButton.classList.add("playAgainButton");
+  playAgainButton.addEventListener("click", playAgain);
+}
+
+function playAgain() {
+  console.clear();
+  gameLost = false;
+  numMines = 0;
+  randomMines = [];
+  visitedTiles = [];
+  if (document.querySelector(".playAgainButton")) {
+    document.querySelector(".playAgainButton").remove();
+  }
+  document.querySelector(".flagButton").remove();
+  if (selectDifficulty.value === "easy") {
+    generateEasy();
+  } else if (selectDifficulty.value === "medium") {
+    generateMedium();
+  } else {
+    generateHard();
+  }
 }
 
 generateEasy();
