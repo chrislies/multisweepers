@@ -191,14 +191,14 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
   // }); 
 
   // Generate mines
-  let tile = document.getElementsByTagName("td");
+  // let tile = document.getElementsByTagName("td");
   while (randomMines.length < numMines) {
     let randomNum = Math.round(Math.random() * tableSize); // generate random # between [0-tableSize)
     while (randomMines.includes(randomNum) || valueVisitedTiles.includes(randomNum)) {
       randomNum = Math.round(Math.random() * tableSize); // generate random # between [0-tableSize)
     }
     randomMines.push(randomNum);
-    tile[randomNum].style.backgroundColor = "red";
+    // tile[randomNum].style.backgroundColor = "red";
     // tile[randomNum].className += "-mine";
   }
 
@@ -274,27 +274,6 @@ function leftClick() {
     gameWon();
   }
 }
-
-
-
-// function leftClick() {
-//   let currTile = this;
-//   // return if currTile is right clicked (flagged); otherwise proceed
-//   if (currTile.getAttribute("rightClicked") === "true") { return; }
-//   if (randomMines.includes(parseInt(currTile.dataset.value))) {
-//     gameLost();
-//     return;
-//   }
-//   // console.log(`[LEFT CLICK]` + " on tile " + currTile.dataset.value);
-//   document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/shocked-icon.png' alt='buddy-shocked'>";
-//   visitedTiles.push(currTile);
-//   currTile.style.backgroundColor = "#707070"; //gray=808080
-//   scanMineRadius(currTile);
-//   currTile.removeEventListener("click", leftClick);
-//   if (document.querySelectorAll("td").length - visitedTiles.length === numMines) {
-//     gameWon();
-//   }
-// }
 
 const rightClickHandler = (event) => {
   event.preventDefault();
