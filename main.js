@@ -194,7 +194,7 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
       randomNum = Math.round(Math.random() * tableSize); // generate random # between [0-tableSize)
     }
     randomMines.push(randomNum);
-    tile[randomNum].style.backgroundColor = "red";
+    // tile[randomNum].style.backgroundColor = "red";
     // tile[randomNum].className += "-mine";
   }
 
