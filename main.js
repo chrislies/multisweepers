@@ -1,5 +1,5 @@
 const gw = document.getElementById("game-window");
-let gameLost = false;
+let gameOver = false;
 let numMines = 0;
 let buttonFlagCounter = 0;
 
@@ -29,6 +29,7 @@ function generateEasy() {
     }
     gw.appendChild(row);
   }
+  createBuddy();
   createFlagButton();
 }
 
@@ -58,6 +59,7 @@ function generateMedium() {
     }
     gw.appendChild(row);
   }
+  createBuddy();
   createFlagButton();
 }
 
@@ -88,6 +90,7 @@ function generateHard() {
     }
     gw.appendChild(row);
   }
+  createBuddy();
   createFlagButton();
 }
 
@@ -118,6 +121,7 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
   if (document.querySelector(".flagButton").getAttribute("flagButtonClicked") === "true") {
     return;
   }
+  document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/shocked-icon.png' alt='buddy-shocked'>";
   let initialTile = this;
   visitedTiles.push(initialTile);
   let tableSize = document.querySelectorAll("td").length - 1; // get the last td element to determine tableSize
@@ -187,14 +191,14 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
   // }); 
 
   // Generate mines
-  // let tile = document.getElementsByTagName("td");
+  let tile = document.getElementsByTagName("td");
   while (randomMines.length < numMines) {
     let randomNum = Math.round(Math.random() * tableSize); // generate random # between [0-tableSize)
     while (randomMines.includes(randomNum) || valueVisitedTiles.includes(randomNum)) {
       randomNum = Math.round(Math.random() * tableSize); // generate random # between [0-tableSize)
     }
     randomMines.push(randomNum);
-    // tile[randomNum].style.backgroundColor = "red";
+    tile[randomNum].style.backgroundColor = "red";
     // tile[randomNum].className += "-mine";
   }
 
@@ -255,23 +259,51 @@ function leftClick() {
   // return if currTile is right clicked (flagged); otherwise proceed
   if (currTile.getAttribute("rightClicked") === "true") { return; }
   if (randomMines.includes(parseInt(currTile.dataset.value))) {
-    gameOver();
+    gameLost();
     return;
   }
+  if (!visitedTiles.includes(currTile)) {
+    visitedTiles.push(currTile);  // this prevents currTile from being pushed more than once (ex. if user clicks too fast)
+  }
   // console.log(`[LEFT CLICK]` + " on tile " + currTile.dataset.value);
-  visitedTiles.push(currTile);
+  document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/shocked-icon.png' alt='buddy-shocked'>";
   currTile.style.backgroundColor = "#707070"; //gray=808080
   scanMineRadius(currTile);
   currTile.removeEventListener("click", leftClick);
+  if (document.querySelectorAll("td").length - visitedTiles.length === numMines) {
+    gameWon();
+  }
 }
+
+
+
+// function leftClick() {
+//   let currTile = this;
+//   // return if currTile is right clicked (flagged); otherwise proceed
+//   if (currTile.getAttribute("rightClicked") === "true") { return; }
+//   if (randomMines.includes(parseInt(currTile.dataset.value))) {
+//     gameLost();
+//     return;
+//   }
+//   // console.log(`[LEFT CLICK]` + " on tile " + currTile.dataset.value);
+//   document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/shocked-icon.png' alt='buddy-shocked'>";
+//   visitedTiles.push(currTile);
+//   currTile.style.backgroundColor = "#707070"; //gray=808080
+//   scanMineRadius(currTile);
+//   currTile.removeEventListener("click", leftClick);
+//   if (document.querySelectorAll("td").length - visitedTiles.length === numMines) {
+//     gameWon();
+//   }
+// }
 
 const rightClickHandler = (event) => {
   event.preventDefault();
   // If game is over, ignore right click feature 
-  if (gameLost) { return; }
+  if (gameOver) { return; }
   let currTile = event.target;
   let valueVisitedTiles = visitedTiles.map(td => parseInt(td.dataset.value));
   if (!valueVisitedTiles.includes(parseInt(currTile.dataset.value))) {
+    document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/nervous-icon.png' alt='buddy-nervous'>";
     if (currTile.getAttribute("rightClicked") === "false") {
       // console.log(`[RIGHT CLICK]` + " on tile " + currTile.dataset.value);
       currTile.innerHTML = "<img src='./img/flag-icon.png' alt='flag'>";
@@ -304,7 +336,7 @@ function createFlagButton() {
 
 function flagButtonClick() {
   // If game is over, ignore flag button feature
-  if (gameLost) { return; }
+  if (gameOver) { return; }
   const flagButton = this;
   const tdElements = document.querySelectorAll("td");
   if (flagButton.getAttribute("flagButtonClicked") === "false") {
@@ -331,10 +363,11 @@ function flagButtonClick() {
 
 // setFlagHandler() should work in tandem with rightClickHandler()
 function setFlagHandler() {
-  if (gameLost) { return; }
+  if (gameOver) { return; }
   let currTile = this;
   let valueVisitedTiles = visitedTiles.map(td => parseInt(td.dataset.value));
   if (!valueVisitedTiles.includes(parseInt(currTile.dataset.value))) {
+    document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/nervous-icon.png' alt='buddy-nervous'>";
     if (currTile.getAttribute("rightClicked") === "false") {
       currTile.innerHTML = "<img src='./img/flag-icon.png' alt='flag'>";
       // currTile.style.backgroundColor = "orange";
@@ -351,9 +384,24 @@ function setFlagHandler() {
   }
 }
 
-function gameOver() {
-  gameLost = true;
+function createBuddy() {
+  const bButton = document.createElement("button");
+  bButton.innerHTML = "<img class='buddyImg' src='./img/smile-icon.png' alt='buddy-smile'>";
+  bButton.classList.add("buddyButton");
+  bButton.addEventListener("click", buddyButtonClick);
+  document.body.insertBefore(bButton, document.querySelector("#game-window"));
+}
+
+function buddyButtonClick() {
+  if (gameOver) {
+    playAgain();
+  }
+}
+
+function gameLost() {
+  gameOver = true;
   console.log(`[GAME OVER]`);
+  document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/dizzy-icon.png' alt='buddy-dizzy'>";
   let tdElements = document.querySelectorAll("td");
   randomMines.forEach(td => {
     tdElements[td].innerHTML = "<img src='./img/bomb-icon.png' alt='bomb'>";
@@ -373,15 +421,32 @@ function gameOver() {
   playAgainButton.addEventListener("click", playAgain);
 }
 
+function gameWon() {
+  gameOver = true;
+  console.log(`[GAME WON]`);
+  document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/chill-icon.png' alt='buddy-chill'>";
+  let tdElements = document.querySelectorAll("td");
+  tdElements.forEach(td => {
+    td.removeEventListener("click", leftClick);
+  });
+  const playAgainButton = document.createElement("button");
+  const playAgainText = document.createTextNode("Play Again");
+  playAgainButton.appendChild(playAgainText);
+  document.body.append(playAgainButton);
+  playAgainButton.classList.add("playAgainButton");
+  playAgainButton.addEventListener("click", playAgain);
+}
+
 function playAgain() {
   console.clear();
-  gameLost = false;
+  gameOver = false;
   numMines = 0;
   randomMines = [];
   visitedTiles = [];
   if (document.querySelector(".playAgainButton")) {
     document.querySelector(".playAgainButton").remove();
   }
+  document.querySelector(".buddyButton").remove();
   document.querySelector(".flagButton").remove();
   if (selectDifficulty.value === "easy") {
     generateEasy();
