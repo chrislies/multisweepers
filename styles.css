@@ -3,6 +3,8 @@ body {
 }
 
 * {
+  /* user-select: none; prevents elements from being highlighted */
+  user-select: none;
   padding: 0;
   margin: 0;
 }
@@ -16,9 +18,7 @@ label {
 }
 
 table {
-  margin-top: 20px;
-  margin-right: auto;
-  margin-left: auto;
+  margin: 0 auto;
   border-spacing: 0;
   border-style: solid;
   border-color: black;
@@ -83,6 +83,23 @@ button .flagCounter {
   position: absolute;
   top: 0px;
   left: 2px;
+}
+
+.buddyButton {
+  width: 20px;
+  height: 20px;
+  background-color: lightgray;
+  text-align: center;
+  padding: 5px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  /* background: lightgray url(./img/smile-icon.png);
+  background-repeat: no-repeat;
+  background-position: 50%; */
+}
+
+.buddyImg {
+  max-width: 25px;
 }
 
 img {
