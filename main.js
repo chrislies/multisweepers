@@ -150,7 +150,7 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
       possibleMove = [30, 1, -30, -1];  // can either move [up,right,down,left] by adding possibleMove[x] current tile
       mineRadiusNB = [-31, -30, -29, -1, 1, 29, 30, 31];  // possible mine locations for each NON-BORDER tile
       mineRadiusLB = [-30, -29, 1, 30, 31];  // possible mine locations for each left border tile
-      mineRadiusRB = [-31, -30, 1, 29, 30];  // possible mine locations for each right border tile
+      mineRadiusRB = [-31, -30, -1, 29, 30];  // possible mine locations for each right border tile
       numRandomTiles = Math.round(Math.random() * (48 - 31) + 31);  // generate random # between [31-48)
       console.log("[initial click] Number of random tiles: " + numRandomTiles);
       break;
@@ -194,13 +194,13 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
       randomNum = Math.round(Math.random() * tableSize); // generate random # between [0-tableSize)
     }
     randomMines.push(randomNum);
-    // tile[randomNum].style.backgroundColor = "blue";
+    // tile[randomNum].style.backgroundColor = "red";
     // tile[randomNum].className += "-mine";
   }
 
   // for each visited tile: 
-  // 1. check its surrounding tiles for mines
-  // 2. check and remove flag, and then change the tile's background color 
+  // 1. check and remove flag, and then change the tile's background color 
+  // 2. check its surrounding tiles for mines (scanMineRadius(tile))
   visitedTiles.forEach(td => {
     if (td.getAttribute("rightClicked") === "true") {
       td.setAttribute("rightClicked", false);
@@ -209,28 +209,7 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
       document.querySelector(".flagCounter").innerHTML = buttonFlagCounter;
     }
     td.style.backgroundColor = "#707070";
-    let mineCounter = 0;
-    let mineRadius = [];
-    let tileValue = parseInt(td.dataset.value);
-
-    if (tileValue % gw.rows.length == 0) {
-      // If current tile is on the left border, mineRadius becomes limited to mineRadiusLB
-      mineRadius = mineRadiusLB;
-    } else if (tileValue % gw.rows.length == gw.rows.length - 1) {
-      // If current tile is on the right border, mineRadius becomes limited to mineRadiusRB
-      mineRadius = mineRadiusRB;
-    } else {
-      // If current tile is not on either border, mineRadius does not need to be limited
-      mineRadius = mineRadiusNB;
-    }
-    for (let i = 0; i < mineRadius.length; i++) {
-      if (randomMines.includes(tileValue + mineRadius[i])) {
-        mineCounter++;
-      }
-      if (mineCounter > 0) {
-        td.innerHTML = mineCounter;
-      }
-    }
+    scanMineRadius(td);
   });
 
   // after doing initial click, for each td element:
@@ -245,25 +224,16 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
   });
 }
 
-function leftClick() {
-  let currTile = this;
-  // return if currTile is right clicked (flagged); otherwise proceed
-  if (currTile.getAttribute("rightClicked") === "true") { return; }
-  if (randomMines.includes(parseInt(currTile.dataset.value))) {
-    gameOver();
-    return;
-  }
-  // console.log(`[LEFT CLICK]` + " on tile " + currTile.dataset.value);
-  visitedTiles.push(currTile);
-  currTile.style.backgroundColor = "#707070"; //gray=808080
+function scanMineRadius(tile) {
+  let colLength = document.querySelector("tr").children.length; // the number of elements in a row
   let mineCounter = 0;
   let mineRadius = [];
-  let tileValue = parseInt(currTile.dataset.value);
+  let tileValue = parseInt(tile.dataset.value);
 
-  if (tileValue % gw.rows.length == 0) {
+  if (tileValue % colLength === 0) {
     // If current tile is on the left border, mineRadius becomes limited to mineRadiusLB
     mineRadius = mineRadiusLB;
-  } else if (tileValue % gw.rows.length == gw.rows.length - 1) {
+  } else if (tileValue % colLength === colLength - 1) {
     // If current tile is on the right border, mineRadius becomes limited to mineRadiusRB
     mineRadius = mineRadiusRB;
   } else {
@@ -275,9 +245,23 @@ function leftClick() {
       mineCounter++;
     }
     if (mineCounter > 0) {
-      currTile.innerHTML = mineCounter;
+      tile.innerHTML = mineCounter;
     }
   }
+}
+
+function leftClick() {
+  let currTile = this;
+  // return if currTile is right clicked (flagged); otherwise proceed
+  if (currTile.getAttribute("rightClicked") === "true") { return; }
+  if (randomMines.includes(parseInt(currTile.dataset.value))) {
+    gameOver();
+    return;
+  }
+  // console.log(`[LEFT CLICK]` + " on tile " + currTile.dataset.value);
+  visitedTiles.push(currTile);
+  currTile.style.backgroundColor = "#707070"; //gray=808080
+  scanMineRadius(currTile);
   currTile.removeEventListener("click", leftClick);
 }
 
