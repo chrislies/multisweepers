@@ -358,6 +358,9 @@ function gameOver() {
   randomMines.forEach(td => {
     tdElements[td].innerHTML = "<img src='./img/bomb-icon.png' alt='bomb'>";
     tdElements[td].style.backgroundColor = "brown";
+    if (tdElements[td].getAttribute("rightClicked") === "true") {
+      tdElements[td].innerHTML += "<img class='flagOnMine' src='./img/flag-icon.png' alt='flag'>";
+    }
   });
   tdElements.forEach(td => {
     td.removeEventListener("click", leftClick);
