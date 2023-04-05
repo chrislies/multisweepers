@@ -187,14 +187,14 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
   // }); 
 
   // Generate mines
-  // let tile = document.getElementsByTagName("td");
+  let tile = document.getElementsByTagName("td");
   while (randomMines.length < numMines) {
     let randomNum = Math.round(Math.random() * tableSize); // generate random # between [0-tableSize)
     while (randomMines.includes(randomNum) || valueVisitedTiles.includes(randomNum)) {
       randomNum = Math.round(Math.random() * tableSize); // generate random # between [0-tableSize)
     }
     randomMines.push(randomNum);
-    // tile[randomNum].style.backgroundColor = "red";
+    tile[randomNum].style.backgroundColor = "red";
     // tile[randomNum].className += "-mine";
   }
 
@@ -358,6 +358,9 @@ function gameOver() {
   randomMines.forEach(td => {
     tdElements[td].innerHTML = "<img src='./img/bomb-icon.png' alt='bomb'>";
     tdElements[td].style.backgroundColor = "brown";
+    if (tdElements[td].getAttribute("rightClicked") === "true") {
+      tdElements[td].innerHTML += "<img class='flagOnMine' src='./img/flag-icon.png' alt='flag'>";
+    }
   });
   tdElements.forEach(td => {
     td.removeEventListener("click", leftClick);
