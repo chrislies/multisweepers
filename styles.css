@@ -60,10 +60,16 @@ button:hover {
   background-color: rgba(200, 200, 200, 1);
 }
 
+button:active {
+  box-shadow: inset 0px 0px 10px 0px black;
+  transform: scale(.95);
+}
+
 .playAgainButton {
   background-color: lightgray;
   text-align: center;
   padding: 5px;
+  margin-top: 10px;
   border-radius: 10px;
 }
 
