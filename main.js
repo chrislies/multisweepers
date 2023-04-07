@@ -254,6 +254,44 @@ function scanMineRadius(tile) {
   }
 }
 
+function floodFill(tile) {
+  let colLength = document.querySelector("tr").children.length; // the number of elements in a row
+  let floodRadius = [];
+  let tileValue = parseInt(tile.dataset.value);
+  let td = document.querySelectorAll("td");
+
+  if (tileValue % colLength === 0) {
+    // If current tile is on the left border, floodRadius becomes limited to mineRadiusLB
+    floodRadius = mineRadiusLB;
+  } else if (tileValue % colLength === colLength - 1) {
+    // If current tile is on the right border, floodRadius becomes limited to mineRadiusRB
+    floodRadius = mineRadiusRB;
+  } else {
+    // If current tile is not on either border, floodRadius does not need to be limited
+    floodRadius = mineRadiusNB;
+  }
+
+  for (let i = 0; i < floodRadius.length; i++) {
+    let nextTileValue = tileValue + floodRadius[i]
+    if (td[nextTileValue]) {
+      if (!visitedTiles.includes(td[nextTileValue])) {
+        visitedTiles.push(td[nextTileValue]);
+        td[nextTileValue].style.backgroundColor = "#707070";
+        scanMineRadius(td[nextTileValue]);
+        if (td[nextTileValue].innerHTML === "") {
+          floodFill(td[nextTileValue]);
+        }
+      }
+      if (td[nextTileValue].getAttribute("rightClicked") === "true") {
+        td[nextTileValue].setAttribute("rightClicked", false);
+        td[nextTileValue].innerHTML = "";
+        buttonFlagCounter += 1;
+        document.querySelector(".flagCounter").innerHTML = buttonFlagCounter;
+      }
+    }
+  }
+}
+
 function leftClick() {
   let currTile = this;
   // return if currTile is right clicked (flagged); otherwise proceed
@@ -270,6 +308,11 @@ function leftClick() {
   currTile.style.backgroundColor = "#707070"; //gray=808080
   scanMineRadius(currTile);
   currTile.removeEventListener("click", leftClick);
+
+  if (currTile.innerHTML === "") {
+    floodFill(currTile);
+  }
+
   if (document.querySelectorAll("td").length - visitedTiles.length === numMines) {
     gameWon();
   }
