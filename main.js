@@ -212,8 +212,11 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
       buttonFlagCounter += 1; // update the total flag counter by 'returning' the flag to the counter
       document.querySelector(".flagCounter").innerHTML = buttonFlagCounter;
     }
-    td.style.backgroundColor = "#707070";
     scanMineRadius(td);
+    if (td.innerHTML === "") {
+      floodFill(td);
+    }
+    td.style.backgroundColor = "#707070";
   });
 
   // after doing initial click, for each td element:
