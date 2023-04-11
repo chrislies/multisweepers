@@ -293,6 +293,7 @@ function floodFill(tile) {
         td[nextTileValue].innerHTML = "";
         buttonFlagCounter += 1;
         document.querySelector(".flagCounter").innerHTML = buttonFlagCounter;
+        scanMineRadius(td[nextTileValue]);
       }
     }
   }
@@ -301,7 +302,7 @@ function floodFill(tile) {
 function leftClick() {
   let currTile = this;
   // return if currTile is right clicked (flagged); otherwise proceed
-  if (currTile.getAttribute("rightClicked") === "true") { return; }
+  if (currTile.getAttribute("rightClicked") === "true" || gameOver) { return; }
   if (randomMines.includes(parseInt(currTile.dataset.value))) {
     gameLost();
     return;
@@ -310,10 +311,7 @@ function leftClick() {
     visitedTiles.push(currTile);  // this prevents currTile from being pushed more than once (ex. if user clicks too fast)
   }
   // console.log(`[LEFT CLICK]` + " on tile " + currTile.dataset.value);
-  document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/shocked-icon.png' alt='buddy-shocked'>";
-  setTimeout(() => {
-    document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/smile-icon.png' alt='buddy-smile'>";
-  }, 1000);
+  document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/smile-icon.png' alt='buddy-smile'>";
   currTile.style.backgroundColor = "#707070"; //gray=808080
   scanMineRadius(currTile);
   currTile.removeEventListener("click", leftClick);
@@ -321,7 +319,6 @@ function leftClick() {
   if (currTile.innerHTML === "") {
     floodFill(currTile);
   }
-
 
   if (document.querySelectorAll("td").length - visitedTiles.length === numMines) {
     gameWon();
