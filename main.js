@@ -121,9 +121,9 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
   if (document.querySelector(".flagButton").getAttribute("flagButtonClicked") === "true") {
     return;
   }
-  document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='../img/shocked-icon.png' alt='buddy-shocked'>";
+  document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/shocked-icon.png' alt='buddy-shocked'>";
   setTimeout(() => {
-    document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='../img/smile-icon.png' alt='buddy-smile'>";
+    document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/smile-icon.png' alt='buddy-smile'>";
   }, 1000);
   let initialTile = this;
   visitedTiles.push(initialTile);
@@ -315,7 +315,7 @@ function leftClick() {
     visitedTiles.push(currTile);  // this prevents currTile from being pushed more than once (ex. if user clicks too fast)
   }
   // console.log(`[LEFT CLICK]` + " on tile " + currTile.dataset.value);
-  document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='../img/smile-icon.png' alt='buddy-smile'>";
+  document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/smile-icon.png' alt='buddy-smile'>";
   currTile.style.backgroundColor = "#707070"; //gray=808080
   scanMineRadius(currTile);
   currTile.removeEventListener("click", leftClick);
@@ -338,15 +338,15 @@ const rightClickHandler = (event) => {
   if (!valueVisitedTiles.includes(parseInt(currTile.dataset.value))) {
     if (currTile.getAttribute("rightClicked") === "false") {
       // console.log(`[RIGHT CLICK]` + " on tile " + currTile.dataset.value);
-      currTile.innerHTML = "<img src='../img/flag-icon.png' alt='flag'>";
+      currTile.innerHTML = "<img src='./img/flag-icon.png' alt='flag'>";
       // currTile.style.backgroundColor = "orange";
       currTile.setAttribute("rightClicked", true);
       buttonFlagCounter -= 1;
       document.querySelector(".flagCounter").innerHTML = buttonFlagCounter;
     } else {
-      document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='../img/nervous-icon.png' alt='buddy-nervous'>";
+      document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/nervous-icon.png' alt='buddy-nervous'>";
       setTimeout(() => {
-        document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='../img/smile-icon.png' alt='buddy-smile'>";
+        document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/smile-icon.png' alt='buddy-smile'>";
       }, 1000);
       currTile.innerHTML = "";
       // currTile.style.backgroundColor = "lightgray";
@@ -404,15 +404,15 @@ function setFlagHandler() {
   let valueVisitedTiles = visitedTiles.map(td => parseInt(td.dataset.value));
   if (!valueVisitedTiles.includes(parseInt(currTile.dataset.value))) {
     if (currTile.getAttribute("rightClicked") === "false") {
-      currTile.innerHTML = "<img src='../img/flag-icon.png' alt='flag'>";
+      currTile.innerHTML = "<img src='./img/flag-icon.png' alt='flag'>";
       // currTile.style.backgroundColor = "orange";
       currTile.setAttribute("rightClicked", true);
       buttonFlagCounter -= 1;
       document.querySelector(".flagCounter").innerHTML = buttonFlagCounter;
     } else {
-      document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='../img/nervous-icon.png' alt='buddy-nervous'>";
+      document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/nervous-icon.png' alt='buddy-nervous'>";
       setTimeout(() => {
-        document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='../img/smile-icon.png' alt='buddy-smile'>";
+        document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/smile-icon.png' alt='buddy-smile'>";
       }, 1000);
       currTile.innerHTML = "";
       // currTile.style.backgroundColor = "lightgray";
@@ -425,7 +425,7 @@ function setFlagHandler() {
 
 function createBuddy() {
   const bButton = document.createElement("button");
-  bButton.innerHTML = "<img class='buddyImg' src='../img/smile-icon.png' alt='buddy-smile'>";
+  bButton.innerHTML = "<img class='buddyImg' src='./img/smile-icon.png' alt='buddy-smile'>";
   bButton.classList.add("buddyButton");
   bButton.addEventListener("click", buddyButtonClick);
   document.body.insertBefore(bButton, document.querySelector("#game-window"));
@@ -440,13 +440,13 @@ function buddyButtonClick() {
 function gameLost() {
   gameOver = true;
   console.log(`[GAME OVER]`);
-  document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='../img/dizzy-icon.png' alt='buddy-dizzy'>";
+  document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/dizzy-icon.png' alt='buddy-dizzy'>";
   let tdElements = document.querySelectorAll("td");
   randomMines.forEach(td => {
-    tdElements[td].innerHTML = "<img src='../img/bomb-icon.png' alt='bomb'>";
+    tdElements[td].innerHTML = "<img src='./img/bomb-icon.png' alt='bomb'>";
     tdElements[td].style.backgroundColor = "brown";
     if (tdElements[td].getAttribute("rightClicked") === "true") {
-      tdElements[td].innerHTML += "<img class='flagOnMine' src='../img/flag-icon.png' alt='flag'>";
+      tdElements[td].innerHTML += "<img class='flagOnMine' src='./img/flag-icon.png' alt='flag'>";
     }
   });
   tdElements.forEach(td => {
@@ -463,7 +463,7 @@ function gameLost() {
 function gameWon() {
   gameOver = true;
   console.log(`[GAME WON]`);
-  document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='../img/chill-icon.png' alt='buddy-chill'>";
+  document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/chill-icon.png' alt='buddy-chill'>";
   let tdElements = document.querySelectorAll("td");
   tdElements.forEach(td => {
     td.removeEventListener("click", leftClick);
