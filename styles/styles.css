@@ -1,0 +1,132 @@
+body {
+  background-color: #79b799;
+}
+
+* {
+  /* user-select: none; prevents elements from being highlighted */
+  user-select: none;
+  padding: 0;
+  margin: 0;
+}
+
+.selection {
+  margin-top: 20px;
+}
+
+label {
+  color: white;
+}
+
+table {
+  margin: 0 auto;
+  border-spacing: 0;
+  border-style: solid;
+  border-color: black;
+  border-width: 2px;
+}
+
+td {
+  position: relative;
+  height: 25px;
+  width: 25px;
+  text-align: center;
+  background-color: lightgray;
+  border-style: solid;
+  border-color: gray;
+  border-width: 1px;
+}
+
+td:hover {
+  background-color: rgba(200, 200, 200, 1);
+}
+
+.selection {
+  text-align: center;
+}
+
+button {
+  all: unset;
+  margin: 0 auto;
+  display: block;
+  position: relative;
+  margin-top: 30px;
+  cursor: pointer;
+  border-style: solid;
+  border-width: 2px;
+  border-color: black;
+}
+
+button:hover {
+  background-color: rgba(200, 200, 200, 1);
+}
+
+button:active {
+  box-shadow: inset 0px 0px 10px 0px black;
+  transform: scale(.95);
+}
+
+.playAgainButton {
+  background-color: lightgray;
+  text-align: center;
+  padding: 5px;
+  margin-top: 10px;
+  border-radius: 10px;
+}
+
+.flagButton {
+  width: 50px;
+  height: 50px;
+  margin-top: 10px;
+  background: lightgray url(../img/flag-icon.png);
+  background-repeat: no-repeat;
+  background-position: 50%;
+}
+
+button .flagCounter {
+  font-size: 10px;
+  font-weight: 700;
+  color: brown;
+  position: absolute;
+  top: 0px;
+  left: 2px;
+}
+
+.buddyButton {
+  width: 20px;
+  height: 20px;
+  background-color: lightgray;
+  text-align: center;
+  padding: 5px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  /* background: lightgray url(./img/smile-icon.png);
+  background-repeat: no-repeat;
+  background-position: 50%; */
+}
+
+.buddyImg {
+  max-width: 25px;
+}
+
+img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 60%;
+  height: auto;
+  display: block;
+  margin: auto;
+  pointer-events: none;
+}
+
+img.flagOnMine {
+  position: absolute;
+  top: 30%;
+  left: 20%;
+  max-width: 50%;
+  height: auto;
+  display: block;
+  margin: auto;
+  pointer-events: none;
+}
