@@ -1,23 +1,95 @@
+*::before,
+*::after,
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
 body {
   background-color: #79b799;
 }
 
-* {
-  /* user-select: none; prevents elements from being highlighted */
-  user-select: none;
-  padding: 0;
-  margin: 0;
+#header {
+  font-size: 25px;
+  position: absolute;
+  top: 3%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
-.selection {
-  margin-top: 20px;
+p,
+label,
+input,
+#choice,
+#joinServerButton {
+  font-size: 12px;
 }
 
+p,
 label {
   color: white;
 }
 
-table {
+#playerCountBox p {
+  font-size: 20px;
+  position: absolute;
+  right: 0;
+}
+
+select,
+input {
+  height: 25px;
+}
+
+button,
+#joinServerButton {
+  cursor: pointer;
+}
+
+#container {
+  border: 2px solid black;
+  position: absolute;
+  /* top, right, bottom, left */
+  /* inset: 10% 20% 10% 20%; */
+  top: 50%;
+  /* aligns the top edge to the vertical center of the parent container */
+  left: 50%;
+  /* aligns the left edge to the horizontal center of the parent container */
+  transform: translate(-50%, -50%);
+  /* moves the div back and scales it up */
+  display: grid;
+  grid-template-columns: 20% 80%;
+  /* grid-template-columns: 20% 70% 10%; */
+  /* grid-template-rows: 10% 90%; */
+}
+
+#sidebar * {
+  width: 100%;
+  /* border: 1px solid red; */
+}
+
+#sidebar {
+  display: flex;
+  flex-flow: column wrap;
+  justify-content: center;
+  row-gap: 50px;
+  padding: 5px;
+}
+
+#gameBoard {
+  /* display: flex; */
+  /* flex-flow: column wrap; */
+  /* justify-content: center; */
+  padding: 10px;
+  text-align: center;
+}
+
+#gameWindow {
   margin: 0 auto;
   border-spacing: 0;
   border-style: solid;
@@ -40,37 +112,28 @@ td:hover {
   background-color: rgba(200, 200, 200, 1);
 }
 
-.selection {
-  text-align: center;
-}
-
 button {
   all: unset;
-  margin: 0 auto;
-  display: block;
   position: relative;
-  margin-top: 30px;
   cursor: pointer;
   border-style: solid;
   border-width: 2px;
   border-color: black;
 }
 
-button:hover {
-  background-color: rgba(200, 200, 200, 1);
-}
-
-button:active {
-  box-shadow: inset 0px 0px 10px 0px black;
-  transform: scale(.95);
-}
-
-.playAgainButton {
+.buddyButton {
+  display: flex;
+  margin: 0 auto;
+  width: 20px;
+  height: 20px;
   background-color: lightgray;
   text-align: center;
   padding: 5px;
-  margin-top: 10px;
-  border-radius: 10px;
+  margin-top: 0;
+  margin-bottom: 10px;
+  /* background: lightgray url(./img/smile-icon.png);
+  background-repeat: no-repeat;
+  background-position: 50%; */
 }
 
 .flagButton {
@@ -82,6 +145,17 @@ button:active {
   background-position: 50%;
 }
 
+img.flagOnMine {
+  position: absolute;
+  top: 30%;
+  left: 20%;
+  max-width: 50%;
+  height: auto;
+  display: block;
+  margin: auto;
+  pointer-events: none;
+}
+
 button .flagCounter {
   font-size: 10px;
   font-weight: 700;
@@ -91,17 +165,21 @@ button .flagCounter {
   left: 2px;
 }
 
-.buddyButton {
-  width: 20px;
-  height: 20px;
+.playAgainButton {
+  max-width: 80px;
   background-color: lightgray;
   text-align: center;
   padding: 5px;
-  margin-top: 10px;
-  margin-bottom: 10px;
-  /* background: lightgray url(./img/smile-icon.png);
-  background-repeat: no-repeat;
-  background-position: 50%; */
+  align-items: center;
+  margin-left: 10px;
+  border-radius: 10px;
+}
+
+#joinServerButton:hover,
+.playAgainButton:hover,
+.buddyButton:hover,
+.flagButton:hover {
+  opacity: .75;
 }
 
 .buddyImg {
@@ -120,13 +198,6 @@ img {
   pointer-events: none;
 }
 
-img.flagOnMine {
-  position: absolute;
-  top: 30%;
-  left: 20%;
-  max-width: 50%;
-  height: auto;
-  display: block;
-  margin: auto;
-  pointer-events: none;
+#joinServerButton {
+  background-color: lightgray;
 }
