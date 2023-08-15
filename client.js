@@ -139,7 +139,7 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
   document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/shocked-icon.png' alt='buddy-shocked'>";
   setTimeout(() => {
     document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/smile-icon.png' alt='buddy-smile'>";
-  }, 800);
+  }, 400);
   let initialTile = this;
   visitedTiles.push(initialTile);
   let tableSize = document.querySelectorAll("td").length - 1; // get the last td element to determine tableSize
@@ -362,7 +362,7 @@ const rightClickHandler = (event) => {
       document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/nervous-icon.png' alt='buddy-nervous'>";
       setTimeout(() => {
         document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/smile-icon.png' alt='buddy-smile'>";
-      }, 1000);
+      }, 600);
       currTile.innerHTML = "";
       // currTile.style.backgroundColor = "lightgray";
       currTile.setAttribute("rightClicked", false);
@@ -504,7 +504,7 @@ function setFlagHandler() {
       document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/nervous-icon.png' alt='buddy-nervous'>";
       setTimeout(() => {
         document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/smile-icon.png' alt='buddy-smile'>";
-      }, 1000);
+      }, 600);
       currTile.innerHTML = "";
       // currTile.style.backgroundColor = "lightgray";
       currTile.setAttribute("rightClicked", false);
