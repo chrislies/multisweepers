@@ -1,7 +1,7 @@
 let socket = new WebSocket("ws://localhost:8080");
 socket.onmessage = onMessage;
 
-let clientId;
+let clientId, gameId;
 const playerCountTag = document.querySelector(".playerCount");
 
 function onMessage(msg) {
@@ -10,13 +10,21 @@ function onMessage(msg) {
   switch (data.tag) {
     case "connected":
       clientId = data.clientId;
-      initGame();
       console.log("Received connected message, clientId:", data.clientId);
+      break;
+    case "gameGenerated":
+      gameId = data.gameId;
+      console.log("Received connected message, gameId:", data.gameId);
+      // initGame();
       break;
     case "playerCount":
       playerCountTag.innerText = data.count;
       break;
   }
+}
+
+socket.onclose = function(event) {
+
 }
 
 const gameServers = [];
@@ -374,9 +382,9 @@ const rightClickHandler = (event) => {
 
 
 function initGame() {
-  let gameId = generateGameId(4);
+  let gameId = generateGameId();
   while (gameServers.includes(gameId)) {
-    gameId = generateGameId(4);
+    gameId = generateGameId();
     if (gameServers.length === Math.pow(9, 4)) {  // 9^4 possible servers (6561)
       console.log("MAXIMUM SERVERS REACHED");
       return;
@@ -588,16 +596,16 @@ function playAgain() {
   }
 }
 
-function generateGameId(size) {
-  let id = "";
-  const data = "0123456789";
-  for (let i = 0; i < size; i++) {
-    id += data.charAt(Math.floor(Math.random() * data.length));
-  }
-  const serverCode = document.querySelector("#serverCode");
-  serverCode.innerText = id;
-  return id;
-}
+// function generateGameId() {
+//   let id = "";
+//   const data = "0123456789";
+//   for (let i = 0; i < 4; i++) {
+//     id += data.charAt(Math.floor(Math.random() * data.length));
+//   }
+//   const serverCode = document.querySelector("#serverCode");
+//   serverCode.innerText = id;
+//   return id;
+// }
 
 class Minesweeper {
   createGame() {

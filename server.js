@@ -7,11 +7,20 @@ let games = {};
 
 socket.on("request", (req) => {
   const connection = req.accept(null, req.origin);
+  
+  connection.on('close', () => {})
+  
   const clientId = generateClientId();
+  const gameId = generateGameId();
   clients[clientId] = { "connection": connection };
+  games[gameId] = { "gameGenerated": connection };
   connection.send(JSON.stringify({
     "tag": "connected",
     "clientId": clientId
+  }));
+  connection.send(JSON.stringify({
+    "tag": "gameGenerated",
+    "gameId": gameId
   }));
   sendPlayerCount();
 });
@@ -27,13 +36,24 @@ function sendPlayerCount() {
 
 }
 
-
 function generateClientId() {
   let id = "";
   const data = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   for (let i = 0; i < 10; i++) {
     id += data.charAt(Math.floor(Math.random() * data.length));
   }
-  console.log(id);
+  console.log(`Client id: ${id}`);
+  return id;
+}
+
+function generateGameId() {
+  let id = "";
+  const data = "0123456789";
+  for (let i = 0; i < 4; i++) {
+    id += data.charAt(Math.floor(Math.random() * data.length));
+  }
+  console.log(`Game id: ${id}`);
+  // const serverCode = document.querySelector("#serverCode");
+  // serverCode.innerText = id;
   return id;
 }
