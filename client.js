@@ -1,12 +1,20 @@
 let socket = new WebSocket("ws://localhost:8080");
-socket.onmessage = onMessage;
-
-let clientId, gameId;
+let clientId;
+let gameId;
 const playerCountTag = document.querySelector(".playerCount");
 
-function onMessage(msg) {
+
+socket.addEventListener("open", (event) => {
+  const payLoad = {
+    "method": "instantiate",
+    "clientId": clientId
+  }
+  socket.send(JSON.stringify(payLoad));
+})
+
+socket.onmessage = function(msg) {
   const data = JSON.parse(msg.data);
-  console.log("Parsed data:", data);
+  // console.log("Parsed data:", data);
   switch (data.tag) {
     case "connected":
       clientId = data.clientId;
@@ -595,24 +603,3 @@ function playAgain() {
     generateHard();
   }
 }
-
-// function generateGameId() {
-//   let id = "";
-//   const data = "0123456789";
-//   for (let i = 0; i < 4; i++) {
-//     id += data.charAt(Math.floor(Math.random() * data.length));
-//   }
-//   const serverCode = document.querySelector("#serverCode");
-//   serverCode.innerText = id;
-//   return id;
-// }
-
-class Minesweeper {
-  createGame() {
-
-  };
-
-  initialClick() {
-
-  };
-};

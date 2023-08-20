@@ -1,3 +1,5 @@
+const { connection } = require("websocket");
+
 const http = require("http").createServer().listen(8080, console.log("Listening on port 8080"));
 const server = require("websocket").server;
 const socket = new server({ "httpServer": http });
@@ -7,23 +9,41 @@ let games = {};
 
 socket.on("request", (req) => {
   const connection = req.accept(null, req.origin);
-  
-  connection.on('close', () => {})
+  connection.on("open", connectionOpened)
+  connection.on("close", () => {});
+  connection.on("message", messageHandler);
   
   const clientId = generateClientId();
-  const gameId = generateGameId();
   clients[clientId] = { "connection": connection };
-  games[gameId] = { "gameGenerated": connection };
   connection.send(JSON.stringify({
-    "tag": "connected",
+    "method": "connected",
     "clientId": clientId
   }));
-  connection.send(JSON.stringify({
-    "tag": "gameGenerated",
-    "gameId": gameId
-  }));
-  sendPlayerCount();
 });
+
+function connectionOpened() {
+  connection.send("Connection with server opened");
+}
+
+function messageHandler(message) {
+  const msg = JSON.parse(message.utf8Data);
+  let localPlayer = {};
+  switch (msg.method) {
+    case "instantiate":
+      localPlayer = {
+        "clientId" : msg.clientId,
+        "wins" : 0,
+        "oopsies" : 0
+      }
+      const gameId = generateGameId;
+      games[gameId] = {
+        "gameId": gameId,
+        "players": Array(localPlayer),
+
+      }
+
+  }
+}
 
 function sendPlayerCount() {
   let totalPlayers = Object.keys(clients).length;
