@@ -4,13 +4,13 @@ let gameId;
 const playerCountTag = document.querySelector(".playerCount");
 
 
-socket.addEventListener("open", (event) => {
+socket.onopen = function(event) {
   const payLoad = {
     "method": "instantiate",
     "clientId": clientId
   }
   socket.send(JSON.stringify(payLoad));
-})
+}
 
 socket.onmessage = function(msg) {
   const data = JSON.parse(msg.data);

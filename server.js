@@ -14,10 +14,13 @@ socket.on("request", (req) => {
   connection.on("message", messageHandler);
   
   const clientId = generateClientId();
-  clients[clientId] = { "connection": connection };
+  clients[clientId] = { 
+    "clientId" : clientId,
+    "connection": connection 
+  };
   connection.send(JSON.stringify({
     "method": "connected",
-    "clientId": clientId
+    "clientId": clients[clientId].clientId
   }));
 });
 
@@ -30,18 +33,41 @@ function messageHandler(message) {
   let localPlayer = {};
   switch (msg.method) {
     case "instantiate":
+      console.log("server.js, case 'instantiate'")
       localPlayer = {
         "clientId" : msg.clientId,
         "wins" : 0,
         "oopsies" : 0
       }
-      const gameId = generateGameId;
+      const gameId = generateGameId();
       games[gameId] = {
         "gameId": gameId,
-        "players": Array(localPlayer),
+        "players": [localPlayer],
 
       }
+      const payLoad = {
+        "method": "instantiated",
+        "game": games[gameId]
+      }
+      clients[msg.clientId].connection.send(JSON.stringify(payLoad));
+      sendAvailableGames();
+      break;
+  }
+}
 
+function sendAvailableGames() {
+  const allGames = [];
+  for (const i of Object.keys(games)) {
+    if (games[i].players.length < 2) {
+      allGames.push(games[i].gameId);
+    }
+  }
+  const payLoad = {
+    "method" : "availableGames",
+    "games" : allGames
+  }
+  for (const c of Object.keys(clients)) {
+    clients[c].connection.send(JSON.stringify(payLoad));
   }
 }
 
