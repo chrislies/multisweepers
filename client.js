@@ -1,41 +1,3 @@
-let socket = new WebSocket("ws://localhost:8080");
-let clientId;
-let gameId;
-const playerCountTag = document.querySelector(".playerCount");
-
-
-socket.onopen = function(event) {
-  const payLoad = {
-    "method": "instantiate",
-    "clientId": clientId
-  }
-  socket.send(JSON.stringify(payLoad));
-  console.log("client.js - sending 'instantiate' method to server");
-}
-
-socket.onmessage = function(msg) {
-  const data = JSON.parse(msg.data);
-  // console.log("Parsed data:", data);
-  switch (data.tag) {
-    case "connected":
-      clientId = data.clientId;
-      console.log("Received connected message, clientId:", data.clientId);
-      break;
-    case "gameGenerated":
-      gameId = data.gameId;
-      console.log("Received connected message, gameId:", data.gameId);
-      // initGame();
-      break;
-    case "playerCount":
-      playerCountTag.innerText = data.count;
-      break;
-  }
-}
-
-socket.onclose = function(event) {
-
-}
-
 const gameServers = [];
 const joinServerButton = document.querySelector("#joinServerButton");
 
@@ -607,3 +569,22 @@ function playAgain() {
     generateHard();
   }
 }
+
+let socket = new WebSocket("ws://localhost:8080");
+let clientId;
+let gameId;
+
+let multiplayerButton = document.querySelector("#multiplayerButton");
+multiplayerButton.addEventListener("clicK", (src)=> {
+    socket = new WebSocket("ws://localhost:8080");
+    socket.onmessage = onMessage;
+})
+
+function onMessage(msg) {
+    const data = JSON.parse(msg.data);
+    switch(data.method) {
+        
+    }
+}
+
+generateEasy();
