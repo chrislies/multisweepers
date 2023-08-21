@@ -10,6 +10,7 @@ socket.onopen = function(event) {
     "clientId": clientId
   }
   socket.send(JSON.stringify(payLoad));
+  console.log("client.js - sending 'instantiate' method to server");
 }
 
 socket.onmessage = function(msg) {
@@ -80,6 +81,7 @@ function generateEasy() {
   container.style.transform = "translate(-50%, -50%) scale(2.2)";
   createBuddy();
   createFlagButton();
+  paintContainerGrids();
 }
 
 function generateMedium() {
@@ -112,6 +114,7 @@ function generateMedium() {
   container.style.transform = "translate(-50%, -50%) scale(1.6)";
   createBuddy();
   createFlagButton();
+  paintContainerGrids();
 }
 
 function generateHard() {
@@ -145,6 +148,7 @@ function generateHard() {
   container.style.transform = "translate(-50%, -50%) scale(1.6)";
   createBuddy();
   createFlagButton();
+  paintContainerGrids();
 }
 
 function initialClick() { // clear x surrounding tiles upon inital click on one of the tiles

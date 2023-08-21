@@ -1,15 +1,16 @@
-const http = require("http").createServer().listen(8080, console.log("Listening on port 8080"));
-const server = require("websocket").server;
-const socket = new server({"httpServer":http});
+const { send } = require("process");
 
 let clients = {};
 let games = {};
+
+const http = require("http").createServer().listen(8080, console.log("Listening on port 8080"));
+const server = require("websocket").server;
+const socket = new server({"httpServer":http});
 
 socket.on("request", (req) => {
   const connection = req.accept(null, req.origin);
   const clientId = generateClientId();
   clients[clientId] = { 
-    "clientId" : clientId,
     "connection": connection 
   };
   connection.send(JSON.stringify({
@@ -28,7 +29,7 @@ function messageHandler(message) {
   switch (msg.method) {
     case "instantiate":
       console.log("server.js, case 'instantiate'")
-      localPlayer = {
+      player = {
         "clientId" : msg.clientId,
         "wins" : 0,
         "oopsies" : 0
@@ -36,7 +37,7 @@ function messageHandler(message) {
       const gameId = generateGameId();
       games[gameId] = {
         "gameId": gameId,
-        "players": [localPlayer],
+        "players": [player],
 
       }
       const payLoad = {
@@ -50,18 +51,17 @@ function messageHandler(message) {
 }
 
 function sendAvailableGames() {
-  const allGames = [];
-  for (const i of Object.keys(games)) {
-    if (games[i].players.length < 2) {
-      allGames.push(games[i].gameId);
+  const gamesList = [];
+  for (const game in games) {
+    if (games[game].players.length < 2) {
+      gamesList.push(game);
     }
   }
-  const payLoad = {
-    "method" : "availableGames",
-    "games" : allGames
-  }
-  for (const c of Object.keys(clients)) {
-    clients[c].connection.send(JSON.stringify(payLoad));
+  for(const client in clients) {
+    clients[client].connection.send(JSON.stringify({
+      "method" : "gamesList",
+      "list" : gamesList
+    }));
   }
 }
 
