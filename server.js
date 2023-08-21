@@ -1,18 +1,12 @@
-const { connection } = require("websocket");
-
 const http = require("http").createServer().listen(8080, console.log("Listening on port 8080"));
 const server = require("websocket").server;
-const socket = new server({ "httpServer": http });
+const socket = new server({"httpServer":http});
 
 let clients = {};
 let games = {};
 
 socket.on("request", (req) => {
   const connection = req.accept(null, req.origin);
-  connection.on("open", connectionOpened)
-  connection.on("close", () => {});
-  connection.on("message", messageHandler);
-  
   const clientId = generateClientId();
   clients[clientId] = { 
     "clientId" : clientId,
@@ -20,13 +14,13 @@ socket.on("request", (req) => {
   };
   connection.send(JSON.stringify({
     "method": "connected",
-    "clientId": clients[clientId].clientId
+    "clientId": clientId
   }));
+  sendAvailableGames();
+  connection.on("message", messageHandler);
 });
 
-function connectionOpened() {
-  connection.send("Connection with server opened");
-}
+
 
 function messageHandler(message) {
   const msg = JSON.parse(message.utf8Data);
