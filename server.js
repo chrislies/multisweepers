@@ -10,18 +10,18 @@ const socket = new server({"httpServer":http});
 socket.on("request", (req) => {
   const connection = req.accept(null, req.origin);
   const clientId = generateClientId();
+  const gameId = generateGameId();
   clients[clientId] = { 
     "connection": connection 
   };
   connection.send(JSON.stringify({
     "method": "connected",
-    "clientId": clientId
+    "clientId": clientId,
+    "gameId": gameId
   }));
   sendAvailableGames();
   connection.on("message", messageHandler);
 });
-
-
 
 function messageHandler(message) {
   const msg = JSON.parse(message.utf8Data);
@@ -88,9 +88,15 @@ function generateClientId() {
 
 function generateGameId() {
   let id = "";
+  let temp;
   const data = "0123456789";
-  for (let i = 0; i < 4; i++) {
-    id += data.charAt(Math.floor(Math.random() * data.length));
+  // generate a 4 digit game id that does not start with zero
+  while (id.length < 4) {
+    temp = data.charAt(Math.floor(Math.random() * data.length));
+    while (id.length == 0 && temp == 0) {
+      temp = data.charAt(Math.floor(Math.random() * data.length))
+    }
+    id += temp;
   }
   console.log(`Game id: ${id}`);
   // const serverCode = document.querySelector("#serverCode");

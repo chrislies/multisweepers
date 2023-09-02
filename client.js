@@ -1,5 +1,4 @@
 const gameServers = [];
-const joinServerButton = document.querySelector("#joinServerButton");
 
 const gw = document.querySelector("#gameWindow");
 let gameOver = false;
@@ -354,7 +353,6 @@ const rightClickHandler = (event) => {
   }
 };
 
-
 function initGame() {
   let gameId = generateGameId();
   while (gameServers.includes(gameId)) {
@@ -418,16 +416,6 @@ function playAgain() {
     generateHard();
   }
 }
-
-joinServerButton.addEventListener("click", (event) => {
-  event.preventDefault();
-  let serverCode = document.querySelector("#serverCodeInput").value.trim();
-  if (gameServers.includes(serverCode)) {
-    console.log("Server exists, joining");
-  } else {
-    console.log(`Server '${serverCode}' does not exist`);
-  }
-});
 
 function createFlagButton() {
   const gameBoard = document.querySelector("#gameBoard");
@@ -574,16 +562,27 @@ let socket = new WebSocket("ws://localhost:8080");
 let clientId;
 let gameId;
 
-let multiplayerButton = document.querySelector("#multiplayerButton");
-multiplayerButton.addEventListener("clicK", (src)=> {
-    socket = new WebSocket("ws://localhost:8080");
-    socket.onmessage = onMessage;
-})
+let joinServerButton = document.querySelector("#joinServerButton");
+joinServerButton.addEventListener("click", (event) => {
+  event.preventDefault();
+  let serverCode = document.querySelector("#serverCodeInput").value.trim();
+  if (gameServers.includes(serverCode)) {
+    console.log("Server exists, joining");
+  } else {
+    console.log(`Server '${serverCode}' does not exist`);
+  }
+});
 
+socket.onmessage = onMessage;
 function onMessage(msg) {
     const data = JSON.parse(msg.data);
     switch(data.method) {
-        
+        case "connected":
+          console.log("Client connected");
+          clientId = data.clientId;
+          gameId = data.gameId;
+          console.log(`Game id = ${gameId}`);
+          serverCode.innerHTML = gameId;
     }
 }
 
