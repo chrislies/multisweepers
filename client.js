@@ -1,5 +1,3 @@
-const gameServers = [];
-
 const gw = document.querySelector("#gameWindow");
 let gameOver = false;
 let numMines = 0;
@@ -353,21 +351,21 @@ const rightClickHandler = (event) => {
   }
 };
 
-function initGame() {
-  let gameId = generateGameId();
-  while (gameServers.includes(gameId)) {
-    gameId = generateGameId();
-    if (gameServers.length === Math.pow(9, 4)) {  // 9^4 possible servers (6561)
-      console.log("MAXIMUM SERVERS REACHED");
-      return;
-    }
-  }
-  gameServers.push(gameId);
-  console.log(`Game ID: ${gameId}`);
-  paintContainerGrids();
-  generateEasy();
+// function initGame() {
+//   let gameId = generateGameId();
+//   while (gameServers.includes(gameId)) {
+//     gameId = generateGameId();
+//     if (gameServers.length === Math.pow(9, 4)) {  // 9^4 possible servers (6561)
+//       console.log("MAXIMUM SERVERS REACHED");
+//       return;
+//     }
+//   }
+//   gameServers.push(gameId);
+//   console.log(`Game ID: ${gameId}`);
+//   paintContainerGrids();
+//   generateEasy();
 
-};
+// };
 
 function paintContainerGrids() {
   const sidebar = document.querySelector("#sidebar");
@@ -558,9 +556,12 @@ function playAgain() {
   }
 }
 
-let socket = new WebSocket("ws://localhost:8080");
+let socket;
+let gameServers = [];
 let clientId;
-let gameId;
+let serverId;
+let username;
+const list = document.querySelector("ul");
 
 let joinServerButton = document.querySelector("#joinServerButton");
 joinServerButton.addEventListener("click", (event) => {
@@ -568,21 +569,44 @@ joinServerButton.addEventListener("click", (event) => {
   let serverCode = document.querySelector("#serverCodeInput").value.trim();
   if (gameServers.includes(serverCode)) {
     console.log("Server exists, joining");
+    const payLoad = {
+      "method" : "join server",
+      "clientId" : clientId
+    }
   } else {
     console.log(`Server '${serverCode}' does not exist`);
   }
 });
 
+socket = new WebSocket("ws://localhost:8080");
 socket.onmessage = onMessage;
 function onMessage(msg) {
     const data = JSON.parse(msg.data);
     switch(data.method) {
-        case "connected":
-          console.log("Client connected");
-          clientId = data.clientId;
-          gameId = data.gameId;
-          console.log(`Game id = ${gameId}`);
-          serverCode.innerHTML = gameId;
+      case "connected":
+        console.log("Client connected");
+        clientId = data.clientId;
+        serverId = data.serverId;
+        console.log(`Server id = ${serverId}`);
+        serverCode.innerHTML = serverId;
+        document.querySelector("#playerCount").innerHTML += 1
+        document.querySelector("#username").innerHTML = data.username;
+        break;
+      case "serversList":
+        console.log(`data.list = ${data.list}`);
+        // for each element of the servers[], we want to create a list item and insert it into the ul
+        // first remove and then repopulate the list in the sidebar
+        while(list.firstChild) {
+          list.removeChild(list.lastChild);
+        }
+        const servers = data.list;
+        servers.forEach(server=>{
+          console.log(`Server = ${server}`);
+          const li = document.createElement("li");
+          li.innerText = server;
+          list.appendChild(li);
+        })
+        break;
     }
 }
 

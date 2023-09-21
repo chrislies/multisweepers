@@ -36,10 +36,15 @@ label {
   color: white;
 }
 
-#playerCountBox p {
-  font-size: 20px;
+#playerCountBox {
   position: absolute;
   right: 0;
+  padding: 10px;
+  background-color: rgba(0,0,0,0.5);
+}
+#playerCountBox * {
+  color: white;
+  font-size: 20px;
 }
 
 select,
