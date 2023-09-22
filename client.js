@@ -250,6 +250,9 @@ function scanMineRadius(tile) {
     }
     if (mineCounter > 0) {
       tile.innerHTML = mineCounter;
+      tile.onselectstart = function() { // prevent mineCounter text from being highlighted
+        return false;
+      }
     }
   }
 }
