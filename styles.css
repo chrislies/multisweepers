@@ -189,6 +189,10 @@ img.flagOnMine {
   border-radius: 10px;
 }
 
+.playAgainButton:active {
+  transform: translate(.35px, .35px);
+}
+
 #joinServerButton:hover,
 .playAgainButton:hover,
 .buddyButton:hover,

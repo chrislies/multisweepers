@@ -499,8 +499,10 @@ function buddyButtonClick() {
 
 function createPlayAgainButton() {
   const playAgainButton = document.createElement("button");
+  const textSpan = document.createElement("span");
   const playAgainText = document.createTextNode("Play Again");
-  playAgainButton.appendChild(playAgainText);
+  textSpan.appendChild(playAgainText)
+  playAgainButton.appendChild(textSpan);
   const gameBoard = document.querySelector("#gameBoard");
   gameBoard.append(playAgainButton);
   playAgainButton.classList.add("playAgainButton");
