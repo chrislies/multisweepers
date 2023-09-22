@@ -21,6 +21,7 @@ socket.on("request", (req) => {
   }
   const players = Array(player);
   servers[serverId] = {
+    "serverId": serverId,
     "players": players
   }
   connection.send(JSON.stringify({
@@ -29,11 +30,36 @@ socket.on("request", (req) => {
     "serverId": serverId,
     "username": username
   }));
-  console.log("calling sendAvailableServers()");
   sendAvailableServers(); // from servers table, filter out servers player can join and send to all clients
   connection.on("message", onMessage);
 });
 
+function onMessage(message) {
+  const msg = JSON.parse(message.utf8Data);
+  let localPlayer = {};
+  switch (msg.method) {
+    case "instantiate":
+      console.log("server.js, case 'instantiate'")
+      player = {
+        "clientId" : msg.clientId,
+        "wins" : 0,
+        "oofs" : 0
+      }
+      const serverId = generateserverId();
+      servers[serverId] = {
+        "serverId": serverId,
+        "players": [player],
+
+      }
+      const payLoad = {
+        "method": "instantiated",
+        "server": servers[serverId]
+      }
+      clients[msg.clientId].connection.send(JSON.stringify(payLoad));
+      sendAvailableServers();
+      break;
+  }
+}
 
 function sendAvailableServers() {
   // for each client, send them this servers array
@@ -46,39 +72,10 @@ function sendAvailableServers() {
   }
   for(const client in clients) {
     clients[client].connection.send(JSON.stringify({
-      "method" : "serversList",
+      "method" : "updateServersList",
       "list" : serversList
     }));
   }
-}
-
-
-// function sendAvailableGames() {
-//   const gamesList = [];
-//   for (game in games) {
-//     gamesList.push(games[game].gameId);
-//     console.log("game:");
-//     console.log(game);
-//   }
-//   // console.log(gamesList);
-//   for(const client of Object.keys(clients)) {
-//     clients[client].connection.send(JSON.stringify({
-//       "method" : "gamesAvailable",
-//       "games" : gamesList
-//     }));
-//   }
-//   console.log("done w/ sendAvailableGames()");
-// }
-
-function sendPlayerCount() {
-  let totalPlayers = Object.keys(clients).length;
-  Object.keys(clients).forEach((client) => {
-    clients[client].connection.send(JSON.stringify({
-      "method": "playerCount",
-      "count": totalPlayers
-    }));
-  });
-
 }
 
 function generateName() {
@@ -95,11 +92,14 @@ function generateClientId() {
   for (let i = 0; i < 10; i++) {
     id += data.charAt(Math.floor(Math.random() * data.length));
   }
-  console.log(`Client id: ${id}`);
+  // console.log(`Client id: ${id}`);
   return id;
 }
 
 function generateServerId() {
+  // for (const server in servers) {
+  //   console.log(servers[server]);
+  // }
   let id = "";
   let temp;
   const data = "0123456789";
@@ -111,33 +111,6 @@ function generateServerId() {
     }
     id += temp;
   }
-  console.log(`Server id: ${id}`);
+  // console.log(`Server id: ${id}`);
   return id;
-}
-
-function onMessage(message) {
-  const msg = JSON.parse(message.utf8Data);
-  let localPlayer = {};
-  switch (msg.method) {
-    case "instantiate":
-      console.log("server.js, case 'instantiate'")
-      player = {
-        "clientId" : msg.clientId,
-        "wins" : 0,
-        "oopsies" : 0
-      }
-      const serverId = generateserverId();
-      servers[serverId] = {
-        "serverId": serverId,
-        "players": [player],
-
-      }
-      const payLoad = {
-        "method": "instantiated",
-        "server": servers[serverId]
-      }
-      clients[msg.clientId].connection.send(JSON.stringify(payLoad));
-      sendAvailableServers();
-      break;
-  }
 }

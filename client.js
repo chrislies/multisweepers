@@ -592,7 +592,7 @@ function onMessage(msg) {
         document.querySelector("#playerCount").innerHTML += 1
         document.querySelector("#username").innerHTML = data.username;
         break;
-      case "serversList":
+      case "updateServersList":
         console.log(`data.list = ${data.list}`);
         // for each element of the servers[], we want to create a list item and insert it into the ul
         // first remove and then repopulate the list in the sidebar
@@ -601,7 +601,6 @@ function onMessage(msg) {
         }
         const servers = data.list;
         servers.forEach(server=>{
-          console.log(`Server = ${server}`);
           const li = document.createElement("li");
           li.innerText = server;
           list.appendChild(li);

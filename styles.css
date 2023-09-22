@@ -142,6 +142,10 @@ button {
   background-position: 50%; */
 }
 
+.buddyButton:active {
+  transform: translate(.35px, .35px);
+}
+
 .flagButton {
   width: 50px;
   height: 50px;
@@ -149,6 +153,19 @@ button {
   background: lightgray url(./img/flag-icon.png);
   background-repeat: no-repeat;
   background-position: 50%;
+}
+
+.flagButton:active {
+  transform: translate(.35px, .35px);
+}
+
+button.flagButton .flagCounter {
+  font-size: 10px;
+  font-weight: 700;
+  color: brown;
+  position: absolute;
+  top: 0px;
+  left: 2px;
 }
 
 img.flagOnMine {
@@ -160,15 +177,6 @@ img.flagOnMine {
   display: block;
   margin: auto;
   pointer-events: none;
-}
-
-button .flagCounter {
-  font-size: 10px;
-  font-weight: 700;
-  color: brown;
-  position: absolute;
-  top: 0px;
-  left: 2px;
 }
 
 .playAgainButton {
@@ -206,4 +214,12 @@ img {
 
 #joinServerButton {
   background-color: lightgray;
+}
+
+#joinServerButton span {
+  display: inline-block;
+}
+
+#joinServerButton:active span {
+  transform: translate(.35px, .35px);
 }
