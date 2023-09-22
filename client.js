@@ -250,8 +250,31 @@ function scanMineRadius(tile) {
     }
     if (mineCounter > 0) {
       tile.innerHTML = mineCounter;
-      tile.onselectstart = function() { // prevent mineCounter text from being highlighted
-        return false;
+      switch(mineCounter) {
+        case 1:
+          tile.style.color = "#0100fa"; 
+          break;
+        case 2:
+          tile.style.color = "#028002";
+          break;
+        case 3:
+          tile.style.color = "#fb0102";
+          break;
+        case 4:
+          tile.style.color = "#000081";
+          break;
+        case 5:
+          tile.style.color = "#7f0201";
+          break;
+        case 6:
+          tile.style.color = "#007f7e";
+          break;
+        case 7:
+          tile.style.color = "#000000";
+          break;
+        case 8:
+          tile.style.color = "#FFFFFF";
+          break;
       }
     }
   }
@@ -373,6 +396,9 @@ const rightClickHandler = (event) => {
 function paintContainerGrids() {
   const sidebar = document.querySelector("#sidebar");
   const gameBoard = document.querySelector("#gameBoard");
+  gameBoard.onselectstart = function() {  // prevent gameBoard contents from being highlighted
+    return false;
+  }
   const bgCol = getComputedStyle(document.body).backgroundColor;
   // bgCol = "rgb(r,g,b)"
   const r = bgCol.split(",")[0].split("(")[1];

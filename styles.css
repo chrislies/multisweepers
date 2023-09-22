@@ -112,6 +112,12 @@ td {
   border-style: solid;
   border-color: gray;
   border-width: 1px;
+  font-size: 90%;
+  font-weight:bold;
+  -webkit-text-stroke-width: .001px;
+  -webkit-text-stroke-color: black;
+  /* font-family: 'Russo One', sans-serif; */
+  font-family: 'Press Start 2P', cursive;
 }
 
 td:hover {
