@@ -598,15 +598,12 @@ let joinServerButton = document.querySelector("#joinServerButton");
 joinServerButton.addEventListener("click", (event) => {
   event.preventDefault();
   let serverCode = document.querySelector("#serverCodeInput").value.trim();
-  if (gameServers.includes(serverCode)) {
-    console.log("Server exists, joining");
-    const payLoad = {
-      "method" : "join server",
-      "clientId" : clientId
-    }
-  } else {
-    console.log(`Server '${serverCode}' does not exist`);
+  const payLoad = {
+    "method" : "joinServer",
+    "clientId" : clientId,
+    "serverId": serverCode
   }
+  socket.send(JSON.stringify(payLoad));
 });
 
 socket = new WebSocket("ws://localhost:8080");
@@ -637,7 +634,16 @@ function onMessage(msg) {
           list.appendChild(li);
         })
         break;
-    }
+      case "alreadyInServer":
+        console.log(`Already in server ${data.serverId}!`);
+        break;
+      case "joinedServer":
+        console.log(`Joining server "${data.serverId}"`);
+        break;
+      case "serverDNE":
+        console.log(`Server "${data.serverId}" does not exist!`);
+        break;
+      }
 }
 
 generateEasy();

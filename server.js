@@ -35,13 +35,13 @@ socket.on("request", (req) => {
 });
 
 function onMessage(message) {
-  const msg = JSON.parse(message.utf8Data);
+  const data = JSON.parse(message.utf8Data);
   let localPlayer = {};
-  switch (msg.method) {
+  switch (data.method) {
     case "instantiate":
       console.log("server.js, case 'instantiate'")
       player = {
-        "clientId" : msg.clientId,
+        "clientId" : data.clientId,
         "wins" : 0,
         "oofs" : 0
       }
@@ -55,8 +55,49 @@ function onMessage(message) {
         "method": "instantiated",
         "server": servers[serverId]
       }
-      clients[msg.clientId].connection.send(JSON.stringify(payLoad));
+      clients[data.clientId].connection.send(JSON.stringify(payLoad));
       sendAvailableServers();
+      break;
+    case "joinServer":
+      if (servers[data.serverId]) {  // Server exists
+        // Prevent user from joining own's server
+        let alreadyInServer = false;
+        for (const p of servers[data.serverId].players) {
+          console.log(p);
+          if (p.clientId == data.clientId) {  
+            alreadyInServer = true;
+            clients[data.clientId].connection.send(JSON.stringify({
+              "method": "alreadyInServer",
+              "serverId": data.serverId
+            }));
+            break; // Exit the loop
+          }
+        }
+        if (alreadyInServer) {  // If already in the server, don't continue further
+          break; // Exit the switch block
+        }
+        player = {
+          "clientId": data.clientId,
+          "username": data.username,
+          "wins": 0,
+          "oofs": 0
+        }
+        servers[data.serverId].players.push(player);
+        sendAvailableServers();   // update and remove the server from the serversList since server is now full
+        servers[data.serverId].players.forEach(player => {
+          clients[player.clientId].connection.send(JSON.stringify({
+            "method": "joinedServer",
+            "serverId": data.serverId,
+            "username": data.username
+          }));
+        });
+      } else {
+        // Server DNE!
+        clients[data.clientId].connection.send(JSON.stringify({
+          "method": "serverDNE",
+          "serverId": data.serverId
+        }));
+      }
       break;
   }
 }
