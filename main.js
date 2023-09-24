@@ -1,4 +1,4 @@
-const gw = document.getElementById("game-window");
+const gw = document.querySelector("#gameWindow");
 let gameOver = false;
 let numMines = 0;
 let buttonFlagCounter = 0;
@@ -103,7 +103,7 @@ function generateBg() {
 }
 
 // Changing selected difficulty
-const selectDifficulty = document.getElementById("choice");
+const selectDifficulty = document.getElementById("#choice");
 selectDifficulty.addEventListener("change", () => {
   playAgain();
   generateBg();
@@ -428,7 +428,7 @@ function createBuddy() {
   bButton.innerHTML = "<img class='buddyImg' src='./img/smile-icon.png' alt='buddy-smile'>";
   bButton.classList.add("buddyButton");
   bButton.addEventListener("click", buddyButtonClick);
-  document.body.insertBefore(bButton, document.querySelector("#game-window"));
+  document.body.insertBefore(bButton, document.querySelector("#gameWindow"));
 }
 
 function buddyButtonClick() {

@@ -6,20 +6,46 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Minesweeper</title>
-  <link rel="stylesheet" href="./styles.css">
-</head>
-
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Pacifico&display=swap" rel="stylesheet"></head>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pacifico&display=swap" rel="stylesheet"></head>
 <body>
-  <div class="selection">
-    <label><strong>Choose difficulty:</strong></label>
-    <select id="choice">
-      <option value="easy" selected>Easy</option>
-      <option value="medium">Medium</option>
-      <option value="hard">Hard</option>
-    </select>
+  <div id="playerCountBox">
+    <p>Players: <span id="playerCount"></span></p>
+    <span id="username"><p>sunnyC</p></span>
   </div>
-  <table id="game-window"></table>
-  <script src="./main.js"></script>
+  <ul></ul>
+  <div id="header">
+    <h1 id="title">Minesweepers</h1>
+  </div>
+  <div id="container">
+    <div id="sidebar">
+      <div>
+        <p>Server: <span id="serverCode"></span></p>
+      </div>
+      <div id="difficultySelection">
+        <label><strong>Difficulty:</strong></label>
+        <select id="choice">
+          <option value="easy" selected>Easy</option>
+          <option value="medium">Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+      </div>
+      <form id="joinServerForm">
+        <input type="text" id="serverCodeInput" placeholder="Server ID"><br>
+        <button type="submit" id="joinServerButton"><span>Join Server</span></button>
+      </form>
+    </div>
+    <div id="gameBoard">
+      <table id="gameWindow"></table>
+    </div>
+    <!-- <div class="sideHeader">
+      <h1>Minesweepers</h1>
+    </div> -->
+  </div>
+  <script src="client.js" defer></script>
 </body>
 
 </html>
