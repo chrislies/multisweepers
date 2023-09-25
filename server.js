@@ -28,10 +28,24 @@ socket.on("request", (req) => {
     "method": "connected",
     "clientId": clientId,
     "serverId": serverId,
-    "username": username
+    "username": username,
+    "playerCount": Object.keys(servers[serverId].players).length
   }));
   sendAvailableServers(); // from servers table, filter out servers player can join and send to all clients
   connection.on("message", onMessage);
+
+  // Handle client disconnect
+  connection.on("close", (reasonCode, description) => {
+    console.log(`Client ${clientId} disconnected. Reason: ${description}`);
+    // remove client from the server
+    if (serverId && clientId) {
+      removePlayerFromServer(serverId, clientId);
+    }
+    // remove client from the clients object
+    delete clients[clientId];
+    // update and send available servers to clients
+    sendAvailableServers();
+  });
 });
 
 function onMessage(message) {
@@ -45,7 +59,7 @@ function onMessage(message) {
         "wins" : 0,
         "oofs" : 0
       }
-      const serverId = generateserverId();
+      const serverId = generateServerId();
       servers[serverId] = {
         "serverId": serverId,
         "players": [player],
@@ -63,7 +77,6 @@ function onMessage(message) {
         // Prevent user from joining own's server
         let alreadyInServer = false;
         for (const p of servers[data.serverId].players) {
-          console.log(p);
           if (p.clientId == data.clientId) {  
             alreadyInServer = true;
             clients[data.clientId].connection.send(JSON.stringify({
@@ -88,7 +101,8 @@ function onMessage(message) {
           clients[player.clientId].connection.send(JSON.stringify({
             "method": "joinedServer",
             "serverId": data.serverId,
-            "username": data.username
+            "username": data.username,
+            "playerCount": Object.keys(servers[data.serverId].players).length
           }));
         });
       } else {
@@ -106,16 +120,32 @@ function sendAvailableServers() {
   // for each client, send them this servers array
   // only send servers that do not have two players
   const serversList = [];
-  for (const server in servers) {
-    if (servers[server].players.length < 2) {
-      serversList.push(server);
-    }
+  for (const serverId in servers) {
+    if (servers[serverId].players.length < 2) {
+      serversList.push(serverId);
+    } 
   }
   for(const client in clients) {
     clients[client].connection.send(JSON.stringify({
       "method" : "updateServersList",
       "list" : serversList
     }));
+  }
+}
+ 
+function removePlayerFromServer(serverId, clientId) {
+  if (servers[serverId]) {
+    servers[serverId].players = servers[serverId].players.filter(player => player.clientId !== clientId);
+    if (servers[serverId].players.length === 0) { // delete server if empty
+      delete servers[serverId];
+    } else if (servers[serverId].players.length === 1) {  // server has one player; update playerCount
+      for(const client in clients) {
+        clients[client].connection.send(JSON.stringify({
+          "method": "updatePlayerCount",
+          "playerCount": Object.keys(servers[serverId].players).length
+        }));
+      }
+    }
   }
 }
 

@@ -593,6 +593,7 @@ let clientId;
 let serverId;
 let username;
 const list = document.querySelector("ul");
+let playerCount = document.querySelector("#playerCount");
 
 let joinServerButton = document.querySelector("#joinServerButton");
 joinServerButton.addEventListener("click", (event) => {
@@ -617,13 +618,13 @@ function onMessage(msg) {
         serverId = data.serverId;
         console.log(`Server id = ${serverId}`);
         serverCode.innerHTML = serverId;
-        document.querySelector("#playerCount").innerHTML += 1
+        playerCount.innerHTML = data.playerCount;
         document.querySelector("#username").innerHTML = data.username;
         break;
       case "updateServersList":
         console.log(`data.list = ${data.list}`);
         // for each element of the servers[], we want to create a list item and insert it into the ul
-        // first remove and then repopulate the list in the sidebar
+        // first remove and then repopulate the list
         while(list.firstChild) {
           list.removeChild(list.lastChild);
         }
@@ -631,6 +632,7 @@ function onMessage(msg) {
         servers.forEach(server=>{
           const li = document.createElement("li");
           li.innerText = server;
+          playerCount = `${server.playerCount}/2`;
           list.appendChild(li);
         })
         break;
@@ -639,9 +641,14 @@ function onMessage(msg) {
         break;
       case "joinedServer":
         console.log(`Joining server "${data.serverId}"`);
+        serverCode.innerHTML = data.serverId;
+        playerCount.innerHTML = data.playerCount;
         break;
       case "serverDNE":
         console.log(`Server "${data.serverId}" does not exist!`);
+        break;
+      case "updatePlayerCount": 
+        playerCount.innerHTML = data.playerCount;
         break;
       }
 }
