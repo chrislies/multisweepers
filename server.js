@@ -49,12 +49,8 @@ socket.on("request", (req) => {
     } else {
       console.log(`Client with ID ${clientId} not found in server ${leftServerId}`);
     }    
-    // If the server is now empty, remove it
-    if (servers[serverId].clients.length === 0) {
-      delete servers[serverId];
-    }
-    sendAvailableServers();
-
+    delete clients[clientId];
+    
     // ---------- JUST FOR CHECKING ----------
     console.log(`remaining servers:`)
     for (s in servers) {
@@ -77,7 +73,11 @@ socket.on("request", (req) => {
         }));
       }    
     }
-    delete clients[clientId];
+    // If the server is now empty, remove it
+    if (servers[serverId].clients.length === 0) {
+      delete servers[serverId];
+    }
+    sendAvailableServers();
   });
   
 });
