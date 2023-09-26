@@ -38,53 +38,48 @@ socket.on("request", (req) => {
 
   // Handle client disconnect
   connection.on("close", (reasonCode, description) => {
-    console.log(`Player "${clients[clientId].username}" disconnected. Reason: ${description}`);
-    
-    // Check if the client was in a server
-    if (servers[serverId]) {
-      console.log(`Player "${clients[clientId].username}" left server ${servers[serverId].serverId}`);
-      // Find the client with a matching clientId
-      const clientIndex = servers[serverId].clients.findIndex(client => client.clientId === clientId);
-      if (clientIndex !== -1) {
-        // Remove the client from the server's client list
-        servers[serverId].clients.splice(clientIndex, 1);
-        console.log(`Removed client with ID ${clientId} from server ${serverId}`);
-      } else {
-        console.log(`Client with ID ${clientId} not found in server ${serverId}`);
-      }
-
-      // for (s in servers) {
-      //   console.log(`servers[${s}].clients.length = ${servers[s].clients.length}`);
-      // }
-      
-      // If the server is now empty, remove it
-      if (servers[serverId].clients.length === 0) {
-        delete servers[serverId];
-      }
+    const leftServerId = clients[clientId].serverId;
+    console.log(`Player "${clients[clientId].username}" disconnected from server ${leftServerId}. Reason: ${description}`);
+    // Find the index of the disconnected client in the server's clients array
+    const clientIndex = servers[leftServerId].clients.findIndex(client => client.clientId === clientId);
+    if (clientIndex !== -1) {
+      // Remove the client from the server's clients array
+      servers[leftServerId].clients.splice(clientIndex, 1);
+      // console.log(`servers[${leftServerId}].clients.length = ${servers[leftServerId].clients.length}`);
+    } else {
+      console.log(`Client with ID ${clientId} not found in server ${leftServerId}`);
+    }    
+    // If the server is now empty, remove it
+    if (servers[serverId].clients.length === 0) {
+      delete servers[serverId];
     }
-    // Remove the client from the clients object
-    delete clients[clientId];
+    sendAvailableServers();
+
+    // ---------- JUST FOR CHECKING ----------
     console.log(`remaining servers:`)
     for (s in servers) {
-      console.log(s);
+      console.log(`servers[${s}].clients.length = ${servers[s].clients.length}`);
     }
-    // Update and send available servers to clients
-    sendAvailableServers();
-    
-    const updatedPlayerList = Object.values(clients).map(client => client.username);
+    // ---------- JUST FOR CHECKING ----------
+    delete clients[clientId];
+    const updatedPlayerList = [];
+    for (const clientId in servers[leftServerId].clients) {
+      const client = servers[leftServerId].clients[clientId];
+      updatedPlayerList.push(client.username);
+    }
     console.log(`updatedPlayerList = ${updatedPlayerList}`);
-
     // send the updated player list to the other client in that server
     for (const client of Object.values(clients)) {
-      console.log(`client = ${client}`);
-      if (client.serverId === serverId) {
+      if (client.serverId === leftServerId) {
         client.connection.send(JSON.stringify({
           method: "updatePlayersList",
-          usernameList: updatedPlayerList
+          usernameList: updatedPlayerList,
+          playerCount: servers[leftServerId].clients.length
         }));
       }    
     }
   });
+
 });
 function onMessage(message) {
   const data = JSON.parse(message.utf8Data);
@@ -201,87 +196,10 @@ function sendAvailableServers() {
         method: "updateServersList",
         list: serversList
       })
-      );
-    }
+    );
   }
+}
   
-// function updatePlayersList() {
-//   const playersList = [];
-//   for (const serverId in servers) {
-//     if (servers[serverId].clients.length !== 0) {
-//       playersList.push({
-//         serverId: serverId,
-//         // players: servers[serverId].clients
-//         playerCount: servers[serverId].clients.length
-//       });
-//     }
-//   }
-//   for (const clientId in clients) {
-//     clients[clientId].connection.send(
-//       JSON.stringify({
-//         method: "updatePlayersList",
-//         usernameList: playersList
-//       })
-//     );
-//   }
-// }
-
-        // // create a usernameList array for the current server
-        // const usernameList = [];
-        // for (const client in clients) {
-        //   if (clients[client].serverId === data.serverId) {
-        //     usernameList.push(clients[client].username);
-        //   }
-        // }
-        // servers[data.serverId].clients.forEach(c => {
-        //   if (clients[c.clientId]) {
-        //     clients[c.clientId].connection.send(JSON.stringify({
-        //       "method": "joinedServer",
-        //       "serverId": data.serverId,
-        //       "playerCount": Object.keys(servers[data.serverId].clients).length,
-        //       "usernameList": usernameList
-        //     }));
-        //   }
-        // });
-
-
-// function updatePlayersList() {
-//   const playersList = [];
-
-//   for (const serverId in servers) {
-//     const server = servers[serverId];
-//     if (server && server.clients) {
-//       const playerInfo = server.clients.map(client => {
-//         return {
-//           clientId: client.clientId,
-//           username: client.username,
-//           wins: client.wins,
-//           oofs: client.oofs,
-//         };
-//       });
-
-//       playersList.push({
-//         serverId: serverId,
-//         players: playerInfo,
-//         playerCount: server.clients.length,
-//       });
-//     }
-//   }
-
-//   for (const clientId in clients) {
-//     const client = clients[clientId];
-//     if (client && client.connection) {
-//       client.connection.send(
-//         JSON.stringify({
-//           method: "updatePlayersList",
-//           usernameList: playersList,
-//         })
-//       );
-//     }
-//   }
-// }
-
-
 function generateName() {
   const adjectives = ["Joyful","Samurai","Warrior","Friendly","Cheerful","Delightful","Hungry","Ninja","Silly","Wonderful","Fantastic","Amazing","Enthusiastic","Trusting","Courageous","Optimistic","Talented","Funny","Hopeful","Charismatic","Genuine","Creative","Confident","Radiant","Splendid","Harmonious","Intelligent","Dynamic","Vibrant","Brilliant","Excited","Jubilant","Awesome","Happy","Strong","Brave","Witty","Charming","Eager","Caring","Lucky","Jovial","Honest","Polite","Fearless","Sincere","Ecstatic","Zealous","Earnest","Relaxed","Mindful","Energetic"]
   const animals = ["Serpent","Hippo","Giraffe","Bunny","Turtle","Tortoise","Rabbit","Mouse","Cat","Tiger","Puppy","Lion","Elephant","Dolphin","Koala","Cheetah","Panda","Gorilla","Penguin","Flamingo","Zebra","Lemur","Sloth","Ostrich","Raccoon","Meerkat","Peacock","Hyena","Monkey","Capybara","Goose"]
