@@ -1,3 +1,5 @@
+// const { client } = require("websocket");
+
 const gw = document.querySelector("#gameWindow");
 let gameOver = false;
 let numMines = 0;
@@ -588,69 +590,105 @@ function playAgain() {
 }
 
 let socket;
-let gameServers = [];
 let clientId;
 let serverId;
-let username;
-const list = document.querySelector("ul");
+let clientUsername;
+const serverList = document.querySelector(".servers");
 let playerCount = document.querySelector("#playerCount");
+let playerList = document.querySelector("#playerList");
+let span;
 
 let joinServerButton = document.querySelector("#joinServerButton");
 joinServerButton.addEventListener("click", (event) => {
   event.preventDefault();
   let serverCode = document.querySelector("#serverCodeInput").value.trim();
   const payLoad = {
-    "method" : "joinServer",
-    "clientId" : clientId,
-    "serverId": serverCode
-  }
+    method: "joinServer",
+    clientId: clientId,
+    serverId: serverCode,
+    username: clientUsername,
+  };
   socket.send(JSON.stringify(payLoad));
 });
 
+function updatePlayerList(playerListData) {
+  const playerList = document.querySelector("#playerList");
+  // clear the existing player list/leaderboard
+  while (playerList.firstChild) {
+    playerList.removeChild(playerList.firstChild);
+  }
+  // add players to the player list
+  for (const playerName of playerListData) {
+    const span = document.createElement("span");
+    span.innerHTML = playerName;
+    playerList.appendChild(span);
+  }
+}
+
 socket = new WebSocket("ws://localhost:8080");
 socket.onmessage = onMessage;
+
 function onMessage(msg) {
-    const data = JSON.parse(msg.data);
-    switch(data.method) {
-      case "connected":
-        console.log("Client connected");
-        clientId = data.clientId;
-        serverId = data.serverId;
-        console.log(`Server id = ${serverId}`);
-        serverCode.innerHTML = serverId;
-        playerCount.innerHTML = data.playerCount;
-        document.querySelector("#username").innerHTML = data.username;
-        break;
-      case "updateServersList":
-        console.log(`data.list = ${data.list}`);
-        // for each element of the servers[], we want to create a list item and insert it into the ul
-        // first remove and then repopulate the list
-        while(list.firstChild) {
-          list.removeChild(list.lastChild);
-        }
-        const servers = data.list;
-        servers.forEach(server=>{
-          const li = document.createElement("li");
-          li.innerText = server;
-          playerCount = `${server.playerCount}/2`;
-          list.appendChild(li);
-        })
-        break;
-      case "alreadyInServer":
-        console.log(`Already in server ${data.serverId}!`);
-        break;
-      case "joinedServer":
-        console.log(`Joining server "${data.serverId}"`);
-        serverCode.innerHTML = data.serverId;
-        playerCount.innerHTML = data.playerCount;
-        break;
-      case "serverDNE":
-        console.log(`Server "${data.serverId}" does not exist!`);
-        break;
-      case "updatePlayerCount": 
-        playerCount.innerHTML = data.playerCount;
-        break;
+  const data = JSON.parse(msg.data);
+  switch (data.method) {
+    case "connected":
+      console.log("Client connected");
+      clientId = data.clientId;
+      serverId = data.serverId;
+      console.log(`Server id = ${serverId}`);
+      serverCode.innerHTML = serverId;
+      playerCount.innerHTML = data.playerCount;
+      span = document.createElement("span");
+      span.innerHTML = data.username;
+      playerList.append(span);
+      clientUsername = data.username;
+      break;
+    case "updateServersList":
+      // Clear the existing server list
+      while (serverList.firstChild) {
+        serverList.removeChild(serverList.lastChild);
       }
+      const servers = data.list;
+      servers.forEach((server) => {
+        let li = document.createElement("h1");
+        li.innerHTML = `${server.serverId} (${server.playerCount}/2)`;
+        serverList.appendChild(li);
+      });
+      break;
+    case "alreadyInServer":
+      console.log(`Already in server "${data.serverId}"`);
+      break;
+    case "serverIsFull":
+      console.log(`Server "${data.serverId}" is full!`)
+      break;
+    case "joinedServer":
+      console.log(`Joining server "${data.serverId}"`);
+      serverCode.innerHTML = data.serverId;
+      playerCount.innerHTML = data.playerCount;
+      // clear existing leaderboard
+      while (playerList.firstChild) {
+        playerList.removeChild(playerList.firstChild);
+      };
+      let clientUsernameElement; // store a reference to the client's username element
+      for (const name in data.usernameList) {
+        const span = document.createElement("span");
+        span.innerHTML = data.usernameList[name] + "<br>";
+        playerList.append(span);
+        if (data.usernameList[name] === clientUsername) {
+          span.setAttribute("id", "clientUsername");
+          clientUsernameElement = span;
+        }
+      }
+      // rearrange player leaderboard so that the client's username is first
+      playerList.prepend(clientUsernameElement);
+      break;
+    case "serverDNE":
+      console.log(`Server "${data.serverId}" does not exist!`);
+      break;
+    case "updatePlayersList":
+      updatePlayerList(data.usernameList);
+      break;
+  }
 }
 
 generateEasy();

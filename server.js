@@ -3,72 +3,108 @@ const { send } = require("process");
 let clients = {};
 let servers = {};
 
-const http = require("http").createServer().listen(8080, console.log("Listening on port 8080"));
+const http = require("http").createServer().listen(8080, () => {
+  console.log("Listening on port 8080");
+});
 const server = require("websocket").server;
-const socket = new server({"httpServer":http});
+const socket = new server({ httpServer: http });
 
 socket.on("request", (req) => {
   const connection = req.accept(null, req.origin);
   const clientId = generateClientId();
   const serverId = generateServerId();
   const username = generateName();
-  clients[clientId] = { 
-    "connection": connection 
+  clients[clientId] = {
+    clientId: clientId,
+    serverId: serverId,
+    username: username,
+    connection: connection
   };
-  let player = {
-    "clientId": clientId,
-    "username": username
-  }
-  const players = Array(player);
   servers[serverId] = {
-    "serverId": serverId,
-    "players": players
-  }
-  connection.send(JSON.stringify({
-    "method": "connected",
-    "clientId": clientId,
-    "serverId": serverId,
-    "username": username,
-    "playerCount": Object.keys(servers[serverId].players).length
-  }));
-  sendAvailableServers(); // from servers table, filter out servers player can join and send to all clients
+    serverId: serverId,
+    clients: [clients[clientId]]
+  };
+  connection.send(
+    JSON.stringify({
+      method: "connected",
+      clientId: clientId,
+      serverId: serverId,
+      username: username,
+      playerCount: servers[serverId].clients.length
+    })
+  );
+  sendAvailableServers(); // send available servers to all clients
   connection.on("message", onMessage);
 
   // Handle client disconnect
   connection.on("close", (reasonCode, description) => {
-    console.log(`Client ${clientId} disconnected. Reason: ${description}`);
-    // remove client from the server
-    if (serverId && clientId) {
-      removePlayerFromServer(serverId, clientId);
+    console.log(`Player "${clients[clientId].username}" disconnected. Reason: ${description}`);
+    
+    // Check if the client was in a server
+    if (servers[serverId]) {
+      console.log(`Player "${clients[clientId].username}" left server ${servers[serverId].serverId}`);
+      // Find the client with a matching clientId
+      const clientIndex = servers[serverId].clients.findIndex(client => client.clientId === clientId);
+      if (clientIndex !== -1) {
+        // Remove the client from the server's client list
+        servers[serverId].clients.splice(clientIndex, 1);
+        console.log(`Removed client with ID ${clientId} from server ${serverId}`);
+      } else {
+        console.log(`Client with ID ${clientId} not found in server ${serverId}`);
+      }
+
+      // for (s in servers) {
+      //   console.log(`servers[${s}].clients.length = ${servers[s].clients.length}`);
+      // }
+      
+      // If the server is now empty, remove it
+      if (servers[serverId].clients.length === 0) {
+        delete servers[serverId];
+      }
     }
-    // remove client from the clients object
+    // Remove the client from the clients object
     delete clients[clientId];
-    // update and send available servers to clients
+    console.log(`remaining servers:`)
+    for (s in servers) {
+      console.log(s);
+    }
+    // Update and send available servers to clients
     sendAvailableServers();
+    
+    const updatedPlayerList = Object.values(clients).map(client => client.username);
+    console.log(`updatedPlayerList = ${updatedPlayerList}`);
+
+    // send the updated player list to the other client in that server
+    for (const client of Object.values(clients)) {
+      console.log(`client = ${client}`);
+      if (client.serverId === serverId) {
+        client.connection.send(JSON.stringify({
+          method: "updatePlayersList",
+          usernameList: updatedPlayerList
+        }));
+      }    
+    }
   });
 });
-
 function onMessage(message) {
   const data = JSON.parse(message.utf8Data);
-  let localPlayer = {};
   switch (data.method) {
     case "instantiate":
-      console.log("server.js, case 'instantiate'")
-      player = {
-        "clientId" : data.clientId,
-        "wins" : 0,
-        "oofs" : 0
-      }
+      console.log("server.js, case 'instantiate'");
+      const player = {
+        clientId: data.clientId,
+        wins: 0,
+        oofs: 0
+      };
       const serverId = generateServerId();
       servers[serverId] = {
-        "serverId": serverId,
-        "players": [player],
-
-      }
+        serverId: serverId,
+        clients: [clients[data.clientId]]
+      };
       const payLoad = {
-        "method": "instantiated",
-        "server": servers[serverId]
-      }
+        method: "instantiated",
+        server: servers[serverId]
+      };
       clients[data.clientId].connection.send(JSON.stringify(payLoad));
       sendAvailableServers();
       break;
@@ -76,84 +112,197 @@ function onMessage(message) {
       if (servers[data.serverId]) {  // Server exists
         // Prevent user from joining own's server
         let alreadyInServer = false;
-        for (const p of servers[data.serverId].players) {
+        for (const p of servers[data.serverId].clients) {
           if (p.clientId == data.clientId) {  
             alreadyInServer = true;
-            clients[data.clientId].connection.send(JSON.stringify({
-              "method": "alreadyInServer",
-              "serverId": data.serverId
-            }));
+            if (clients[data.clientId]) {
+              clients[data.clientId].connection.send(JSON.stringify({
+                "method": "alreadyInServer",
+                "serverId": data.serverId
+              }));
+            }
             break; // Exit the loop
           }
         }
         if (alreadyInServer) {  // If already in the server, don't continue further
           break; // Exit the switch block
         }
-        player = {
+        // Prevent user from joining a full server
+        if (servers[data.serverId].clients.length === 2) {
+          if (clients[data.clientId]) {
+            clients[data.clientId].connection.send(JSON.stringify({
+              "method": "serverIsFull",
+              "serverId": data.serverId
+            }));
+          }
+          break;
+        }
+        // update client's serverId with new server
+        const oldServerId = clients[data.clientId].serverId;
+        servers[oldServerId].clients.length -= 1;
+        clients[data.clientId].serverId = data.serverId;
+
+        const client = {
           "clientId": data.clientId,
           "username": data.username,
           "wins": 0,
-          "oofs": 0
+          "oofs": 0,
+          "connection": clients[data.clientId].connection // Get the client's connection
+        };
+        servers[data.serverId].clients.push(client);
+
+        // create a usernameList array for the current server
+        const usernameList = [];
+        for (const client in clients) {
+          if (clients[client].serverId === data.serverId) {
+            usernameList.push(clients[client].username);
+          }
         }
-        servers[data.serverId].players.push(player);
-        sendAvailableServers();   // update and remove the server from the serversList since server is now full
-        servers[data.serverId].players.forEach(player => {
-          clients[player.clientId].connection.send(JSON.stringify({
-            "method": "joinedServer",
-            "serverId": data.serverId,
-            "username": data.username,
-            "playerCount": Object.keys(servers[data.serverId].players).length
-          }));
+        servers[data.serverId].clients.forEach(c => {
+          if (clients[c.clientId]) {
+            clients[c.clientId].connection.send(JSON.stringify({
+              "method": "joinedServer",
+              "serverId": data.serverId,
+              "playerCount": Object.keys(servers[data.serverId].clients).length,
+              "usernameList": usernameList
+            }));
+          }
         });
+        sendAvailableServers();   // update and remove the server from the serversList since server is now full
       } else {
         // Server DNE!
-        clients[data.clientId].connection.send(JSON.stringify({
-          "method": "serverDNE",
-          "serverId": data.serverId
-        }));
+        if (clients[data.clientId]) {
+          clients[data.clientId].connection.send(JSON.stringify({
+            "method": "serverDNE",
+            "serverId": data.serverId
+          }));
+        }
       }
       break;
   }
 }
 
 function sendAvailableServers() {
-  // for each client, send them this servers array
-  // only send servers that do not have two players
+  // Create a list of available servers with player counts
   const serversList = [];
   for (const serverId in servers) {
-    if (servers[serverId].players.length < 2) {
-      serversList.push(serverId);
-    } 
-  }
-  for(const client in clients) {
-    clients[client].connection.send(JSON.stringify({
-      "method" : "updateServersList",
-      "list" : serversList
-    }));
-  }
-}
- 
-function removePlayerFromServer(serverId, clientId) {
-  if (servers[serverId]) {
-    servers[serverId].players = servers[serverId].players.filter(player => player.clientId !== clientId);
-    if (servers[serverId].players.length === 0) { // delete server if empty
-      delete servers[serverId];
-    } else if (servers[serverId].players.length === 1) {  // server has one player; update playerCount
-      for(const client in clients) {
-        clients[client].connection.send(JSON.stringify({
-          "method": "updatePlayerCount",
-          "playerCount": Object.keys(servers[serverId].players).length
-        }));
-      }
+    if (servers[serverId].clients.length !== 0) {
+      console.log(`serverId = ${serverId}`);
+      serversList.push({
+        serverId: serverId,
+        playerCount: servers[serverId].clients.length
+      });
     }
   }
-}
+  console.log("------------------");
+  for (const clientId in clients) {
+    clients[clientId].connection.send(
+      JSON.stringify({
+        method: "updateServersList",
+        list: serversList
+      })
+      );
+    }
+  }
+  
+// function updatePlayersList() {
+//   const playersList = [];
+//   for (const serverId in servers) {
+//     if (servers[serverId].clients.length !== 0) {
+//       playersList.push({
+//         serverId: serverId,
+//         // players: servers[serverId].clients
+//         playerCount: servers[serverId].clients.length
+//       });
+//     }
+//   }
+//   for (const clientId in clients) {
+//     clients[clientId].connection.send(
+//       JSON.stringify({
+//         method: "updatePlayersList",
+//         usernameList: playersList
+//       })
+//     );
+//   }
+// }
+
+        // // create a usernameList array for the current server
+        // const usernameList = [];
+        // for (const client in clients) {
+        //   if (clients[client].serverId === data.serverId) {
+        //     usernameList.push(clients[client].username);
+        //   }
+        // }
+        // servers[data.serverId].clients.forEach(c => {
+        //   if (clients[c.clientId]) {
+        //     clients[c.clientId].connection.send(JSON.stringify({
+        //       "method": "joinedServer",
+        //       "serverId": data.serverId,
+        //       "playerCount": Object.keys(servers[data.serverId].clients).length,
+        //       "usernameList": usernameList
+        //     }));
+        //   }
+        // });
+
+
+// function updatePlayersList() {
+//   const playersList = [];
+
+//   for (const serverId in servers) {
+//     const server = servers[serverId];
+//     if (server && server.clients) {
+//       const playerInfo = server.clients.map(client => {
+//         return {
+//           clientId: client.clientId,
+//           username: client.username,
+//           wins: client.wins,
+//           oofs: client.oofs,
+//         };
+//       });
+
+//       playersList.push({
+//         serverId: serverId,
+//         players: playerInfo,
+//         playerCount: server.clients.length,
+//       });
+//     }
+//   }
+
+//   for (const clientId in clients) {
+//     const client = clients[clientId];
+//     if (client && client.connection) {
+//       client.connection.send(
+//         JSON.stringify({
+//           method: "updatePlayersList",
+//           usernameList: playersList,
+//         })
+//       );
+//     }
+//   }
+// }
+
 
 function generateName() {
-  const adjectives = ["Joyful","Samurai","Warrior","Friendly","Cheerful","Delightful","Hungry","Ninja","Silly","Wonderful","Fantastic","Amazing","Enthusiastic","Trusting","Courageous","Optimistic","Talented","Funny","Hopeful","Charismatic","Genuine","Creative","Confident","Radiant","Splendid","Harmonious","Intelligent","Dynamic","Vibrant","Brilliant","Excited","Jubilant","Awesome","Happy","Strong","Brave","Witty","Charming","Eager","Caring","Lucky","Jovial","Honest","Polite","Fearless","Sincere","Ecstatic","Zealous","Earnest","Relaxed","Mindful","Energetic"]
-  const animals = ["Serpent","Hippo","Giraffe","Bunny","Turtle","Tortoise","Rabbit","Mouse","Cat","Tiger","Puppy","Lion","Elephant","Dolphin","Koala","Cheetah","Panda","Gorilla","Penguin","Flamingo","Zebra","Lemur","Sloth","Ostrich","Raccoon","Meerkat","Peacock","Hyena","Monkey","Capybara","Goose"]
-  let name = "";
-  name += adjectives[Math.floor(Math.random() * adjectives.length)] + " " + animals[Math.floor(Math.random() * animals.length)];
+  const adjectives = [
+    "Joyful",
+    "Samurai",
+    "Warrior",
+    "Friendly",
+    "Cheerful",
+    // ... (other adjectives)
+  ];
+  const animals = [
+    "Serpent",
+    "Hippo",
+    "Giraffe",
+    "Bunny",
+    "Turtle",
+    // ... (other animals)
+  ];
+  const name =
+    adjectives[Math.floor(Math.random() * adjectives.length)] +
+    " " +
+    animals[Math.floor(Math.random() * animals.length)];
   return name;
 }
 
@@ -163,22 +312,18 @@ function generateClientId() {
   for (let i = 0; i < 10; i++) {
     id += data.charAt(Math.floor(Math.random() * data.length));
   }
-  // console.log(`Client id: ${id}`);
   return id;
 }
 
 function generateServerId() {
   let id = "";
-  let temp;
   const data = "0123456789";
-  // generate a 4 digit game id that does not start with zero
   while (id.length < 4) {
-    temp = data.charAt(Math.floor(Math.random() * data.length));
-    while (id.length == 0 && temp == 0) {
-      temp = data.charAt(Math.floor(Math.random() * data.length))
+    let temp = data.charAt(Math.floor(Math.random() * data.length));
+    while (id.length === 0 && temp === "0") {
+      temp = data.charAt(Math.floor(Math.random() * data.length));
     }
     id += temp;
   }
-  // console.log(`Server id: ${id}`);
   return id;
 }
