@@ -61,7 +61,6 @@ socket.on("request", (req) => {
       console.log(`servers[${s}].clients.length = ${servers[s].clients.length}`);
     }
     // ---------- JUST FOR CHECKING ----------
-    delete clients[clientId];
     const updatedPlayerList = [];
     for (const clientId in servers[leftServerId].clients) {
       const client = servers[leftServerId].clients[clientId];
@@ -78,8 +77,9 @@ socket.on("request", (req) => {
         }));
       }    
     }
+    delete clients[clientId];
   });
-
+  
 });
 function onMessage(message) {
   const data = JSON.parse(message.utf8Data);
