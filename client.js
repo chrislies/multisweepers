@@ -611,20 +611,6 @@ joinServerButton.addEventListener("click", (event) => {
   socket.send(JSON.stringify(payLoad));
 });
 
-function updatePlayerList(playerListData) {
-  const playerList = document.querySelector("#playerList");
-  // clear the existing player list/leaderboard
-  while (playerList.firstChild) {
-    playerList.removeChild(playerList.firstChild);
-  }
-  // add players to the player list
-  for (const playerName of playerListData) {
-    const span = document.createElement("span");
-    span.innerHTML = playerName;
-    playerList.appendChild(span);
-  }
-}
-
 socket = new WebSocket("ws://localhost:8080");
 socket.onmessage = onMessage;
 
@@ -663,6 +649,7 @@ function onMessage(msg) {
       break;
     case "joinedServer":
       console.log(`Joining server "${data.serverId}"`);
+      serverId = data.serverId; 
       serverCode.innerHTML = data.serverId;
       playerCount.innerHTML = data.playerCount;
       // clear existing leaderboard
@@ -670,11 +657,11 @@ function onMessage(msg) {
         playerList.removeChild(playerList.firstChild);
       };
       let clientUsernameElement; // store a reference to the client's username element
-      for (const name in data.usernameList) {
+      for (const playerName in data.usernameList) {
         const span = document.createElement("span");
-        span.innerHTML = data.usernameList[name] + "<br>";
+        span.innerHTML = data.usernameList[playerName] + "<br>";
         playerList.append(span);
-        if (data.usernameList[name] === clientUsername) {
+        if (data.usernameList[playerName] === clientUsername) {
           span.setAttribute("id", "clientUsername");
           clientUsernameElement = span;
         }
@@ -686,7 +673,17 @@ function onMessage(msg) {
       console.log(`Server "${data.serverId}" does not exist!`);
       break;
     case "updatePlayersList":
-      updatePlayerList(data.usernameList);
+      // clear the existing player list/leaderboard
+      while (playerList.firstChild) {
+        playerList.removeChild(playerList.firstChild);
+      }
+      // add players to the player list
+      for (const playerName of data.usernameList) {
+        const span = document.createElement("span");
+        span.innerHTML = playerName;
+        playerList.appendChild(span);
+      }
+      playerCount.innerHTML = data.playerCount;
       break;
   }
 }
