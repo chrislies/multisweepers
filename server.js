@@ -283,26 +283,9 @@ function sendAvailableServers() {
 
 
 function generateName() {
-  const adjectives = [
-    "Joyful",
-    "Samurai",
-    "Warrior",
-    "Friendly",
-    "Cheerful",
-    // ... (other adjectives)
-  ];
-  const animals = [
-    "Serpent",
-    "Hippo",
-    "Giraffe",
-    "Bunny",
-    "Turtle",
-    // ... (other animals)
-  ];
-  const name =
-    adjectives[Math.floor(Math.random() * adjectives.length)] +
-    " " +
-    animals[Math.floor(Math.random() * animals.length)];
+  const adjectives = ["Joyful","Samurai","Warrior","Friendly","Cheerful","Delightful","Hungry","Ninja","Silly","Wonderful","Fantastic","Amazing","Enthusiastic","Trusting","Courageous","Optimistic","Talented","Funny","Hopeful","Charismatic","Genuine","Creative","Confident","Radiant","Splendid","Harmonious","Intelligent","Dynamic","Vibrant","Brilliant","Excited","Jubilant","Awesome","Happy","Strong","Brave","Witty","Charming","Eager","Caring","Lucky","Jovial","Honest","Polite","Fearless","Sincere","Ecstatic","Zealous","Earnest","Relaxed","Mindful","Energetic"]
+  const animals = ["Serpent","Hippo","Giraffe","Bunny","Turtle","Tortoise","Rabbit","Mouse","Cat","Tiger","Puppy","Lion","Elephant","Dolphin","Koala","Cheetah","Panda","Gorilla","Penguin","Flamingo","Zebra","Lemur","Sloth","Ostrich","Raccoon","Meerkat","Peacock","Hyena","Monkey","Capybara","Goose"]
+  const name = adjectives[Math.floor(Math.random() * adjectives.length)] + " " + animals[Math.floor(Math.random() * animals.length)];
   return name;
 }
 
