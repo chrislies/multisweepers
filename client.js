@@ -1,16 +1,251 @@
 // const { client } = require("websocket");
 
+let socket;
+let clientId;
+let serverId;
+let clientUsername;
+const serverList = document.querySelector(".servers");
+let playerCount = document.querySelector("#playerCount");
+let playerList = document.querySelector("#playerList");
+let span;
+
+let joinServerButton = document.querySelector("#joinServerButton");
+joinServerButton.addEventListener("click", (event) => {
+  event.preventDefault();
+  let serverCode = document.querySelector("#serverCodeInput").value.trim();
+  const payLoad = {
+    method: "joinServer",
+    clientId: clientId,
+    serverId: serverCode, // the requested serverId 
+    oldServerId: serverId,
+    username: clientUsername,
+  };
+  socket.send(JSON.stringify(payLoad));
+});
+
+socket = new WebSocket("ws://localhost:8080");
+socket.onmessage = onMessage;
+
+function onMessage(msg) {
+  const data = JSON.parse(msg.data);
+  switch (data.method) {
+    case "connected":
+      console.log("Client connected");
+      clientId = data.clientId;
+      serverId = data.serverId;
+      console.log(`Server id = ${serverId}`);
+      serverCode.innerHTML = serverId;
+      playerCount.innerHTML = data.playerCount;
+      span = document.createElement("span");
+      span.innerHTML = data.username;
+      playerList.append(span);
+      clientUsername = data.username;
+
+      gameState.visitedTiles = [];
+      gameState.numMines = numMines;
+      gameState.randomMines = randomMines;
+      gameState.buttonFlagCounter = buttonFlagCounter;
+      gameState.gameDifficulty = "easy"
+      // Send the updated gameState to the server with the function below
+      sendGameStateToServer();
+      break;
+    case "updateServersList":
+      // Clear the existing server list
+      while (serverList.firstChild) {
+        serverList.removeChild(serverList.lastChild);
+      }
+      const servers = data.list;
+      servers.forEach((server) => {
+        let li = document.createElement("h1");
+        li.innerHTML = `${server.serverId} (${server.playerCount}/2)`;
+        serverList.appendChild(li);
+      });
+      break;
+    case "alreadyInServer":
+      console.log(`Already in server "${data.serverId}"`);
+      break;
+    case "serverIsFull":
+      console.log(`Server "${data.serverId}" is full!`)
+      break;
+    case "joinedServer":
+      console.log(`Player ${data.player} joined server "${data.serverId}"`);
+      serverId = data.serverId; 
+      serverCode.innerHTML = data.serverId;
+      playerCount.innerHTML = data.playerCount;
+      // clear existing leaderboard
+      while (playerList.firstChild) {
+        playerList.removeChild(playerList.firstChild);
+      };
+      let clientUsernameElement; // store a reference to the client's username element
+      for (const playerName in data.usernameList) {
+        const span = document.createElement("span");
+        span.innerHTML = data.usernameList[playerName] + "<br>";
+        playerList.append(span);
+        if (data.usernameList[playerName] === clientUsername) {
+          span.setAttribute("id", "clientUsername");
+          clientUsernameElement = span;
+        }
+      }
+      // rearrange player leaderboard so that the client's username is first
+      playerList.prepend(clientUsernameElement);
+
+      // update player's gameboard to new server's gameboard
+      console.log(data)
+
+      break;
+    case "serverDNE":
+      console.log(`Server "${data.serverId}" does not exist!`);
+      break;
+    case "updatePlayersList": // when a user DISCONNECTS from a full server
+      // clear the existing player list/leaderboard
+      while (playerList.firstChild) {
+        playerList.removeChild(playerList.firstChild);
+      }
+      // add players to the player list
+      for (const playerName of data.usernameList) {
+        const span = document.createElement("span");
+        span.innerHTML = playerName;
+        playerList.appendChild(span);
+      }
+      playerCount.innerHTML = data.playerCount;
+      break;
+    case "userLeftFullServer":  // when a user LEAVES from a full server
+      // clear the existing player list/leaderboard
+      while (playerList.firstChild) {
+        playerList.removeChild(playerList.firstChild);
+      }
+      // add players to the player list
+      for (const playerName of data.usernameList) {
+        const span = document.createElement("span");
+        span.innerHTML = playerName;
+        playerList.appendChild(span);
+      }
+      playerCount.innerHTML = data.playerCount;
+      break;
+    case "updateGameState": 
+      console.log(`Updating game state for player ${data.otherClient}`);
+      switch (data.gameDifficulty) {
+        case "easy":
+          // console.log(`Tiles = ${data.tiles}`);
+          difficulty = data.gameDifficulty;
+          selectDifficulty.value = data.gameDifficulty; 
+          if (gw.rows.length > 0) {
+            while (gw.rows.length > 0) {
+              gw.deleteRow(0);
+            }
+          }
+          n = 9; // n x n grid
+          numMines = 10;
+          buttonFlagCounter = numMines;
+          tileCounter = 0;
+          for (let i = 0; i < n; i++) {
+            let row = document.createElement("tr");
+            for (let j = 0; j < n; j++) {
+              let data = document.createElement("td");
+              data.classList.add("tile-" + tileCounter);
+              data.dataset.value = tileCounter;
+              data.setAttribute("rightClicked", false);
+              data.addEventListener("click", initialClick);
+              data.addEventListener("contextmenu", rightClickHandler);
+              row.appendChild(data);
+              tileCounter++;
+            }
+            gw.appendChild(row);
+          }
+          container = document.querySelector("#container");
+          container.style.transform = "translate(-50%, -50%) scale(2.2)";
+          generateBg();
+          break;
+        case "medium": 
+          // console.log(`Tiles = ${data.tiles}`);
+          difficulty = data.gameDifficulty;
+          selectDifficulty.value = data.gameDifficulty; 
+          if (gw.rows.length > 0) {
+            while (gw.rows.length > 0) {
+              gw.deleteRow(0);
+            }
+          }
+          n = 16; // n x n grid
+          numMines = 40;
+          buttonFlagCounter = numMines;
+          tileCounter = 0;
+          for (let i = 0; i < n; i++) {
+            let row = document.createElement("tr");
+            for (let j = 0; j < n; j++) {
+              let data = document.createElement("td");
+              data.classList.add("tile-" + tileCounter);
+              data.dataset.value = tileCounter;
+              data.setAttribute("rightClicked", false);
+              data.addEventListener("click", initialClick);
+              data.addEventListener("contextmenu", rightClickHandler);
+              row.appendChild(data);
+              tileCounter++;
+            }
+            gw.appendChild(row);
+          }
+          container = document.querySelector("#container");
+          container.style.transform = "translate(-50%, -50%) scale(1.6)";
+          generateBg();
+          break;
+          case "hard": 
+          // console.log(`Tiles = ${data.tiles}`);
+          difficulty = data.gameDifficulty;
+          selectDifficulty.value = data.gameDifficulty; 
+          if (gw.rows.length > 0) {
+            while (gw.rows.length > 0) {
+              gw.deleteRow(0);
+            }
+          }
+          n = 16; // n x m grid
+          m = 30
+          numMines = 99;
+          buttonFlagCounter = numMines;
+          tileCounter = 0;
+          for (let i = 0; i < n; i++) {
+            let row = document.createElement("tr");
+            for (let j = 0; j < m; j++) {
+              let data = document.createElement("td");
+              data.classList.add("tile-" + tileCounter);
+              data.dataset.value = tileCounter;
+              data.setAttribute("rightClicked", false);
+              data.addEventListener("click", initialClick);
+              data.addEventListener("contextmenu", rightClickHandler);
+              row.appendChild(data);
+              tileCounter++;
+            }
+            gw.appendChild(row);
+          }
+          container = document.querySelector("#container");
+          container.style.transform = "translate(-50%, -50%) scale(1.6)";
+          generateBg();
+          break;
+      }
+      console.log(`data.visitedTiles = ${data.visitedTiles}`);
+      console.log(`data.randomMines = ${data.randomMines}`)
+
+      break;
+  }
+}
+
 const gw = document.querySelector("#gameWindow");
 let gameOver = false;
 let numMines = 0;
 let buttonFlagCounter = 0;
 let visitedTiles = [];
-
 let randomMines = [];
 let possibleMove = [];
 let mineRadiusNB = [];
 let mineRadiusLB = [];
 let mineRadiusRB = [];
+let difficulty = "";
+
+let gameState = {
+  visitedTiles: [],
+  numMines: 0,
+  randomMines: [],
+  buttonFlagCounter: 0,
+  gameDifficulty: ""
+};
 
 function generateEasy() {
   visitedTiles = [];
@@ -43,6 +278,14 @@ function generateEasy() {
   createBuddy();
   createFlagButton();
   paintContainerGrids();
+  // Update the gameState object
+  gameState.visitedTiles = [];
+  gameState.numMines = numMines;
+  gameState.randomMines = randomMines;
+  gameState.buttonFlagCounter = buttonFlagCounter;
+  gameState.gameDifficulty = "easy"
+  // Send the updated gameState to the server with the function below
+  sendGameStateToServer();
 }
 
 function generateMedium() {
@@ -76,6 +319,14 @@ function generateMedium() {
   createBuddy();
   createFlagButton();
   paintContainerGrids();
+  // Update the gameState object
+  gameState.visitedTiles = [];
+  gameState.numMines = numMines;
+  gameState.randomMines = randomMines;
+  gameState.buttonFlagCounter = buttonFlagCounter;
+  gameState.gameDifficulty = "medium"
+  // Send the updated gameState to the server with the function below
+  sendGameStateToServer();
 }
 
 function generateHard() {
@@ -110,6 +361,14 @@ function generateHard() {
   createBuddy();
   createFlagButton();
   paintContainerGrids();
+  // Update the gameState object
+  gameState.visitedTiles = [];
+  gameState.numMines = numMines;
+  gameState.randomMines = randomMines;
+  gameState.buttonFlagCounter = buttonFlagCounter;
+  gameState.gameDifficulty = "hard"
+  // Send the updated gameState to the server with the function below
+  sendGameStateToServer();
 }
 
 function initialClick() { // clear x surrounding tiles upon inital click on one of the tiles
@@ -122,13 +381,14 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
     document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/smile-icon.png' alt='buddy-smile'>";
   }, 400);
   let initialTile = this;
+  // console.log(`initial tile = ${parseInt(initialTile.dataset.value)}`);
   visitedTiles.push(initialTile);
   let tableSize = document.querySelectorAll("td").length - 1; // get the last td element to determine tableSize
   console.log("tableSize = " + tableSize);
   let numRandomTiles = 0;
   // console.log(parseInt(initialTile.dataset.value) + possibleMove[0]); // parseInt() converts string to int
 
-  let difficulty = selectDifficulty.value;  // Check selected difficulty
+  difficulty = selectDifficulty.value;  // Check selected difficulty
   switch (difficulty) {
     case "easy":
       numMines = 10;
@@ -228,6 +488,9 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
       td.addEventListener("click", leftClick);
     }
   });
+  gameState.visitedTiles = valueVisitedTiles;
+  gameState.randomMines = randomMines;
+  sendGameStateToServer();
 }
 
 function scanMineRadius(tile) {
@@ -589,102 +852,14 @@ function playAgain() {
   }
 }
 
-let socket;
-let clientId;
-let serverId;
-let clientUsername;
-const serverList = document.querySelector(".servers");
-let playerCount = document.querySelector("#playerCount");
-let playerList = document.querySelector("#playerList");
-let span;
-
-let joinServerButton = document.querySelector("#joinServerButton");
-joinServerButton.addEventListener("click", (event) => {
-  event.preventDefault();
-  let serverCode = document.querySelector("#serverCodeInput").value.trim();
-  const payLoad = {
-    method: "joinServer",
-    clientId: clientId,
-    serverId: serverCode,
-    username: clientUsername,
-  };
-  socket.send(JSON.stringify(payLoad));
-});
-
-socket = new WebSocket("ws://localhost:8080");
-socket.onmessage = onMessage;
-
-function onMessage(msg) {
-  const data = JSON.parse(msg.data);
-  switch (data.method) {
-    case "connected":
-      console.log("Client connected");
-      clientId = data.clientId;
-      serverId = data.serverId;
-      console.log(`Server id = ${serverId}`);
-      serverCode.innerHTML = serverId;
-      playerCount.innerHTML = data.playerCount;
-      span = document.createElement("span");
-      span.innerHTML = data.username;
-      playerList.append(span);
-      clientUsername = data.username;
-      break;
-    case "updateServersList":
-      // Clear the existing server list
-      while (serverList.firstChild) {
-        serverList.removeChild(serverList.lastChild);
-      }
-      const servers = data.list;
-      servers.forEach((server) => {
-        let li = document.createElement("h1");
-        li.innerHTML = `${server.serverId} (${server.playerCount}/2)`;
-        serverList.appendChild(li);
-      });
-      break;
-    case "alreadyInServer":
-      console.log(`Already in server "${data.serverId}"`);
-      break;
-    case "serverIsFull":
-      console.log(`Server "${data.serverId}" is full!`)
-      break;
-    case "joinedServer":
-      console.log(`Joining server "${data.serverId}"`);
-      serverId = data.serverId; 
-      serverCode.innerHTML = data.serverId;
-      playerCount.innerHTML = data.playerCount;
-      // clear existing leaderboard
-      while (playerList.firstChild) {
-        playerList.removeChild(playerList.firstChild);
-      };
-      let clientUsernameElement; // store a reference to the client's username element
-      for (const playerName in data.usernameList) {
-        const span = document.createElement("span");
-        span.innerHTML = data.usernameList[playerName] + "<br>";
-        playerList.append(span);
-        if (data.usernameList[playerName] === clientUsername) {
-          span.setAttribute("id", "clientUsername");
-          clientUsernameElement = span;
-        }
-      }
-      // rearrange player leaderboard so that the client's username is first
-      playerList.prepend(clientUsernameElement);
-      break;
-    case "serverDNE":
-      console.log(`Server "${data.serverId}" does not exist!`);
-      break;
-    case "updatePlayersList":
-      // clear the existing player list/leaderboard
-      while (playerList.firstChild) {
-        playerList.removeChild(playerList.firstChild);
-      }
-      // add players to the player list
-      for (const playerName of data.usernameList) {
-        const span = document.createElement("span");
-        span.innerHTML = playerName;
-        playerList.appendChild(span);
-      }
-      playerCount.innerHTML = data.playerCount;
-      break;
+function sendGameStateToServer() {
+  if (socket.readyState === WebSocket.OPEN) {
+    socket.send(JSON.stringify({
+      method: "updateGameState",
+      gameState: gameState,
+      serverId: serverId,
+      clientId: clientId
+    }))
   }
 }
 

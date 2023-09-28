@@ -1,7 +1,9 @@
 const { send } = require("process");
+const { client } = require("websocket");
 
 let clients = {};
 let servers = {};
+let gameState = {};
 
 const http = require("http").createServer().listen(8080, () => {
   console.log("Listening on port 8080");
@@ -14,6 +16,11 @@ socket.on("request", (req) => {
   const clientId = generateClientId();
   const serverId = generateServerId();
   const username = generateName();
+  let visitedTiles = [];
+  let numMines = 0;
+  let randomMines = [];
+  let buttonFlagCounter = 0;
+  let gameDifficulty = "";
   clients[clientId] = {
     clientId: clientId,
     serverId: serverId,
@@ -22,8 +29,16 @@ socket.on("request", (req) => {
   };
   servers[serverId] = {
     serverId: serverId,
-    clients: [clients[clientId]]
+    clients: [clients[clientId]],
+    gameState: gameState
   };
+  gameState[serverId] = {
+    visitedTiles: visitedTiles,
+    numMines: numMines,
+    randomMines: randomMines,
+    buttonFlagCounter: buttonFlagCounter,
+    gameDifficulty: gameDifficulty
+  }
   connection.send(
     JSON.stringify({
       method: "connected",
@@ -133,8 +148,8 @@ function onMessage(message) {
           break;
         }
         // update client's serverId with new server
-        const oldServerId = clients[data.clientId].serverId;
-        servers[oldServerId].clients.length -= 1;
+        // const oldServerId = clients[data.clientId].serverId;
+        servers[data.oldServerId].clients.length -= 1;
         clients[data.clientId].serverId = data.serverId;
 
         const client = {
@@ -159,7 +174,27 @@ function onMessage(message) {
               "method": "joinedServer",
               "serverId": data.serverId,
               "playerCount": Object.keys(servers[data.serverId].clients).length,
-              "usernameList": usernameList
+              "usernameList": usernameList,
+              "player": clients[data.clientId].username
+            }));
+          }
+        });
+
+        // create an oldUsernameList array for the old server
+        const oldUsernameList = [];
+        for (const client in clients) {
+          if (clients[client].serverId === data.oldServerId) {
+            oldUsernameList.push(clients[client].username);
+          }
+        }
+        // update old server to remove the player's username from leaderboard
+        servers[data.oldServerId].clients.forEach(c => {
+          if (clients[c.clientId]) {
+            clients[c.clientId].connection.send(JSON.stringify({
+              "method": "userLeftFullServer",
+              "serverId": data.oldServerId,
+              "playerCount": Object.keys(servers[data.oldServerId].clients).length,
+              "usernameList": oldUsernameList
             }));
           }
         });
@@ -174,7 +209,33 @@ function onMessage(message) {
         }
       }
       break;
-  }
+    case "updateGameState":
+      // update gameState to server.js
+      gameState[data.serverId].visitedTiles = data.gameState.visitedTiles;
+      gameState[data.serverId].numMines = data.gameState.numMines;
+      gameState[data.serverId].randomMines = data.gameState.randomMines;
+      gameState[data.serverId].buttonFlagCounter = data.gameState.buttonFlagCounter;
+      gameState[data.serverId].gameDifficulty = data.gameState.gameDifficulty; 
+      // console.log(`Server ${data.serverId} gameState = ${gameState[data.serverId].visitedTiles}`);
+
+      // send server info to its clients 
+      for (const client in clients) {
+        if (clients[client].serverId === data.serverId && clients[client].clientId !== data.clientId) {
+          const otherClient = clients[client];
+          otherClient.connection.send(JSON.stringify({
+            "method": "updateGameState",
+            "otherClient": otherClient.username,
+            "tiles": data.gameState.tiles,
+            "visitedTiles": data.gameState.visitedTiles,
+            "numMines": data.gameState.numMines,
+            "randomMines": data.gameState.randomMines,
+            "buttonFlagCounter": data.gameState.buttonFlagCounter,
+            "gameDifficulty": data.gameState.gameDifficulty
+          }));
+        }
+      }
+      break;
+    }
 }
 
 function sendAvailableServers() {
@@ -199,7 +260,7 @@ function sendAvailableServers() {
     );
   }
 }
-  
+
 function generateName() {
   const adjectives = ["Joyful","Samurai","Warrior","Friendly","Cheerful","Delightful","Hungry","Ninja","Silly","Wonderful","Fantastic","Amazing","Enthusiastic","Trusting","Courageous","Optimistic","Talented","Funny","Hopeful","Charismatic","Genuine","Creative","Confident","Radiant","Splendid","Harmonious","Intelligent","Dynamic","Vibrant","Brilliant","Excited","Jubilant","Awesome","Happy","Strong","Brave","Witty","Charming","Eager","Caring","Lucky","Jovial","Honest","Polite","Fearless","Sincere","Ecstatic","Zealous","Earnest","Relaxed","Mindful","Energetic"]
   const animals = ["Serpent","Hippo","Giraffe","Bunny","Turtle","Tortoise","Rabbit","Mouse","Cat","Tiger","Puppy","Lion","Elephant","Dolphin","Koala","Cheetah","Panda","Gorilla","Penguin","Flamingo","Zebra","Lemur","Sloth","Ostrich","Raccoon","Meerkat","Peacock","Hyena","Monkey","Capybara","Goose"]
