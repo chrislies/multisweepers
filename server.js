@@ -150,7 +150,9 @@ function onMessage(message) {
         // update client's serverId with new server
         // const oldServerId = clients[data.clientId].serverId;
         servers[data.oldServerId].clients.length -= 1;
+        console.log(`clients[data.clientId].serverId = ${clients[data.clientId].serverId}`);
         clients[data.clientId].serverId = data.serverId;
+        console.log(`clients[data.clientId].serverId = ${clients[data.clientId].serverId}`);
 
         const client = {
           "clientId": data.clientId,
@@ -168,6 +170,8 @@ function onMessage(message) {
             usernameList.push(clients[client].username);
           }
         }
+        console.log(`usernameList for server ${data.serverId} = ${usernameList}`);
+
         servers[data.serverId].clients.forEach(c => {
           if (clients[c.clientId]) {
             clients[c.clientId].connection.send(JSON.stringify({
@@ -180,24 +184,23 @@ function onMessage(message) {
           }
         });
 
-        // create an oldUsernameList array for the old server
-        const oldUsernameList = [];
-        for (const client in clients) {
-          if (clients[client].serverId === data.oldServerId) {
-            oldUsernameList.push(clients[client].username);
-          }
+        // update the usernames for the old server
+        const updatedPlayerList = [];
+        for (const clientId in servers[data.oldServerId].clients) {
+          const client = servers[data.oldServerId].clients[clientId];
+          updatedPlayerList.push(client.username);
         }
-        // update old server to remove the player's username from leaderboard
-        servers[data.oldServerId].clients.forEach(c => {
-          if (clients[c.clientId]) {
-            clients[c.clientId].connection.send(JSON.stringify({
-              "method": "userLeftFullServer",
-              "serverId": data.oldServerId,
-              "playerCount": Object.keys(servers[data.oldServerId].clients).length,
-              "usernameList": oldUsernameList
+        console.log(`updatedPlayerList = ${updatedPlayerList}`);
+        // send the updated player list to the other client in that server
+        for (const client of Object.values(clients)) {
+          if (client.serverId === data.oldServerId) {
+            client.connection.send(JSON.stringify({
+              method: "updatePlayersList",
+              usernameList: updatedPlayerList,
+              playerCount: servers[data.oldServerId].clients.length
             }));
-          }
-        });
+          }    
+        }
         sendAvailableServers();   // update and remove the server from the serversList since server is now full
       } else {
         // Server DNE!

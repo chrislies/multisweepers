@@ -96,20 +96,7 @@ function onMessage(msg) {
     case "serverDNE":
       console.log(`Server "${data.serverId}" does not exist!`);
       break;
-    case "updatePlayersList": // when a user DISCONNECTS from a full server
-      // clear the existing player list/leaderboard
-      while (playerList.firstChild) {
-        playerList.removeChild(playerList.firstChild);
-      }
-      // add players to the player list
-      for (const playerName of data.usernameList) {
-        const span = document.createElement("span");
-        span.innerHTML = playerName;
-        playerList.appendChild(span);
-      }
-      playerCount.innerHTML = data.playerCount;
-      break;
-    case "userLeftFullServer":  // when a user LEAVES from a full server
+    case "updatePlayersList": // when a user DISCONNECTS/LEAVES from a full server
       // clear the existing player list/leaderboard
       while (playerList.firstChild) {
         playerList.removeChild(playerList.firstChild);
