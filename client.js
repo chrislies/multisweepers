@@ -90,7 +90,8 @@ function onMessage(msg) {
       playerList.prepend(clientUsernameElement);
 
       // update player's gameboard to new server's gameboard
-      console.log(data)
+      // update the new player's gamestate
+      sendGameStateToServerForPlayerJoining();
 
       break;
     case "serverDNE":
@@ -102,15 +103,16 @@ function onMessage(msg) {
         playerList.removeChild(playerList.firstChild);
       }
       // add players to the player list
-      for (const playerName of data.usernameList) {
+      for (const playerName in data.updatedPlayerList) {
         const span = document.createElement("span");
-        span.innerHTML = playerName;
+        span.innerHTML = data.updatedPlayerList[playerName] + "<br>";;
         playerList.appendChild(span);
       }
       playerCount.innerHTML = data.playerCount;
       break;
     case "updateGameState": 
       console.log(`Updating game state for player ${data.otherClient}`);
+      console.log(data.gameDifficulty);
       switch (data.gameDifficulty) {
         case "easy":
           // console.log(`Tiles = ${data.tiles}`);
@@ -209,7 +211,104 @@ function onMessage(msg) {
       }
       console.log(`data.visitedTiles = ${data.visitedTiles}`);
       console.log(`data.randomMines = ${data.randomMines}`)
-
+      break;
+    case "updateGameStateForPlayerJoining":
+      switch (data.gameDifficulty) {
+        case "easy":
+          // console.log(`Tiles = ${data.tiles}`);
+          difficulty = data.gameDifficulty;
+          selectDifficulty.value = data.gameDifficulty; 
+          if (gw.rows.length > 0) {
+            while (gw.rows.length > 0) {
+              gw.deleteRow(0);
+            }
+          }
+          n = 9; // n x n grid
+          numMines = 10;
+          buttonFlagCounter = numMines;
+          tileCounter = 0;
+          for (let i = 0; i < n; i++) {
+            let row = document.createElement("tr");
+            for (let j = 0; j < n; j++) {
+              let data = document.createElement("td");
+              data.classList.add("tile-" + tileCounter);
+              data.dataset.value = tileCounter;
+              data.setAttribute("rightClicked", false);
+              data.addEventListener("click", initialClick);
+              data.addEventListener("contextmenu", rightClickHandler);
+              row.appendChild(data);
+              tileCounter++;
+            }
+            gw.appendChild(row);
+          }
+          container = document.querySelector("#container");
+          container.style.transform = "translate(-50%, -50%) scale(2.2)";
+          generateBg();
+          break;
+        case "medium": 
+          // console.log(`Tiles = ${data.tiles}`);
+          difficulty = data.gameDifficulty;
+          selectDifficulty.value = data.gameDifficulty; 
+          if (gw.rows.length > 0) {
+            while (gw.rows.length > 0) {
+              gw.deleteRow(0);
+            }
+          }
+          n = 16; // n x n grid
+          numMines = 40;
+          buttonFlagCounter = numMines;
+          tileCounter = 0;
+          for (let i = 0; i < n; i++) {
+            let row = document.createElement("tr");
+            for (let j = 0; j < n; j++) {
+              let data = document.createElement("td");
+              data.classList.add("tile-" + tileCounter);
+              data.dataset.value = tileCounter;
+              data.setAttribute("rightClicked", false);
+              data.addEventListener("click", initialClick);
+              data.addEventListener("contextmenu", rightClickHandler);
+              row.appendChild(data);
+              tileCounter++;
+            }
+            gw.appendChild(row);
+          }
+          container = document.querySelector("#container");
+          container.style.transform = "translate(-50%, -50%) scale(1.6)";
+          generateBg();
+          break;
+          case "hard": 
+          // console.log(`Tiles = ${data.tiles}`);
+          difficulty = data.gameDifficulty;
+          selectDifficulty.value = data.gameDifficulty; 
+          if (gw.rows.length > 0) {
+            while (gw.rows.length > 0) {
+              gw.deleteRow(0);
+            }
+          }
+          n = 16; // n x m grid
+          m = 30
+          numMines = 99;
+          buttonFlagCounter = numMines;
+          tileCounter = 0;
+          for (let i = 0; i < n; i++) {
+            let row = document.createElement("tr");
+            for (let j = 0; j < m; j++) {
+              let data = document.createElement("td");
+              data.classList.add("tile-" + tileCounter);
+              data.dataset.value = tileCounter;
+              data.setAttribute("rightClicked", false);
+              data.addEventListener("click", initialClick);
+              data.addEventListener("contextmenu", rightClickHandler);
+              row.appendChild(data);
+              tileCounter++;
+            }
+            gw.appendChild(row);
+          }
+          container = document.querySelector("#container");
+          container.style.transform = "translate(-50%, -50%) scale(1.6)";
+          generateBg();
+          break;
+      }
       break;
   }
 }
@@ -843,6 +942,17 @@ function sendGameStateToServer() {
   if (socket.readyState === WebSocket.OPEN) {
     socket.send(JSON.stringify({
       method: "updateGameState",
+      gameState: gameState,
+      serverId: serverId,
+      clientId: clientId
+    }))
+  }
+}
+
+function sendGameStateToServerForPlayerJoining() {
+  if (socket.readyState === WebSocket.OPEN) {
+    socket.send(JSON.stringify({
+      method: "updateGameStateForPlayerJoining",
       gameState: gameState,
       serverId: serverId,
       clientId: clientId

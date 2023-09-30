@@ -121,22 +121,14 @@ function onMessage(message) {
     case "joinServer":
       if (servers[data.serverId]) {  // Server exists
         // Prevent user from joining own's server
-        let alreadyInServer = false;
-        for (const p of servers[data.serverId].clients) {
-          if (p.clientId == data.clientId) {  
-            alreadyInServer = true;
-            if (clients[data.clientId]) {
-              clients[data.clientId].connection.send(JSON.stringify({
-                "method": "alreadyInServer",
-                "serverId": data.serverId
-              }));
-            }
-            break; // Exit the loop
-          }
+        if (clients[data.clientId].serverId === servers[data.serverId].serverId) {
+          clients[data.clientId].connection.send(JSON.stringify({
+          "method": "alreadyInServer",
+          "serverId": data.serverId
+          }))
+          break;
         }
-        if (alreadyInServer) {  // If already in the server, don't continue further
-          break; // Exit the switch block
-        }
+
         // Prevent user from joining a full server
         if (servers[data.serverId].clients.length === 2) {
           if (clients[data.clientId]) {
@@ -147,21 +139,24 @@ function onMessage(message) {
           }
           break;
         }
+        
         // update client's serverId with new server
         // const oldServerId = clients[data.clientId].serverId;
         servers[data.oldServerId].clients.length -= 1;
-        console.log(`clients[data.clientId].serverId = ${clients[data.clientId].serverId}`);
         clients[data.clientId].serverId = data.serverId;
-        console.log(`clients[data.clientId].serverId = ${clients[data.clientId].serverId}`);
 
-        const client = {
-          "clientId": data.clientId,
-          "username": data.username,
-          "wins": 0,
-          "oofs": 0,
-          "connection": clients[data.clientId].connection // Get the client's connection
-        };
-        servers[data.serverId].clients.push(client);
+        console.log(`${data.username} left server ${data.oldServerId} to join server ${data.serverId}`);
+
+        // const client = {
+        //   "clientId": data.clientId,
+        //   "username": data.username,
+        //   "wins": 0,
+        //   "oofs": 0,
+        //   "connection": clients[data.clientId].connection // Get the client's connection
+        // };
+        // servers[data.serverId].clients.push(client);
+
+        servers[data.serverId].clients.push(clients[data.clientId]);
 
         // create a usernameList array for the current server
         const usernameList = [];
@@ -172,9 +167,9 @@ function onMessage(message) {
         }
         console.log(`usernameList for server ${data.serverId} = ${usernameList}`);
 
-        servers[data.serverId].clients.forEach(c => {
-          if (clients[c.clientId]) {
-            clients[c.clientId].connection.send(JSON.stringify({
+        for (const clientId in clients) {
+          if (clients[clientId].serverId === data.serverId) {
+            clients[clientId].connection.send(JSON.stringify({
               "method": "joinedServer",
               "serverId": data.serverId,
               "playerCount": Object.keys(servers[data.serverId].clients).length,
@@ -182,24 +177,25 @@ function onMessage(message) {
               "player": clients[data.clientId].username
             }));
           }
-        });
+        }
 
         // update the usernames for the old server
         const updatedPlayerList = [];
-        for (const clientId in servers[data.oldServerId].clients) {
-          const client = servers[data.oldServerId].clients[clientId];
-          updatedPlayerList.push(client.username);
+        for (const clientId in clients) {
+          if (clients[clientId].serverId === data.oldServerId) {
+            updatedPlayerList.push(clients[clientId].username);
+          }
         }
-        console.log(`updatedPlayerList = ${updatedPlayerList}`);
+        console.log(`updatedPlayerList for server ${data.oldServerId} = ${updatedPlayerList}`);
         // send the updated player list to the other client in that server
-        for (const client of Object.values(clients)) {
-          if (client.serverId === data.oldServerId) {
-            client.connection.send(JSON.stringify({
+        for (const clientId in clients) {
+          if (clients[clientId].serverId === data.oldServerId) {
+            clients[clientId].connection.send(JSON.stringify({
               method: "updatePlayersList",
-              usernameList: updatedPlayerList,
+              updatedPlayerList: updatedPlayerList,
               playerCount: servers[data.oldServerId].clients.length
-            }));
-          }    
+            }))
+          }
         }
         sendAvailableServers();   // update and remove the server from the serversList since server is now full
       } else {
@@ -238,12 +234,25 @@ function onMessage(message) {
         }
       }
       break;
+    case "updateGameStateForPlayerJoining":
+      // update gameState to server.js
+      // send server info to the player joining the server 
+      clients[data.clientId].connection.send(JSON.stringify({
+        "method": "updateGameStateForPlayerJoining",
+        "visitedTiles": gameState[data.serverId].visitedTiles,
+        "numMines": gameState[data.serverId].numMines,
+        "randomMines": gameState[data.serverId].randomMines,
+        "buttonFlagCounter": gameState[data.serverId].buttonFlagCounter,
+        "gameDifficulty": gameState[data.serverId].gameDifficulty
+      }));
+      break;
     }
 }
 
 function sendAvailableServers() {
   // Create a list of available servers with player counts
   const serversList = [];
+  console.log("Servers online:");
   for (const serverId in servers) {
     if (servers[serverId].clients.length !== 0) {
       console.log(`serverId = ${serverId}`);
