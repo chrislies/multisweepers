@@ -7,6 +7,7 @@ let clientUsername;
 const serverList = document.querySelector(".servers");
 let playerCount = document.querySelector("#playerCount");
 let playerList = document.querySelector("#playerList");
+let clientFlags = [];
 let span;
 
 let joinServerButton = document.querySelector("#joinServerButton");
@@ -41,7 +42,7 @@ function onMessage(msg) {
       playerList.append(span);
       clientUsername = data.username;
 
-      gameState.visitedTiles = [];
+      gameState.visitedTilesValue = [];
       gameState.numMines = numMines;
       gameState.randomMines = randomMines;
       gameState.buttonFlagCounter = buttonFlagCounter;
@@ -88,11 +89,37 @@ function onMessage(msg) {
       }
       // rearrange player leaderboard so that the client's username is first
       playerList.prepend(clientUsernameElement);
-
+      
       // update player's gameboard to new server's gameboard
       // update the new player's gamestate
-      sendGameStateToServerForPlayerJoining();
-
+      if (data.gameDifficulty) {
+        console.log(`${data.player} w/ difficulty ${data.gameDifficulty}`)
+        difficulty = data.gameDifficulty;
+        gameState.gameDifficulty = data.gameDifficulty;
+        selectDifficulty.value = data.gameDifficulty;
+        switch (data.gameDifficulty) {
+          case "easy":
+            generateEasy(data.sendToServer);
+            break;
+          case "medium":
+            generateMedium(data.sendToServer);
+            break;
+          case "hard":
+            generateHard(data.sendToServer);
+            break;
+        }
+        clientFlags = data.clientFlags;
+        gameState.visitedTilesValue = data.visitedTilesValue;
+        gameState.flaggedTilesValue = data.flaggedTilesValue;
+        gameState.randomMines = data.randomMines;
+        gameState.buttonFlagCounter = data.buttonFlagCounter;
+        gameState.numMines = data.numMines;
+        gameState.possibleMove = data.possibleMove;
+        gameState.mineRadiusNB = data.mineRadiusNB;
+        gameState.mineRadiusLB = data.mineRadiusLB;
+        gameState.mineRadiusRB = data.mineRadiusRB;
+        updateClientBoard();
+      }
       break;
     case "serverDNE":
       console.log(`Server "${data.serverId}" does not exist!`);
@@ -110,205 +137,55 @@ function onMessage(msg) {
       }
       playerCount.innerHTML = data.playerCount;
       break;
+    case "updateFlagsForOtherClient":
+      // console.log(data.otherClientFlags);
+      let tiles = document.querySelectorAll("td");
+      tiles.forEach(t => {
+        let tileValue = parseInt(t.dataset.value);
+        if (gameState.visitedTilesValue.includes(tileValue)) {
+          return;
+        } else if (data.otherClientFlags.includes(parseInt(tileValue))) {
+          t.innerHTML = "<img src='./img/blueflag-icon.png' alt='blueflag'>";
+          t.setAttribute("rightClicked", true);
+        } else if (clientFlags.includes(parseInt(tileValue))) {
+          return;
+        } else {
+          t.innerHTML = "";
+          t.setAttribute("rightClicked", false);
+        }
+      })
+
+      // data.otherClientFlags.forEach(flagValue => {
+      //   tiles[flagValue].innerHTML = "<img src='./img/blueflag-icon.png' alt='blueflag'>";
+      //   tiles[flagValue].setAttribute("rightClicked", true);
+      // })
+      break;
     case "updateGameState": 
       console.log(`Updating game state for player ${data.otherClient}`);
-      console.log(data.gameDifficulty);
-      switch (data.gameDifficulty) {
-        case "easy":
-          // console.log(`Tiles = ${data.tiles}`);
-          difficulty = data.gameDifficulty;
-          selectDifficulty.value = data.gameDifficulty; 
-          if (gw.rows.length > 0) {
-            while (gw.rows.length > 0) {
-              gw.deleteRow(0);
-            }
-          }
-          n = 9; // n x n grid
-          numMines = 10;
-          buttonFlagCounter = numMines;
-          tileCounter = 0;
-          for (let i = 0; i < n; i++) {
-            let row = document.createElement("tr");
-            for (let j = 0; j < n; j++) {
-              let data = document.createElement("td");
-              data.classList.add("tile-" + tileCounter);
-              data.dataset.value = tileCounter;
-              data.setAttribute("rightClicked", false);
-              data.addEventListener("click", initialClick);
-              data.addEventListener("contextmenu", rightClickHandler);
-              row.appendChild(data);
-              tileCounter++;
-            }
-            gw.appendChild(row);
-          }
-          container = document.querySelector("#container");
-          container.style.transform = "translate(-50%, -50%) scale(2.2)";
-          generateBg();
-          break;
-        case "medium": 
-          // console.log(`Tiles = ${data.tiles}`);
-          difficulty = data.gameDifficulty;
-          selectDifficulty.value = data.gameDifficulty; 
-          if (gw.rows.length > 0) {
-            while (gw.rows.length > 0) {
-              gw.deleteRow(0);
-            }
-          }
-          n = 16; // n x n grid
-          numMines = 40;
-          buttonFlagCounter = numMines;
-          tileCounter = 0;
-          for (let i = 0; i < n; i++) {
-            let row = document.createElement("tr");
-            for (let j = 0; j < n; j++) {
-              let data = document.createElement("td");
-              data.classList.add("tile-" + tileCounter);
-              data.dataset.value = tileCounter;
-              data.setAttribute("rightClicked", false);
-              data.addEventListener("click", initialClick);
-              data.addEventListener("contextmenu", rightClickHandler);
-              row.appendChild(data);
-              tileCounter++;
-            }
-            gw.appendChild(row);
-          }
-          container = document.querySelector("#container");
-          container.style.transform = "translate(-50%, -50%) scale(1.6)";
-          generateBg();
-          break;
-          case "hard": 
-          // console.log(`Tiles = ${data.tiles}`);
-          difficulty = data.gameDifficulty;
-          selectDifficulty.value = data.gameDifficulty; 
-          if (gw.rows.length > 0) {
-            while (gw.rows.length > 0) {
-              gw.deleteRow(0);
-            }
-          }
-          n = 16; // n x m grid
-          m = 30
-          numMines = 99;
-          buttonFlagCounter = numMines;
-          tileCounter = 0;
-          for (let i = 0; i < n; i++) {
-            let row = document.createElement("tr");
-            for (let j = 0; j < m; j++) {
-              let data = document.createElement("td");
-              data.classList.add("tile-" + tileCounter);
-              data.dataset.value = tileCounter;
-              data.setAttribute("rightClicked", false);
-              data.addEventListener("click", initialClick);
-              data.addEventListener("contextmenu", rightClickHandler);
-              row.appendChild(data);
-              tileCounter++;
-            }
-            gw.appendChild(row);
-          }
-          container = document.querySelector("#container");
-          container.style.transform = "translate(-50%, -50%) scale(1.6)";
-          generateBg();
-          break;
+      // console.log(`difficulty = ${difficulty}, data.gameDifficulty = ${data.gameDifficulty}`)
+      if (difficulty !== data.gameDifficulty) {
+        switch (data.gameDifficulty) {
+          case "easy":
+            generateEasy(data.sendToServer);
+            break;
+          case "medium":
+            generateMedium(data.sendToServer);
+            break;
+          case "hard":
+            generateHard(data.sendToServer);
+            break;
+        }
       }
-      console.log(`data.visitedTiles = ${data.visitedTiles}`);
-      console.log(`data.randomMines = ${data.randomMines}`)
-      break;
-    case "updateGameStateForPlayerJoining":
-      switch (data.gameDifficulty) {
-        case "easy":
-          // console.log(`Tiles = ${data.tiles}`);
-          difficulty = data.gameDifficulty;
-          selectDifficulty.value = data.gameDifficulty; 
-          if (gw.rows.length > 0) {
-            while (gw.rows.length > 0) {
-              gw.deleteRow(0);
-            }
-          }
-          n = 9; // n x n grid
-          numMines = 10;
-          buttonFlagCounter = numMines;
-          tileCounter = 0;
-          for (let i = 0; i < n; i++) {
-            let row = document.createElement("tr");
-            for (let j = 0; j < n; j++) {
-              let data = document.createElement("td");
-              data.classList.add("tile-" + tileCounter);
-              data.dataset.value = tileCounter;
-              data.setAttribute("rightClicked", false);
-              data.addEventListener("click", initialClick);
-              data.addEventListener("contextmenu", rightClickHandler);
-              row.appendChild(data);
-              tileCounter++;
-            }
-            gw.appendChild(row);
-          }
-          container = document.querySelector("#container");
-          container.style.transform = "translate(-50%, -50%) scale(2.2)";
-          generateBg();
-          break;
-        case "medium": 
-          // console.log(`Tiles = ${data.tiles}`);
-          difficulty = data.gameDifficulty;
-          selectDifficulty.value = data.gameDifficulty; 
-          if (gw.rows.length > 0) {
-            while (gw.rows.length > 0) {
-              gw.deleteRow(0);
-            }
-          }
-          n = 16; // n x n grid
-          numMines = 40;
-          buttonFlagCounter = numMines;
-          tileCounter = 0;
-          for (let i = 0; i < n; i++) {
-            let row = document.createElement("tr");
-            for (let j = 0; j < n; j++) {
-              let data = document.createElement("td");
-              data.classList.add("tile-" + tileCounter);
-              data.dataset.value = tileCounter;
-              data.setAttribute("rightClicked", false);
-              data.addEventListener("click", initialClick);
-              data.addEventListener("contextmenu", rightClickHandler);
-              row.appendChild(data);
-              tileCounter++;
-            }
-            gw.appendChild(row);
-          }
-          container = document.querySelector("#container");
-          container.style.transform = "translate(-50%, -50%) scale(1.6)";
-          generateBg();
-          break;
-          case "hard": 
-          // console.log(`Tiles = ${data.tiles}`);
-          difficulty = data.gameDifficulty;
-          selectDifficulty.value = data.gameDifficulty; 
-          if (gw.rows.length > 0) {
-            while (gw.rows.length > 0) {
-              gw.deleteRow(0);
-            }
-          }
-          n = 16; // n x m grid
-          m = 30
-          numMines = 99;
-          buttonFlagCounter = numMines;
-          tileCounter = 0;
-          for (let i = 0; i < n; i++) {
-            let row = document.createElement("tr");
-            for (let j = 0; j < m; j++) {
-              let data = document.createElement("td");
-              data.classList.add("tile-" + tileCounter);
-              data.dataset.value = tileCounter;
-              data.setAttribute("rightClicked", false);
-              data.addEventListener("click", initialClick);
-              data.addEventListener("contextmenu", rightClickHandler);
-              row.appendChild(data);
-              tileCounter++;
-            }
-            gw.appendChild(row);
-          }
-          container = document.querySelector("#container");
-          container.style.transform = "translate(-50%, -50%) scale(1.6)";
-          generateBg();
-          break;
-      }
+      gameState.visitedTilesValue = data.visitedTilesValue;
+      gameState.flaggedTilesValue = data.flaggedTilesValue;
+      gameState.randomMines = data.randomMines;
+      gameState.buttonFlagCounter = data.buttonFlagCounter;
+      gameState.numMines = data.numMines;
+      gameState.possibleMove = data.possibleMove;
+      gameState.mineRadiusNB = data.mineRadiusNB;
+      gameState.mineRadiusLB = data.mineRadiusLB;
+      gameState.mineRadiusRB = data.mineRadiusRB;
+      updateClientBoard();
       break;
   }
 }
@@ -317,7 +194,8 @@ const gw = document.querySelector("#gameWindow");
 let gameOver = false;
 let numMines = 0;
 let buttonFlagCounter = 0;
-let visitedTiles = [];
+let visitedTilesValue = [];
+let flaggedTilesValue = [];
 let randomMines = [];
 let possibleMove = [];
 let mineRadiusNB = [];
@@ -326,20 +204,32 @@ let mineRadiusRB = [];
 let difficulty = "";
 
 let gameState = {
-  visitedTiles: [],
+  visitedTilesValue: [],
+  flaggedTilesValue: [],
   numMines: 0,
   randomMines: [],
   buttonFlagCounter: 0,
-  gameDifficulty: ""
+  gameDifficulty: "",
+  possibleMove: [],
+  mineRadiusNB: [],
+  mineRadiusLB: [],
+  mineRadiusRB: []
 };
 
-function generateEasy() {
+function generateEasy(sendToServer) {
+  gameState.gameDifficulty = "easy";
   visitedTiles = [];
   // console.log(gw.rows.length);
   if (gw.rows.length > 0) {
     while (gw.rows.length > 0) {
       gw.deleteRow(0);
     }
+  }  
+  if (document.querySelector(".buddyButton")) {
+    document.querySelector(".buddyButton").remove();
+  }
+  if (document.querySelector(".flagButton")) {
+    document.querySelector(".flagButton").remove();
   }
   let n = 9; // n x n grid
   numMines = 10;
@@ -364,23 +254,32 @@ function generateEasy() {
   createBuddy();
   createFlagButton();
   paintContainerGrids();
-  // Update the gameState object
-  gameState.visitedTiles = [];
-  gameState.numMines = numMines;
-  gameState.randomMines = randomMines;
-  gameState.buttonFlagCounter = buttonFlagCounter;
-  gameState.gameDifficulty = "easy"
-  // Send the updated gameState to the server with the function below
-  sendGameStateToServer();
+  if (sendToServer) {
+    // Update the gameState object
+    gameState.visitedTilesValue = [];
+    gameState.numMines = numMines;
+    gameState.randomMines = randomMines;
+    gameState.buttonFlagCounter = buttonFlagCounter;
+    gameState.gameDifficulty = "easy"
+    // Send the updated gameState to the server with the function below
+    sendGameStateToServer();
+  }
 }
 
-function generateMedium() {
+function generateMedium(sendToServer) {
+  gameState.gameDifficulty = "medium";
   visitedTiles = [];
   // console.log(gw.rows.length);
   if (gw.rows.length > 0) {
     while (gw.rows.length > 0) {
       gw.deleteRow(0);
     }
+  }
+  if (document.querySelector(".buddyButton")) {
+    document.querySelector(".buddyButton").remove();
+  }
+  if (document.querySelector(".flagButton")) {
+    document.querySelector(".flagButton").remove();
   }
   let n = 16; // n x n grid
   numMines = 40;
@@ -405,23 +304,32 @@ function generateMedium() {
   createBuddy();
   createFlagButton();
   paintContainerGrids();
-  // Update the gameState object
-  gameState.visitedTiles = [];
-  gameState.numMines = numMines;
-  gameState.randomMines = randomMines;
-  gameState.buttonFlagCounter = buttonFlagCounter;
-  gameState.gameDifficulty = "medium"
-  // Send the updated gameState to the server with the function below
-  sendGameStateToServer();
+  if (sendToServer) {
+    // Update the gameState object
+    gameState.visitedTilesValue = [];
+    gameState.numMines = numMines;
+    gameState.randomMines = randomMines;
+    gameState.buttonFlagCounter = buttonFlagCounter;
+    gameState.gameDifficulty = "medium"
+    // Send the updated gameState to the server with the function below
+    sendGameStateToServer();
+  }
 }
 
-function generateHard() {
+function generateHard(sendToServer) {
+  gameState.gameDifficulty = "hard";
   visitedTiles = [];
   // console.log(gw.rows.length);
   if (gw.rows.length > 0) {
     while (gw.rows.length > 0) {
       gw.deleteRow(0);
     }
+  }
+  if (document.querySelector(".buddyButton")) {
+    document.querySelector(".buddyButton").remove();
+  }
+  if (document.querySelector(".flagButton")) {
+    document.querySelector(".flagButton").remove();
   }
   let n = 16; // n x m grid
   let m = 30
@@ -447,14 +355,16 @@ function generateHard() {
   createBuddy();
   createFlagButton();
   paintContainerGrids();
-  // Update the gameState object
-  gameState.visitedTiles = [];
-  gameState.numMines = numMines;
-  gameState.randomMines = randomMines;
-  gameState.buttonFlagCounter = buttonFlagCounter;
-  gameState.gameDifficulty = "hard"
-  // Send the updated gameState to the server with the function below
-  sendGameStateToServer();
+  if (sendToServer) {
+    // Update the gameState object
+    gameState.visitedTilesValue = [];
+    gameState.numMines = numMines;
+    gameState.randomMines = randomMines;
+    gameState.buttonFlagCounter = buttonFlagCounter;
+    gameState.gameDifficulty = "hard"
+    // Send the updated gameState to the server with the function below
+    sendGameStateToServer();
+  }
 }
 
 function initialClick() { // clear x surrounding tiles upon inital click on one of the tiles
@@ -483,7 +393,7 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
       mineRadiusLB = [-9, -8, 1, 9, 10];  // possible mine locations for each left border tile
       mineRadiusRB = [-10, -9, -1, 8, 9];  // possible mine locations for each right border tile
       numRandomTiles = Math.round(Math.random() * (25 - 8) + 8);  // generate random # between [8-25)
-      console.log("[initial click] Number of random tiles: " + numRandomTiles);
+      console.log("[easy: initial click] Number of random tiles: " + numRandomTiles);
       break;
     case "medium":
       numMines = 40;
@@ -492,7 +402,7 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
       mineRadiusLB = [-16, -15, 1, 16, 17];  // possible mine locations for each left border tile
       mineRadiusRB = [-17, -16, -1, 15, 16];  // possible mine locations for each right border tile
       numRandomTiles = Math.round(Math.random() * (34 - 17) + 17);  // generate random # between [17-34)
-      console.log("[initial click] Number of random tiles: " + numRandomTiles);
+      console.log("[medium: initial click] Number of random tiles: " + numRandomTiles);
       break;
     case "hard":
       numMines = 99;
@@ -501,7 +411,7 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
       mineRadiusLB = [-30, -29, 1, 30, 31];  // possible mine locations for each left border tile
       mineRadiusRB = [-31, -30, -1, 29, 30];  // possible mine locations for each right border tile
       numRandomTiles = Math.round(Math.random() * (48 - 31) + 31);  // generate random # between [31-48)
-      console.log("[initial click] Number of random tiles: " + numRandomTiles);
+      console.log("[hard: initial click] Number of random tiles: " + numRandomTiles);
       break;
   }
 
@@ -536,14 +446,14 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
   // }); 
 
   // Generate mines
-  // let tile = document.getElementsByTagName("td");
+  let tile = document.getElementsByTagName("td");
   while (randomMines.length < numMines) {
     let randomNum = Math.round(Math.random() * tableSize); // generate random # between [0-tableSize)
     while (randomMines.includes(randomNum) || valueVisitedTiles.includes(randomNum)) {
       randomNum = Math.round(Math.random() * tableSize); // generate random # between [0-tableSize)
     }
     randomMines.push(randomNum);
-    // tile[randomNum].style.backgroundColor = "red";
+    tile[randomNum].style.backgroundColor = "red";
     // tile[randomNum].className += "-mine";
   }
 
@@ -554,8 +464,15 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
     if (td.getAttribute("rightClicked") === "true") {
       td.setAttribute("rightClicked", false);
       td.innerHTML = "";  // clears the innerHTML of a td element to account for flag icon
-      buttonFlagCounter += 1; // update the total flag counter by 'returning' the flag to the counter
-      document.querySelector(".flagCounter").innerHTML = buttonFlagCounter;
+      
+      let currTileIndex = gameState.flaggedTilesValue.findIndex(i => i === parseInt(td.dataset.value));
+      gameState.flaggedTilesValue.splice(currTileIndex, 1);
+      if (clientFlags.includes(parseInt(td.dataset.value))) {
+        buttonFlagCounter += 1; // update the total flag counter by 'returning' the flag to the counter
+        document.querySelector(".flagCounter").innerHTML = buttonFlagCounter;
+        clientFlags.splice(currTileIndex, 1);
+        updateFlagsToServer();
+      }
     }
     scanMineRadius(td);
     if (td.innerHTML === "") {
@@ -574,8 +491,12 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
       td.addEventListener("click", leftClick);
     }
   });
-  gameState.visitedTiles = valueVisitedTiles;
+  gameState.visitedTilesValue = visitedTiles.map(tile => parseInt(tile.dataset.value));
   gameState.randomMines = randomMines;
+  gameState.possibleMove = possibleMove;
+  gameState.mineRadiusNB = mineRadiusNB;
+  gameState.mineRadiusLB = mineRadiusLB;
+  gameState.mineRadiusRB = mineRadiusRB;
   sendGameStateToServer();
 }
 
@@ -587,16 +508,28 @@ function scanMineRadius(tile) {
 
   if (tileValue % colLength === 0) {
     // If current tile is on the left border, mineRadius becomes limited to mineRadiusLB
-    mineRadius = mineRadiusLB;
+    if (mineRadiusLB.length === 0) {
+      mineRadius = gameState.mineRadiusLB;
+    } else {
+      mineRadius = mineRadiusLB;
+    } 
   } else if (tileValue % colLength === colLength - 1) {
     // If current tile is on the right border, mineRadius becomes limited to mineRadiusRB
-    mineRadius = mineRadiusRB;
+    if (mineRadiusRB.length === 0) {
+      mineRadius = gameState.mineRadiusRB;
+    } else {
+      mineRadius = mineRadiusRB;
+    } 
   } else {
     // If current tile is not on either border, mineRadius does not need to be limited
-    mineRadius = mineRadiusNB;
+    if (mineRadiusNB.length === 0) {
+      mineRadius = gameState.mineRadiusNB;
+    } else {
+      mineRadius = mineRadiusNB;
+    } 
   }
   for (let i = 0; i < mineRadius.length; i++) {
-    if (randomMines.includes(tileValue + mineRadius[i])) {
+    if (gameState.randomMines.includes(tileValue + mineRadius[i])) {
       mineCounter++;
     }
     if (mineCounter > 0) {
@@ -640,20 +573,33 @@ function floodFill(tile) {
 
   if (tileValue % colLength === 0) {
     // If current tile is on the left border, floodRadius becomes limited to mineRadiusLB
-    floodRadius = mineRadiusLB;
+    if (mineRadiusLB.length === 0) {
+      floodRadius = gameState.mineRadiusLB;
+    } else {
+      floodRadius = mineRadiusLB;
+    }
   } else if (tileValue % colLength === colLength - 1) {
     // If current tile is on the right border, floodRadius becomes limited to mineRadiusRB
-    floodRadius = mineRadiusRB;
+    if (mineRadiusRB.length === 0) {
+      floodRadius = gameState.mineRadiusRB;
+    } else {
+      floodRadius = mineRadiusRB;
+    }
   } else {
     // If current tile is not on either border, floodRadius does not need to be limited
-    floodRadius = mineRadiusNB;
+    if (mineRadiusNB.length === 0) {
+      floodRadius = gameState.mineRadiusNB;
+    } else {
+      floodRadius = mineRadiusNB;
+    }
   }
 
   for (let i = 0; i < floodRadius.length; i++) {
-    let nextTileValue = tileValue + floodRadius[i]
+    let nextTileValue = tileValue + floodRadius[i];
     if (td[nextTileValue]) {
       if (!visitedTiles.includes(td[nextTileValue])) {
         visitedTiles.push(td[nextTileValue]);
+        gameState.visitedTilesValue.push(nextTileValue);
         td[nextTileValue].style.backgroundColor = "#707070";
         scanMineRadius(td[nextTileValue]);
         if (td[nextTileValue].innerHTML === "") {
@@ -663,8 +609,16 @@ function floodFill(tile) {
       if (td[nextTileValue].getAttribute("rightClicked") === "true") {
         td[nextTileValue].setAttribute("rightClicked", false);
         td[nextTileValue].innerHTML = "";
-        buttonFlagCounter += 1;
-        flagCounter.innerHTML = buttonFlagCounter;
+        if (clientFlags.includes(parseInt(td[nextTileValue].dataset.value))) {
+          buttonFlagCounter += 1;
+          flagCounter.innerHTML = buttonFlagCounter;
+        }
+        let currTileIndex = gameState.flaggedTilesValue.findIndex(i => i === nextTileValue);
+        gameState.flaggedTilesValue.splice(currTileIndex, 1);
+        // sendGameStateToServer();
+        currTileIndex = clientFlags.findIndex(i => i === nextTileValue);
+        clientFlags.splice(currTileIndex, 1);
+        updateFlagsToServer();
         scanMineRadius(td[nextTileValue]);
         if (td[nextTileValue].innerHTML === "") {
           floodFill(td[nextTileValue]);
@@ -678,12 +632,13 @@ function leftClick() {
   let currTile = this;
   // return if currTile is right clicked (flagged); otherwise proceed
   if (currTile.getAttribute("rightClicked") === "true" || gameOver) { return; }
-  if (randomMines.includes(parseInt(currTile.dataset.value))) {
+  if (gameState.randomMines.includes(parseInt(currTile.dataset.value))) {
     gameLost();
     return;
   }
-  if (!visitedTiles.includes(currTile)) {
+  if (!gameState.visitedTilesValue.includes(parseInt(currTile.dataset.value))) {
     visitedTiles.push(currTile);  // this prevents currTile from being pushed more than once (ex. if user clicks too fast)
+    gameState.visitedTilesValue.push(parseInt(currTile.dataset.value));
   }
   // console.log(`[LEFT CLICK]` + " on tile " + currTile.dataset.value);
   document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/smile-icon.png' alt='buddy-smile'>";
@@ -695,9 +650,13 @@ function leftClick() {
     floodFill(currTile);
   }
 
-  if (document.querySelectorAll("td").length - visitedTiles.length === numMines) {
+  if (document.querySelectorAll("td").length - gameState.visitedTilesValue.length === gameState.numMines) {
     gameWon();
   }
+
+  gameState.visitedTilesValue = gameState.visitedTilesValue;
+  console.log(gameState.visitedTilesValue);
+  sendGameStateToServer();
 }
 
 const rightClickHandler = (event) => {
@@ -705,8 +664,15 @@ const rightClickHandler = (event) => {
   // If game is over, ignore right click feature 
   if (gameOver) { return; }
   let currTile = event.target;
-  let valueVisitedTiles = visitedTiles.map(td => parseInt(td.dataset.value));
-  if (!valueVisitedTiles.includes(parseInt(currTile.dataset.value))) {
+
+  // let valueVisitedTiles = [];
+  // if (Number.isInteger(visitedTiles[0])) {
+  //   valueVisitedTiles = visitedTiles;
+  // } else {
+  //   valueVisitedTiles = visitedTiles.map(td => parseInt(td.dataset.value));
+  // }
+
+  if (!gameState.visitedTilesValue.includes(parseInt(currTile.dataset.value))) {
     if (currTile.getAttribute("rightClicked") === "false") {
       // console.log(`[RIGHT CLICK]` + " on tile " + currTile.dataset.value);
       currTile.innerHTML = "<img src='./img/flag-icon.png' alt='flag'>";
@@ -714,6 +680,9 @@ const rightClickHandler = (event) => {
       currTile.setAttribute("rightClicked", true);
       buttonFlagCounter -= 1;
       document.querySelector(".flagCounter").innerHTML = buttonFlagCounter;
+      // update the gamestate
+      gameState.flaggedTilesValue.push(parseInt(currTile.dataset.value));
+      clientFlags.push(parseInt(currTile.dataset.value));
     } else {
       document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/nervous-icon.png' alt='buddy-nervous'>";
       setTimeout(() => {
@@ -722,9 +691,18 @@ const rightClickHandler = (event) => {
       currTile.innerHTML = "";
       // currTile.style.backgroundColor = "lightgray";
       currTile.setAttribute("rightClicked", false);
-      buttonFlagCounter += 1;
-      document.querySelector(".flagCounter").innerHTML = buttonFlagCounter;
+      if (clientFlags.includes(parseInt(currTile.dataset.value))) {
+        buttonFlagCounter += 1;
+        document.querySelector(".flagCounter").innerHTML = buttonFlagCounter;
+      }
+      // update the gamestate
+      let currTileIndex = gameState.flaggedTilesValue.findIndex(i => parseInt(i) === parseInt(currTile.dataset.value));
+      gameState.flaggedTilesValue.splice(currTileIndex, 1);
+      currTileIndex = clientFlags.findIndex(i => parseInt(i) === parseInt(currTile.dataset.value));
+      clientFlags.splice(currTileIndex, 1);
     }
+    updateFlagsToServer();
+    // sendGameStateToServer();
   }
 };
 
@@ -775,26 +753,6 @@ selectDifficulty.addEventListener("change", () => {
   generateBg();
 });
 
-function playAgain() {
-  console.clear();
-  gameOver = false;
-  numMines = 0;
-  randomMines = [];
-  visitedTiles = [];
-  if (document.querySelector(".playAgainButton")) {
-    document.querySelector(".playAgainButton").remove();
-  }
-  document.querySelector(".buddyButton").remove();
-  document.querySelector(".flagButton").remove();
-  if (selectDifficulty.value === "easy") {
-    generateEasy();
-  } else if (selectDifficulty.value === "medium") {
-    generateMedium();
-  } else {
-    generateHard();
-  }
-}
-
 function createFlagButton() {
   const gameBoard = document.querySelector("#gameBoard");
   const fButton = document.createElement("button");
@@ -840,14 +798,16 @@ function flagButtonClick() {
 function setFlagHandler() {
   if (gameOver) { return; }
   let currTile = this;
-  let valueVisitedTiles = visitedTiles.map(td => parseInt(td.dataset.value));
-  if (!valueVisitedTiles.includes(parseInt(currTile.dataset.value))) {
+  // let valueVisitedTiles = visitedTiles.map(td => parseInt(td.dataset.value));
+  if (!gameState.visitedTilesValue.includes(parseInt(currTile.dataset.value))) {
     if (currTile.getAttribute("rightClicked") === "false") {
       currTile.innerHTML = "<img src='./img/flag-icon.png' alt='flag'>";
       // currTile.style.backgroundColor = "orange";
       currTile.setAttribute("rightClicked", true);
       buttonFlagCounter -= 1;
       document.querySelector(".flagCounter").innerHTML = buttonFlagCounter;
+      // update the gamestate
+      gameState.flaggedTilesValue.push(parseInt(currTile.dataset.value));
     } else {
       document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/nervous-icon.png' alt='buddy-nervous'>";
       setTimeout(() => {
@@ -858,7 +818,11 @@ function setFlagHandler() {
       currTile.setAttribute("rightClicked", false);
       buttonFlagCounter += 1;
       document.querySelector(".flagCounter").innerHTML = buttonFlagCounter;
+      // update the gamestate
+      let currTileIndex = gameState.flaggedTilesValue.findIndex(i => parseInt(i) === parseInt(currTile.dataset.value));
+      gameState.flaggedTilesValue.splice(currTileIndex, 1);
     }
+    sendGameStateToServer();
   }
 }
 
@@ -924,17 +888,21 @@ function playAgain() {
   numMines = 0;
   randomMines = [];
   visitedTiles = [];
+  gameState.numMines = 0;
+  gameState.randomMines = [];
+  gameState.visitedTiles = [];
+  gameState.flaggedTilesValue = [];
   if (document.querySelector(".playAgainButton")) {
     document.querySelector(".playAgainButton").remove();
   }
   document.querySelector(".buddyButton").remove();
   document.querySelector(".flagButton").remove();
   if (selectDifficulty.value === "easy") {
-    generateEasy();
+    generateEasy(true);
   } else if (selectDifficulty.value === "medium") {
-    generateMedium();
+    generateMedium(true);
   } else {
-    generateHard();
+    generateHard(true);
   }
 }
 
@@ -949,15 +917,61 @@ function sendGameStateToServer() {
   }
 }
 
-function sendGameStateToServerForPlayerJoining() {
+function updateFlagsToServer() {
   if (socket.readyState === WebSocket.OPEN) {
     socket.send(JSON.stringify({
-      method: "updateGameStateForPlayerJoining",
-      gameState: gameState,
+      method: "updateFlags",
+      flags: clientFlags,
       serverId: serverId,
       clientId: clientId
     }))
   }
 }
 
-generateEasy();
+function updateClientBoard() {
+  randomMines = gameState.randomMines;
+  console.log(`updateClientBoard() for ${clientUsername}`);
+  // console.log(`randomMines = ${gameState.randomMines}`);
+  // console.log(`visitedTilesValue = ${gameState.visitedTilesValue}`);
+  let tiles = document.querySelectorAll("td");
+
+  console.log(gameState)
+
+  tiles.forEach(t => {
+    // let td = document.querySelector(`[data-value="${parseInt(t.dataset.value)}"]`);
+    if (gameState.flaggedTilesValue.includes(parseInt(t.dataset.value))) {
+      t.innerHTML = "<img src='./img/blueflag-icon.png' alt='blueflag'>";
+      t.setAttribute("rightClicked", true);
+    } else {
+      t.innerHTML = "";
+      t.setAttribute("rightClicked", false);
+    }
+  })
+
+  if (gameState.visitedTilesValue.length > 0) {  // if initialClick() was already executed by other client, remove it for the joining client
+    tiles.forEach(t => {
+      t.removeEventListener("click", initialClick);
+      t.addEventListener("click", leftClick);
+    });
+  }
+  for (tileValue in gameState.visitedTilesValue) {
+    let td = document.querySelector(`[data-value="${gameState.visitedTilesValue[tileValue]}"]`);
+    td.style.backgroundColor = "#707070";
+    scanMineRadius(td);
+    td.removeEventListener("click", leftClick);
+    td.removeEventListener("click", rightClickHandler);
+    
+  }
+  
+  let nonVisitedTilesValue = [];
+  tiles.forEach(t => {
+    if (!gameState.visitedTilesValue.includes(parseInt(t.dataset.value))) {
+      nonVisitedTilesValue.push(parseInt(t.dataset.value));
+    }
+  })
+  // console.log(nonVisitedTilesValue);
+}
+
+
+
+generateEasy(true);
