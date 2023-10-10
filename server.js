@@ -244,6 +244,24 @@ function onMessage(message) {
         }
       }
       break;
+    case "removeFlagForOtherClient":
+      for (const client in clients) {
+        if (clients[client].serverId === data.serverId && clients[client].clientId !== data.clientId) {
+          const otherClient = clients[client];
+          console.log(`remove flag ${data.flagValueToRemove} from player ${otherClient.username}`)
+          console.log(`nonupdated list   = ${otherClient.clientFlags}`)
+          let flagIndexToRemove = otherClient.clientFlags.indexOf(data.flagValueToRemove);
+          console.log(`flagIndexToRemove: ${flagIndexToRemove}`);
+          otherClient.clientFlags.splice(flagIndexToRemove, 1);
+          console.log(`updated flag list = ${otherClient.clientFlags}`)
+          otherClient.connection.send(JSON.stringify({
+            "method": "removedFlagForOtherClient",
+            "clientFlags": otherClient.clientFlags,
+            "flagValueToRemove": data.flagValueToRemove
+          }))
+        }
+      }
+      break;
     case "updateFlags":
       clients[data.clientId].clientFlags = data.flags;
       gameState[data.serverId].flaggedTilesValue = data.flags;
@@ -259,7 +277,7 @@ function onMessage(message) {
       break;
     case "updateGameState":
       clients[data.clientId].clientFlags = clients[data.clientId].clientFlags;
-      console.log(`${clients[data.clientId].username}'s flags: ${clients[data.clientId].clientFlags}`);
+      // console.log(`${clients[data.clientId].username}'s flags: ${clients[data.clientId].clientFlags}`);
       gameState[data.serverId].visitedTilesValue = data.gameState.visitedTilesValue;
       gameState[data.serverId].flaggedTilesValue = data.gameState.flaggedTilesValue;
       gameState[data.serverId].numMines = data.gameState.numMines;

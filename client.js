@@ -1,5 +1,3 @@
-// const { client } = require("websocket");
-
 let socket;
 let clientId;
 let serverId;
@@ -9,6 +7,9 @@ let playerCount = document.querySelector("#playerCount");
 let playerList = document.querySelector("#playerList");
 let clientFlags = [];
 let span;
+let buttonFlagCounter = 0;
+let flagCounter = document.querySelector(".flagCounter");
+
 
 let joinServerButton = document.querySelector("#joinServerButton");
 joinServerButton.addEventListener("click", (event) => {
@@ -28,6 +29,7 @@ socket = new WebSocket("ws://localhost:8080");
 socket.onmessage = onMessage;
 
 function onMessage(msg) {
+  let tiles = document.querySelectorAll("td");
   const data = JSON.parse(msg.data);
   switch (data.method) {
     case "connected":
@@ -118,7 +120,7 @@ function onMessage(msg) {
         gameState.mineRadiusNB = data.mineRadiusNB;
         gameState.mineRadiusLB = data.mineRadiusLB;
         gameState.mineRadiusRB = data.mineRadiusRB;
-        updateClientBoard();
+        updateJoiningClientBoard();
       }
       break;
     case "serverDNE":
@@ -137,45 +139,52 @@ function onMessage(msg) {
       }
       playerCount.innerHTML = data.playerCount;
       break;
+    case "removedFlagForOtherClient":
+      // whenever a client removes other client's flag
+      console.log(`removedFlagsForOtherClient for ${clientUsername}`);
+      clientFlags = data.clientFlags;
+      tiles = document.querySelectorAll("td");
+      console.log(`clientFlags: ${clientFlags}`)
+      console.log(`remove flag ${data.flagValueToRemove}`);
+      tiles[data.flagValueToRemove].innerHTML = "";
+      tiles[data.flagValueToRemove].setAttribute("rightClicked", false);
+      console.log(`clientFlags: ${clientFlags}`)
+      let flagCounter = document.querySelector(".flagCounter");
+      switch (gameState.gameDifficulty) {
+        case "easy":
+          buttonFlagCounter = 10 - clientFlags.length;
+          flagCounter.innerHTML = buttonFlagCounter;
+          break;
+        case "medium":
+          buttonFlagCounter = 40 - clientFlags.length;
+          flagCounter.innerHTML = buttonFlagCounter;
+          break;
+        case "hard":
+          buttonFlagCounter = 99 - clientFlags.length;
+          flagCounter.innerHTML = buttonFlagCounter;
+          break;
+      }
+      break;
     case "updateFlagsForOtherClient":
-      // console.log(data.otherClientFlags);
-      let tiles = document.querySelectorAll("td");
-      tiles.forEach(t => {
-        let tileValue = parseInt(t.dataset.value);
-        if (gameState.visitedTilesValue.includes(tileValue)) {
-          return;
-        } else if (data.otherClientFlags.includes(parseInt(tileValue))) {
-          t.innerHTML = "<img src='./img/blueflag-icon.png' alt='blueflag'>";
-          t.setAttribute("rightClicked", true);
-        } else if (clientFlags.includes(parseInt(tileValue))) {
-          return;
-        } else {
-          t.innerHTML = "";
-          t.setAttribute("rightClicked", false);
-        }
-      })
-
-      // data.otherClientFlags.forEach(flagValue => {
-      //   tiles[flagValue].innerHTML = "<img src='./img/blueflag-icon.png' alt='blueflag'>";
-      //   tiles[flagValue].setAttribute("rightClicked", true);
-      // })
+      // whenever either client adds or removes their flag
+      updateClientBoard(data)
       break;
     case "updateGameState": 
-      console.log(`Updating game state for player ${data.otherClient}`);
+      // console.log(`Updating game state for player ${data.otherClient}`);
       // console.log(`difficulty = ${difficulty}, data.gameDifficulty = ${data.gameDifficulty}`)
-      if (difficulty !== data.gameDifficulty) {
-        switch (data.gameDifficulty) {
-          case "easy":
-            generateEasy(data.sendToServer);
-            break;
-          case "medium":
-            generateMedium(data.sendToServer);
-            break;
-          case "hard":
-            generateHard(data.sendToServer);
-            break;
-        }
-      }
+      // if (difficulty !== data.gameDifficulty) {
+      //   switch (data.gameDifficulty) {
+      //     case "easy":
+      //       generateEasy(data.sendToServer);
+      //       break;
+      //     case "medium":
+      //       generateMedium(data.sendToServer);
+      //       break;
+      //     case "hard":
+      //       generateHard(data.sendToServer);
+      //       break;
+      //   }
+      // }
       gameState.visitedTilesValue = data.visitedTilesValue;
       gameState.flaggedTilesValue = data.flaggedTilesValue;
       gameState.randomMines = data.randomMines;
@@ -185,7 +194,7 @@ function onMessage(msg) {
       gameState.mineRadiusNB = data.mineRadiusNB;
       gameState.mineRadiusLB = data.mineRadiusLB;
       gameState.mineRadiusRB = data.mineRadiusRB;
-      updateClientBoard();
+      // updateClientBoard();
       break;
   }
 }
@@ -193,7 +202,6 @@ function onMessage(msg) {
 const gw = document.querySelector("#gameWindow");
 let gameOver = false;
 let numMines = 0;
-let buttonFlagCounter = 0;
 let visitedTilesValue = [];
 let flaggedTilesValue = [];
 let randomMines = [];
@@ -241,7 +249,7 @@ function generateEasy(sendToServer) {
       let data = document.createElement("td");
       data.classList.add("tile-" + tileCounter);
       data.dataset.value = tileCounter;
-      data.setAttribute("rightClicked", false);
+      data.setAttribute("rightClicked", "false");
       data.addEventListener("click", initialClick);
       data.addEventListener("contextmenu", rightClickHandler);
       row.appendChild(data);
@@ -291,7 +299,7 @@ function generateMedium(sendToServer) {
       let data = document.createElement("td");
       data.classList.add("tile-" + tileCounter);
       data.dataset.value = tileCounter;
-      data.setAttribute("rightClicked", false);
+      data.setAttribute("rightClicked", "false");
       data.addEventListener("click", initialClick);
       data.addEventListener("contextmenu", rightClickHandler);
       row.appendChild(data);
@@ -342,7 +350,7 @@ function generateHard(sendToServer) {
       let data = document.createElement("td");
       data.classList.add("tile-" + tileCounter);
       data.dataset.value = tileCounter;
-      data.setAttribute("rightClicked", false);
+      data.setAttribute("rightClicked", "false");
       data.addEventListener("click", initialClick);
       data.addEventListener("contextmenu", rightClickHandler);
       row.appendChild(data);
@@ -379,12 +387,14 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
   let initialTile = this;
   // console.log(`initial tile = ${parseInt(initialTile.dataset.value)}`);
   visitedTiles.push(initialTile);
+  gameState.visitedTilesValue.push(parseInt(initialTile.dataset.value));
   let tableSize = document.querySelectorAll("td").length - 1; // get the last td element to determine tableSize
-  console.log("tableSize = " + tableSize);
+  // console.log("tableSize = " + tableSize);
   let numRandomTiles = 0;
   // console.log(parseInt(initialTile.dataset.value) + possibleMove[0]); // parseInt() converts string to int
 
-  difficulty = selectDifficulty.value;  // Check selected difficulty
+  // difficulty = selectDifficulty.value;  // Check selected difficulty
+  difficulty = gameState.gameDifficulty;  // Check selected difficulty
   switch (difficulty) {
     case "easy":
       numMines = 10;
@@ -435,6 +445,7 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
       }
     }
     visitedTiles.push(nextTile);
+    gameState.visitedTilesValue.push(parseInt(nextTile.dataset.value))
   }
 
   // convert the string dataset.value of each visitedTiles[] into int
@@ -446,52 +457,104 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
   // }); 
 
   // Generate mines
-  let tile = document.getElementsByTagName("td");
+  let tiles = document.querySelectorAll("td");
   while (randomMines.length < numMines) {
     let randomNum = Math.round(Math.random() * tableSize); // generate random # between [0-tableSize)
     while (randomMines.includes(randomNum) || valueVisitedTiles.includes(randomNum)) {
       randomNum = Math.round(Math.random() * tableSize); // generate random # between [0-tableSize)
     }
     randomMines.push(randomNum);
-    tile[randomNum].style.backgroundColor = "red";
+    tiles[randomNum].style.backgroundColor = "red";
     // tile[randomNum].className += "-mine";
   }
 
   // for each visited tile: 
   // 1. check and remove flag, and then change the tile's background color 
   // 2. check its surrounding tiles for mines (scanMineRadius(tile))
-  visitedTiles.forEach(td => {
-    if (td.getAttribute("rightClicked") === "true") {
-      td.setAttribute("rightClicked", false);
-      td.innerHTML = "";  // clears the innerHTML of a td element to account for flag icon
+  // console.log(visitedTiles);
+  // console.log(valueVisitedTiles);
+  
+  // visitedTiles.forEach(td => {
+  //   console.log(`tile ${td.dataset.value}= ${td.getAttribute("rightClicked")}`);
+  //   if (td.getAttribute("rightClicked") === "true" || gameState.flaggedTilesValue.includes(parseInt(td.dataset.value))) {
+  //     td.setAttribute("rightClicked", "false");
+  //     td.innerHTML = "";  // clears the innerHTML of a td element to account for flag icon
+  //     console.log(`unflagging tile ${parseInt(td.dataset.value)}`)
+  //     let removeFlagsForOtherClient = [];
       
-      let currTileIndex = gameState.flaggedTilesValue.findIndex(i => i === parseInt(td.dataset.value));
+  //     let currTileIndex = gameState.flaggedTilesValue.findIndex(i => i === parseInt(td.dataset.value));
+  //     gameState.flaggedTilesValue.splice(currTileIndex, 1);
+  //     sendGameStateToServer();
+  //     if (clientFlags.includes(parseInt(td.dataset.value))) {
+  //       buttonFlagCounter += 1; // update the total flag counter by 'returning' the flag to the counter
+  //       document.querySelector(".flagCounter").innerHTML = buttonFlagCounter;
+  //       currTileIndex = clientFlags.findIndex(i => i === parseInt(td.dataset.value));
+  //       clientFlags.splice(currTileIndex, 1);
+  //       updateFlagsToServer();
+  //     }
+  //     removeFlagsForOtherClient.push(parseInt(td.dataset.value));
+  //     if (socket.readyState === WebSocket.OPEN) {
+  //       socket.send(JSON.stringify({
+  //         method: "removeFlagsForOtherClient",
+  //         flagValuesToRemove: removeFlagsForOtherClient,
+  //         serverId: serverId,
+  //         clientId: clientId
+  //       }))
+  //     }
+
+  //   }
+  //   scanMineRadius(td);
+  //   if (td.innerHTML === "") {
+  //     floodFill(td);
+  //   }
+  //   td.style.backgroundColor = "#707070";
+  tiles = document.querySelectorAll("td");
+  // console.log(gameState.visitedTilesValue)
+  gameState.visitedTilesValue.forEach(tileVal => {
+    // console.log(`tile ${tileVal}= ${tiles[tileVal].getAttribute("rightClicked")}`);
+    if (tiles[tileVal].getAttribute("rightClicked") === "true" || gameState.flaggedTilesValue.includes(tileVal)) {
+      tiles[tileVal].setAttribute("rightClicked", "false");
+      tiles[tileVal].innerHTML = "";  // clears the innerHTML of a td element to account for flag icon
+      // console.log(`unflagging tile ${tileVal}`)
+      let removeFlagsForOtherClient = [];
+      
+      let currTileIndex = gameState.flaggedTilesValue.findIndex(i => i === tileVal);
       gameState.flaggedTilesValue.splice(currTileIndex, 1);
-      if (clientFlags.includes(parseInt(td.dataset.value))) {
+      if (clientFlags.includes(tileVal)) {
         buttonFlagCounter += 1; // update the total flag counter by 'returning' the flag to the counter
         document.querySelector(".flagCounter").innerHTML = buttonFlagCounter;
+        currTileIndex = clientFlags.findIndex(i => i === tileVal);
         clientFlags.splice(currTileIndex, 1);
         updateFlagsToServer();
       }
+      removeFlagsForOtherClient.push(tileVal);
+      if (socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+          method: "removeFlagsForOtherClient",
+          flagValuesToRemove: removeFlagsForOtherClient,
+          serverId: serverId,
+          clientId: clientId
+        }))
+      }
+
     }
-    scanMineRadius(td);
-    if (td.innerHTML === "") {
-      floodFill(td);
+    scanMineRadius(tiles[tileVal]);
+    if (tiles[tileVal].innerHTML === "") {
+      floodFill(tiles[tileVal]);
     }
-    td.style.backgroundColor = "#707070";
+    tiles[tileVal].style.backgroundColor = "#707070";
   });
 
   // after doing initial click, for each td element:
   // remove "initialClick" event listener 
   // add "leftClick" event listener ONLY IF tile has not been visited
-  let tdElements = document.querySelectorAll("td");
-  tdElements.forEach(td => {
+  tiles.forEach(td => {
     td.removeEventListener("click", initialClick);
     if (!visitedTiles.includes(td)) {
       td.addEventListener("click", leftClick);
     }
   });
-  gameState.visitedTilesValue = visitedTiles.map(tile => parseInt(tile.dataset.value));
+  // gameState.visitedTilesValue = visitedTiles.map(tile => parseInt(tile.dataset.value));
   gameState.randomMines = randomMines;
   gameState.possibleMove = possibleMove;
   gameState.mineRadiusNB = mineRadiusNB;
@@ -568,8 +631,8 @@ function floodFill(tile) {
   let colLength = document.querySelector("tr").children.length; // the number of elements in a row
   let floodRadius = [];
   let tileValue = parseInt(tile.dataset.value);
-  let td = document.querySelectorAll("td");
-  let flagCounter = document.querySelector(".flagCounter");
+  let tiles = document.querySelectorAll("td");
+  let removeFlagsForOtherClient = [];
 
   if (tileValue % colLength === 0) {
     // If current tile is on the left border, floodRadius becomes limited to mineRadiusLB
@@ -596,32 +659,63 @@ function floodFill(tile) {
 
   for (let i = 0; i < floodRadius.length; i++) {
     let nextTileValue = tileValue + floodRadius[i];
-    if (td[nextTileValue]) {
-      if (!visitedTiles.includes(td[nextTileValue])) {
-        visitedTiles.push(td[nextTileValue]);
+    if (tiles[nextTileValue]) {
+      if (!gameState.visitedTilesValue.includes(nextTileValue)) {
+        visitedTiles.push(tiles[nextTileValue]);
         gameState.visitedTilesValue.push(nextTileValue);
-        td[nextTileValue].style.backgroundColor = "#707070";
-        scanMineRadius(td[nextTileValue]);
-        if (td[nextTileValue].innerHTML === "") {
-          floodFill(td[nextTileValue]);
-        }
-      }
-      if (td[nextTileValue].getAttribute("rightClicked") === "true") {
-        td[nextTileValue].setAttribute("rightClicked", false);
-        td[nextTileValue].innerHTML = "";
-        if (clientFlags.includes(parseInt(td[nextTileValue].dataset.value))) {
+        // console.log(`visitedTiles = ${visitedTiles}`)
+        // console.log(`gameState.visitedTilesValue = ${gameState.visitedTilesValue}`)
+        tiles[nextTileValue].style.backgroundColor = "#707070";
+        if (gameState.flaggedTilesValue.includes(nextTileValue)) {
+          // console.log(`gameState.flaggedTilesValue.includes(${nextTileValue})`)
+          // unflag the tile 
+          let flagCounter = document.querySelector(".flagCounter");
+          tiles[nextTileValue].innerHTML = "";
+          tiles[nextTileValue].setAttribute("rightClicked", "false");
           buttonFlagCounter += 1;
           flagCounter.innerHTML = buttonFlagCounter;
+          let currTileIndex = gameState.flaggedTilesValue.findIndex(i => i === nextTileValue);
+          gameState.flaggedTilesValue.splice(currTileIndex, 1);
+          currTileIndex = clientFlags.findIndex(i => i === nextTileValue);
+          clientFlags.splice(currTileIndex, 1);
+          updateFlagsToServer();
         }
-        let currTileIndex = gameState.flaggedTilesValue.findIndex(i => i === nextTileValue);
-        gameState.flaggedTilesValue.splice(currTileIndex, 1);
-        // sendGameStateToServer();
-        currTileIndex = clientFlags.findIndex(i => i === nextTileValue);
-        clientFlags.splice(currTileIndex, 1);
-        updateFlagsToServer();
-        scanMineRadius(td[nextTileValue]);
-        if (td[nextTileValue].innerHTML === "") {
-          floodFill(td[nextTileValue]);
+        sendGameStateToServer();
+
+        // if (tiles[nextTileValue].getAttribute("rightClicked") === "true" && !clientFlags.includes(parseInt(tiles[nextTileValue].dataset.value))) {
+        //   // console.log(`Flag ${tiles[nextTileValue].dataset.value} does not belong to ${clientUsername}`);
+        //   tiles[nextTileValue].setAttribute("rightClicked", "false");
+        //   let currTileIndex = gameState.flaggedTilesValue.findIndex(i => i === nextTileValue);
+        //   gameState.flaggedTilesValue.splice(currTileIndex, 1);
+        //   sendGameStateToServer();
+        //   removeFlagsForOtherClient.push(parseInt(tiles[nextTileValue].dataset.value));
+        //   if (socket.readyState === WebSocket.OPEN) {
+        //     socket.send(JSON.stringify({
+        //       method: "removeFlagsForOtherClient",
+        //       flagValuesToRemove: removeFlagsForOtherClient,
+        //       serverId: serverId,
+        //       clientId: clientId
+        //     }))
+        //   }
+        // }
+        // else if (tiles[nextTileValue].getAttribute("rightClicked") === "true") {
+        //   tiles[nextTileValue].setAttribute("rightClicked", "false");
+        //   tiles[nextTileValue].innerHTML = "";
+        //   if (clientFlags.includes(parseInt(tiles[nextTileValue].dataset.value))) {
+        //     let currTileIndex = gameState.flaggedTilesValue.findIndex(i => i === nextTileValue);
+        //     gameState.flaggedTilesValue.splice(currTileIndex, 1);
+        //     sendGameStateToServer();
+        //     buttonFlagCounter += 1;
+        //     flagCounter.innerHTML = buttonFlagCounter;
+        //     currTileIndex = clientFlags.findIndex(i => i === nextTileValue);
+        //     clientFlags.splice(currTileIndex, 1);
+        //     updateFlagsToServer();
+        //   }
+        // }
+
+        scanMineRadius(tiles[nextTileValue]);
+        if (tiles[nextTileValue].innerHTML === "") {
+          floodFill(tiles[nextTileValue]);
         }
       }
     }
@@ -655,7 +749,7 @@ function leftClick() {
   }
 
   gameState.visitedTilesValue = gameState.visitedTilesValue;
-  console.log(gameState.visitedTilesValue);
+  // console.log(gameState.visitedTilesValue);
   sendGameStateToServer();
 }
 
@@ -674,10 +768,9 @@ const rightClickHandler = (event) => {
 
   if (!gameState.visitedTilesValue.includes(parseInt(currTile.dataset.value))) {
     if (currTile.getAttribute("rightClicked") === "false") {
-      // console.log(`[RIGHT CLICK]` + " on tile " + currTile.dataset.value);
       currTile.innerHTML = "<img src='./img/flag-icon.png' alt='flag'>";
       // currTile.style.backgroundColor = "orange";
-      currTile.setAttribute("rightClicked", true);
+      currTile.setAttribute("rightClicked", "true");
       buttonFlagCounter -= 1;
       document.querySelector(".flagCounter").innerHTML = buttonFlagCounter;
       // update the gamestate
@@ -690,37 +783,33 @@ const rightClickHandler = (event) => {
       }, 600);
       currTile.innerHTML = "";
       // currTile.style.backgroundColor = "lightgray";
-      currTile.setAttribute("rightClicked", false);
+      currTile.setAttribute("rightClicked", "false");
       if (clientFlags.includes(parseInt(currTile.dataset.value))) {
         buttonFlagCounter += 1;
         document.querySelector(".flagCounter").innerHTML = buttonFlagCounter;
+        let currTileIndex = clientFlags.findIndex(i => parseInt(i) === parseInt(currTile.dataset.value));
+        clientFlags.splice(currTileIndex, 1);
+      } else { // player removed other player's flag
+        console.log(`remove flag ${currTile.dataset.value} for other player`);
+        if (socket.readyState === WebSocket.OPEN) {
+          socket.send(JSON.stringify({
+            method: "removeFlagForOtherClient",
+            flagValueToRemove: parseInt(currTile.dataset.value),
+            serverId: serverId,
+            clientId: clientId
+          }))
+        }
       }
       // update the gamestate
       let currTileIndex = gameState.flaggedTilesValue.findIndex(i => parseInt(i) === parseInt(currTile.dataset.value));
       gameState.flaggedTilesValue.splice(currTileIndex, 1);
-      currTileIndex = clientFlags.findIndex(i => parseInt(i) === parseInt(currTile.dataset.value));
-      clientFlags.splice(currTileIndex, 1);
+      // currTileIndex = clientFlags.findIndex(i => parseInt(i) === parseInt(currTile.dataset.value));
+      // clientFlags.splice(currTileIndex, 1);
     }
     updateFlagsToServer();
-    // sendGameStateToServer();
+    sendGameStateToServer();
   }
 };
-
-// function initGame() {
-//   let gameId = generateGameId();
-//   while (gameServers.includes(gameId)) {
-//     gameId = generateGameId();
-//     if (gameServers.length === Math.pow(9, 4)) {  // 9^4 possible servers (6561)
-//       console.log("MAXIMUM SERVERS REACHED");
-//       return;
-//     }
-//   }
-//   gameServers.push(gameId);
-//   console.log(`Game ID: ${gameId}`);
-//   paintContainerGrids();
-//   generateEasy();
-
-// };
 
 function paintContainerGrids() {
   const sidebar = document.querySelector("#sidebar");
@@ -928,48 +1017,106 @@ function updateFlagsToServer() {
   }
 }
 
-function updateClientBoard() {
-  randomMines = gameState.randomMines;
-  console.log(`updateClientBoard() for ${clientUsername}`);
-  // console.log(`randomMines = ${gameState.randomMines}`);
-  // console.log(`visitedTilesValue = ${gameState.visitedTilesValue}`);
+function updateJoiningClientBoard() {
+  console.log(`Updating board for the joining client: ${clientUsername}`);
   let tiles = document.querySelectorAll("td");
 
-  console.log(gameState)
-
-  tiles.forEach(t => {
-    // let td = document.querySelector(`[data-value="${parseInt(t.dataset.value)}"]`);
-    if (gameState.flaggedTilesValue.includes(parseInt(t.dataset.value))) {
-      t.innerHTML = "<img src='./img/blueflag-icon.png' alt='blueflag'>";
-      t.setAttribute("rightClicked", true);
-    } else {
-      t.innerHTML = "";
-      t.setAttribute("rightClicked", false);
-    }
-  })
-
-  if (gameState.visitedTilesValue.length > 0) {  // if initialClick() was already executed by other client, remove it for the joining client
+  // if initialClick() was already executed by other client, remove it for the joining client
+  if (gameState.visitedTilesValue.length > 0) {
     tiles.forEach(t => {
       t.removeEventListener("click", initialClick);
-      t.addEventListener("click", leftClick);
+      if (gameState.visitedTilesValue.includes(parseInt(t.dataset.value))) {
+        t.removeEventListener("click", leftClick);
+        t.style.backgroundColor = "#707070";
+        scanMineRadius(t);
+      } else {
+        t.addEventListener("click", leftClick);
+      }
     });
   }
-  for (tileValue in gameState.visitedTilesValue) {
-    let td = document.querySelector(`[data-value="${gameState.visitedTilesValue[tileValue]}"]`);
-    td.style.backgroundColor = "#707070";
-    scanMineRadius(td);
-    td.removeEventListener("click", leftClick);
-    td.removeEventListener("click", rightClickHandler);
-    
+
+  // if they exist, place other client's flags on client's board 
+  if (gameState.flaggedTilesValue.length > 0) {
+    gameState.flaggedTilesValue.forEach(flagValue => {
+      tiles[flagValue].innerHTML = "<img src='./img/blueflag-icon.png' alt='blueflag'>";
+      tiles[flagValue].setAttribute("rightClicked", true);
+    })
   }
+}
+
+ 
+
+
+
+function updateClientBoard(data) {  
+  console.log(`updateClientBoard(${data.method}) for ${clientUsername}`);
+  randomMines = gameState.randomMines;
+  let tiles = document.querySelectorAll("td");
   
-  let nonVisitedTilesValue = [];
-  tiles.forEach(t => {
-    if (!gameState.visitedTilesValue.includes(parseInt(t.dataset.value))) {
-      nonVisitedTilesValue.push(parseInt(t.dataset.value));
-    }
-  })
-  // console.log(nonVisitedTilesValue);
+  switch (data.method) {
+    case "updateFlagsForOtherClient": // whenever a client adds or removes their own flag
+      tiles.forEach(td => {
+        if (gameState.visitedTilesValue.includes(parseInt(td.dataset.value)) || clientFlags.includes(parseInt(td.dataset.value))) {
+          return;
+        }
+        if (data.otherClientFlags.includes(parseInt(td.dataset.value))) {
+          td.innerHTML = "<img src='./img/blueflag-icon.png' alt='blueflag'>";
+          td.setAttribute("rightClicked", true);
+        } else {
+          td.innerHTML = "";
+          td.setAttribute("rightClicked", false);
+        }
+      })
+      break;
+  }
+
+  // gameState.visitedTilesValue.forEach(tileValue => {
+  //   tiles[tileValue].innerHTML = "";
+  //   tiles[tileValue].style.backgroundColor = "#707070";
+  //   tiles[tileValue].removeEventListener("click", leftClick);
+  //   tiles[tileValue].removeEventListener("click", rightClickHandler);
+  //   scanMineRadius(tiles[tileValue]);
+  // })
+  // if (gameState.visitedTilesValue.length > 0){ // if initialClick() was already executed by other client, remove it for the joining client
+  //   tiles.forEach(td => {
+  //     td.removeEventListener("click", initialClick);
+  //     td.addEventListener("click", leftClick);
+  //   })
+  // }
+
+  // tiles.forEach(td => {
+  //   // let td = document.querySelector(`[data-value="${parseInt(t.dataset.value)}"]`);
+  //   if (gameState.flaggedTilesValue.includes(parseInt(td.dataset.value))) {
+  //     td.innerHTML = "<img src='./img/blueflag-icon.png' alt='blueflag'>";
+  //     td.setAttribute("rightClicked", true);
+  //   } else {
+  //     td.innerHTML = "";
+  //     td.setAttribute("rightClicked", false);
+  //   }
+  // })
+
+  // if (gameState.visitedTilesValue.length > 0) {  // if initialClick() was already executed by other client, remove it for the joining client
+  //   tiles.forEach(t => {
+  //     t.removeEventListener("click", initialClick);
+  //     t.addEventListener("click", leftClick);
+  //   });
+  // }
+  // for (tileValue in gameState.visitedTilesValue) {
+  //   let td = document.querySelector(`[data-value="${gameState.visitedTilesValue[tileValue]}"]`);
+  //   td.style.backgroundColor = "#707070";
+  //   scanMineRadius(td);
+  //   td.removeEventListener("click", leftClick);
+  //   td.removeEventListener("click", rightClickHandler);
+    
+  // }
+  
+  // let nonVisitedTilesValue = [];
+  // tiles.forEach(t => {
+  //   if (!gameState.visitedTilesValue.includes(parseInt(t.dataset.value))) {
+  //     nonVisitedTilesValue.push(parseInt(t.dataset.value));
+  //   }
+  // })
+  // // console.log(nonVisitedTilesValue);
 }
 
 
