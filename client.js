@@ -509,7 +509,6 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
       serverId: serverId
     }))
   }
-  // sendGameStateToServer();
 }
 
 function scanMineRadius(tile) {
@@ -698,18 +697,9 @@ const rightClickHandler = (event) => {
   // If game is over, ignore right click feature 
   if (gameOver) { return; }
   let currTile = event.target;
-
-  // let valueVisitedTiles = [];
-  // if (Number.isInteger(visitedTiles[0])) {
-  //   valueVisitedTiles = visitedTiles;
-  // } else {
-  //   valueVisitedTiles = visitedTiles.map(td => parseInt(td.dataset.value));
-  // }
-
   if (!gameState.visitedTilesValue.includes(parseInt(currTile.dataset.value))) {
     if (currTile.getAttribute("rightClicked") === "false") {
       currTile.innerHTML = "<img src='./img/flag-icon.png' alt='flag'>";
-      // currTile.style.backgroundColor = "orange";
       currTile.setAttribute("rightClicked", "true");
       buttonFlagCounter -= 1;
       document.querySelector(".flagCounter").innerHTML = buttonFlagCounter;
@@ -722,13 +712,10 @@ const rightClickHandler = (event) => {
         document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/smile-icon.png' alt='buddy-smile'>";
       }, 600);
       currTile.innerHTML = "";
-      // currTile.style.backgroundColor = "lightgray";
       currTile.setAttribute("rightClicked", "false");
       if (clientFlags.includes(parseInt(currTile.dataset.value))) {
         buttonFlagCounter += 1;
         document.querySelector(".flagCounter").innerHTML = buttonFlagCounter;
-        // let currTileIndex = clientFlags.findIndex(i => parseInt(i) === parseInt(currTile.dataset.value));
-        // clientFlags.splice(currTileIndex, 1);
         clientFlags.splice(clientFlags.indexOf(parseInt(currTile.dataset.value)), 1);
       } else { // player removed other player's flag
         console.log(`remove flag ${currTile.dataset.value} for other player`);
@@ -741,12 +728,10 @@ const rightClickHandler = (event) => {
           }))
         }
       }
-      // update the gamestate
       gameState.flaggedTilesValue.splice(gameState.flaggedTilesValue.indexOf(parseInt(currTile.dataset.value)), 1);
-
     }
     updateFlagsToServer();
-    sendGameStateToServer();
+    sendGameStateToServer(); // update the gamestate
   }
 };
 
@@ -826,31 +811,41 @@ function flagButtonClick() {
 function setFlagHandler() {
   if (gameOver) { return; }
   let currTile = this;
-  // let valueVisitedTiles = visitedTiles.map(td => parseInt(td.dataset.value));
   if (!gameState.visitedTilesValue.includes(parseInt(currTile.dataset.value))) {
     if (currTile.getAttribute("rightClicked") === "false") {
       currTile.innerHTML = "<img src='./img/flag-icon.png' alt='flag'>";
-      // currTile.style.backgroundColor = "orange";
       currTile.setAttribute("rightClicked", true);
       buttonFlagCounter -= 1;
       document.querySelector(".flagCounter").innerHTML = buttonFlagCounter;
       // update the gamestate
       gameState.flaggedTilesValue.push(parseInt(currTile.dataset.value));
+      clientFlags.push(parseInt(currTile.dataset.value));
     } else {
       document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/nervous-icon.png' alt='buddy-nervous'>";
       setTimeout(() => {
         document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/smile-icon.png' alt='buddy-smile'>";
       }, 600);
       currTile.innerHTML = "";
-      // currTile.style.backgroundColor = "lightgray";
       currTile.setAttribute("rightClicked", false);
-      buttonFlagCounter += 1;
-      document.querySelector(".flagCounter").innerHTML = buttonFlagCounter;
-      // update the gamestate
-      let currTileIndex = gameState.flaggedTilesValue.findIndex(i => parseInt(i) === parseInt(currTile.dataset.value));
-      gameState.flaggedTilesValue.splice(currTileIndex, 1);
+      if (clientFlags.includes(parseInt(currTile.dataset.value))) {
+        buttonFlagCounter += 1;
+        document.querySelector(".flagCounter").innerHTML = buttonFlagCounter;
+        clientFlags.splice(clientFlags.indexOf(parseInt(currTile.dataset.value)), 1);
+      } else { // player removed other player's flag
+        console.log(`remove flag ${currTile.dataset.value} for other player`);
+        if (socket.readyState === WebSocket.OPEN) {
+          socket.send(JSON.stringify({
+            method: "removeFlagForOtherClient",
+            flagValueToRemove: parseInt(currTile.dataset.value),
+            serverId: serverId,
+            clientId: clientId
+          }))
+        }
+      }
+      gameState.flaggedTilesValue.splice(gameState.flaggedTilesValue.indexOf(parseInt(currTile.dataset.value)), 1);
     }
-    sendGameStateToServer();
+    updateFlagsToServer();
+    sendGameStateToServer(); // update the gamestate
   }
 }
 
