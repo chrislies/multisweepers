@@ -245,15 +245,16 @@ function onMessage(message) {
       }
       break;
     case "removeFlagForOtherClient":
+      // when a flag is removed via right click
       for (const client in clients) {
         if (clients[client].serverId === data.serverId && clients[client].clientId !== data.clientId) {
           const otherClient = clients[client];
-          console.log(`remove flag ${data.flagValueToRemove} from player ${otherClient.username}`)
-          console.log(`nonupdated list   = ${otherClient.clientFlags}`)
+          // console.log(`remove flag ${data.flagValueToRemove} from player ${otherClient.username}`)
+          // console.log(`nonupdated list   = ${otherClient.clientFlags}`)
           let flagIndexToRemove = otherClient.clientFlags.indexOf(data.flagValueToRemove);
-          console.log(`flagIndexToRemove: ${flagIndexToRemove}`);
+          // console.log(`flagIndexToRemove: ${flagIndexToRemove}`);
           otherClient.clientFlags.splice(flagIndexToRemove, 1);
-          console.log(`updated flag list = ${otherClient.clientFlags}`)
+          // console.log(`updated flag list = ${otherClient.clientFlags}`)
           otherClient.connection.send(JSON.stringify({
             "method": "removedFlagForOtherClient",
             "clientFlags": otherClient.clientFlags,
@@ -262,15 +263,35 @@ function onMessage(message) {
         }
       }
       break;
+    case "removeFlagsForOtherClient":
+      for (const client in clients) {
+        if (clients[client].serverId === data.serverId && clients[client].clientId !== data.clientId) {
+          const otherClient = clients[client];
+          console.log(`remove flags ${data.flagValuesToRemove} from player ${otherClient.username}`)
+          // console.log(`nonupdated list   = ${otherClient.clientFlags}`)
+          otherClient.clientFlags = otherClient.clientFlags.filter(flag => !data.flagValuesToRemove.includes(flag));
+          // console.log(`updated flag list = ${otherClient.clientFlags}`)
+          otherClient.connection.send(JSON.stringify({
+            "method": "removedFlagsForOtherClient",
+            "clientFlags": otherClient.clientFlags,
+            "flagValuesToRemove": data.flagValuesToRemove
+          }))
+        }
+      }
+
+      break;
     case "updateFlags":
-      clients[data.clientId].clientFlags = data.flags;
-      gameState[data.serverId].flaggedTilesValue = data.flags;
+      clients[data.clientId].clientFlags = data.clientFlags;
+      gameState[data.serverId].flaggedTilesValue = data.serverFlags;
+      // console.log(`data.serverFlags = ${data.serverFlags}`)
+      // console.log(`gameState[data.serverId].flaggedTilesValue = ${gameState[data.serverId].flaggedTilesValue}`)
       for (const client in clients) {
         if (clients[client].serverId === data.serverId && clients[client].clientId !== data.clientId) {
           const otherClient = clients[client];
           otherClient.connection.send(JSON.stringify({
             "method": "updateFlagsForOtherClient",
-            "otherClientFlags": data.flags
+            "otherClientFlags": data.clientFlags,
+            "serverFlags": data.serverFlags
           }))
         }
       }
@@ -311,6 +332,46 @@ function onMessage(message) {
         }
       }
       break;
+    case "updateGameState_InitialClick":
+      // update the game state for the other player when initialClick() executes
+      gameState[data.serverId].visitedTilesValue = data.gameState.visitedTilesValue;
+      // gameState[data.serverId].flaggedTilesValue = data.gameState.flaggedTilesValue;
+      gameState[data.serverId].randomMines = data.gameState.randomMines;
+      gameState[data.serverId].possibleMove = data.gameState.possibleMove;
+      gameState[data.serverId].mineRadiusNB = data.gameState.mineRadiusNB;
+      gameState[data.serverId].mineRadiusLB = data.gameState.mineRadiusLB;
+      gameState[data.serverId].mineRadiusRB = data.gameState.mineRadiusRB;
+      for (const client in clients) {
+        if (clients[client].serverId === data.serverId && clients[client].clientId !== data.clientId) {
+          const otherClient = clients[client];
+          otherClient.connection.send(JSON.stringify({
+            "method": "updateGameState_InitialClick",
+            "otherClient": otherClient.username,
+            "visitedTilesValue": gameState[data.serverId].visitedTilesValue,
+            // "flaggedTilesValue": gameState[data.serverId].flaggedTilesValue,
+            "randomMines": gameState[data.serverId].randomMines,
+            "possibleMove": gameState[data.serverId].possibleMove,
+            "mineRadiusNB": gameState[data.serverId].mineRadiusNB,
+            "mineRadiusLB": gameState[data.serverId].mineRadiusLB,
+            "mineRadiusRB": gameState[data.serverId].mineRadiusRB
+          }))
+        }
+      }
+      break;
+    case "updateVisitedTilesForOtherClient":
+      gameState[data.serverId].visitedTilesValue = data.gameState.visitedTilesValue;
+      for (const client in clients) {
+        if (clients[client].serverId === data.serverId && clients[client].clientId !== data.clientId) {
+          const otherClient = clients[client];
+          otherClient.connection.send(JSON.stringify({
+            "method": "updateVisitedTilesForOtherClient",
+            "otherClient": otherClient.username,
+            "visitedTilesValue": gameState[data.serverId].visitedTilesValue
+          }))
+        }
+      }
+      break;
+
     }
 }
 
