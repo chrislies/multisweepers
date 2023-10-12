@@ -176,8 +176,8 @@ function onMessage(msg) {
       // console.log(`Updating game state for player ${data.otherClient}`);
       gameState.visitedTilesValue = data.visitedTilesValue;
       gameState.flaggedTilesValue = data.flaggedTilesValue;
-      gameState.numMines = data.numMines;
       gameState.randomMines = data.randomMines;
+      gameState.numMines = data.numMines;
       gameState.possibleMove = data.possibleMove;
       gameState.mineRadiusNB = data.mineRadiusNB;
       gameState.mineRadiusLB = data.mineRadiusLB;
@@ -188,6 +188,32 @@ function onMessage(msg) {
       break;
     case "updateVisitedTilesForOtherClient":
       updateClientBoard(data);
+      break;
+    case "clearGameState":
+      gameState.visitedTilesValue = data.gameState.visitedTilesValue;
+      gameState.flaggedTilesValue = data.gameState.flaggedTilesValue;
+      gameState.randomMines = data.gameState.randomMines;
+      gameState.possibleMove = data.gameState.possibleMove;
+      gameState.mineRadiusNB = data.gameState.mineRadiusNB;
+      gameState.mineRadiusLB = data.gameState.mineRadiusLB;
+      gameState.mineRadiusRB = data.gameState.mineRadiusRB;
+      // console.log(gameState, `cleared`);
+      break;
+    case "generateGameForOtherClient":
+      switch(data.gameDifficulty) {
+        case "easy":
+          generateEasy();
+          selectDifficulty.value = "easy";
+          break;
+        case "medium":
+          generateMedium();
+          selectDifficulty.value = "medium";
+          break;
+        case "hard":
+          generateHard();
+          selectDifficulty.value = "hard";
+          break;
+      }
       break;
   }
 }
@@ -231,12 +257,14 @@ function generateEasy(sendToServer) {
   paintContainerGrids();
   if (sendToServer) {
     // Update the gameState object
-    gameState.visitedTilesValue = [];
-    gameState.numMines = numMines;
-    gameState.randomMines = randomMines;
-    gameState.gameDifficulty = "easy"
-    // Send the updated gameState to the server with the function below
-    sendGameStateToServer();
+    // gameState.visitedTilesValue = [];
+    // gameState.flaggedTilesValue = [];
+    // gameState.randomMines = [];
+    // gameState.numMines = numMines;
+    // gameState.randomMines = randomMines;
+    // gameState.gameDifficulty = "easy"
+    // Send the updated gameState to the server and client with the function below
+    generateGameForOtherClient();
   }
 }
 
@@ -279,12 +307,14 @@ function generateMedium(sendToServer) {
   paintContainerGrids();
   if (sendToServer) {
     // Update the gameState object
-    gameState.visitedTilesValue = [];
-    gameState.numMines = numMines;
-    gameState.randomMines = randomMines;
-    gameState.gameDifficulty = "medium"
-    // Send the updated gameState to the server with the function below
-    sendGameStateToServer();
+    // gameState.visitedTilesValue = [];
+    // gameState.flaggedTilesValue = [];
+    // gameState.randomMines = [];
+    // gameState.numMines = numMines;
+    // gameState.randomMines = randomMines;
+    // gameState.gameDifficulty = "medium"
+    // Send the updated gameState to the server and client with the function below
+    generateGameForOtherClient();
   }
 }
 
@@ -328,12 +358,13 @@ function generateHard(sendToServer) {
   paintContainerGrids();
   if (sendToServer) {
     // Update the gameState object
-    gameState.visitedTilesValue = [];
-    gameState.numMines = numMines;
-    gameState.randomMines = randomMines;
-    gameState.gameDifficulty = "hard"
-    // Send the updated gameState to the server with the function below
-    sendGameStateToServer();
+    // gameState.visitedTilesValue = [];
+    // gameState.flaggedTilesValue = [];
+    // gameState.randomMines = [];
+    // gameState.numMines = numMines;
+    // gameState.gameDifficulty = "hard"
+    // Send the updated gameState to the server and client with the function below
+    generateGameForOtherClient();
   }
 }
 
@@ -842,6 +873,7 @@ function playAgain() {
   }
   document.querySelector(".buddyButton").remove();
   document.querySelector(".flagButton").remove();
+  clearGameState();
   if (selectDifficulty.value === "easy") {
     generateEasy(true);
   } else if (selectDifficulty.value === "medium") {
@@ -858,6 +890,26 @@ function sendGameStateToServer() {
       gameState: gameState,
       serverId: serverId,
       clientId: clientId
+    }))
+  }
+}
+
+function generateGameForOtherClient() {
+  if (socket.readyState === WebSocket.OPEN) {
+    socket.send(JSON.stringify({
+      method: "generateGameForOtherClient",
+      gameState: gameState,
+      serverId: serverId,
+      clientId: clientId
+    }))
+  }
+}
+
+function clearGameState() { // whenever a client plays new game or changes difficulty
+  if (socket.readyState === WebSocket.OPEN) {
+    socket.send(JSON.stringify({
+      method: "clearGameState",
+      serverId: serverId
     }))
   }
 }

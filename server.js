@@ -367,6 +367,34 @@ function onMessage(message) {
         }
       }
       break;
+    case "clearGameState":
+      gameState[data.serverId].visitedTilesValue = [];
+      gameState[data.serverId].flaggedTilesValue = [];
+      gameState[data.serverId].randomMines = [];
+      gameState[data.serverId].possibleMove = [];
+      gameState[data.serverId].mineRadiusNB = [];
+      gameState[data.serverId].mineRadiusLB = [];
+      gameState[data.serverId].mineRadiusRB = [];
+      for (const client in clients) {
+        if (clients[client].serverId === data.serverId) {
+          clients[client].connection.send(JSON.stringify({
+            method: "clearGameState",
+            gameState: gameState[data.serverId]
+          }))
+        }
+      }
+      break;  
+    case "generateGameForOtherClient":
+      for (const client in clients) {
+        if (clients[client].serverId === data.serverId && clients[client].clientId !== data.clientId) {
+          const otherClient = clients[client];
+          otherClient.connection.send(JSON.stringify({
+            "method": "generateGameForOtherClient",
+            "gameDifficulty": data.gameState.gameDifficulty
+          }))
+        }
+      }
+      break;
 
     }
 }
@@ -396,9 +424,11 @@ function sendAvailableServers() {
 }
 
 function generateName() {
-  const adjectives = ["Joyful","Samurai","Warrior","Friendly","Cheerful","Delightful","Hungry","Ninja","Silly","Wonderful","Fantastic","Amazing","Enthusiastic","Trusting","Courageous","Optimistic","Talented","Funny","Hopeful","Charismatic","Genuine","Creative","Confident","Radiant","Splendid","Harmonious","Intelligent","Dynamic","Vibrant","Brilliant","Excited","Jubilant","Awesome","Happy","Strong","Brave","Witty","Charming","Eager","Caring","Lucky","Jovial","Honest","Polite","Fearless","Sincere","Ecstatic","Zealous","Earnest","Relaxed","Mindful","Energetic"]
-  const animals = ["Serpent","Hippo","Giraffe","Bunny","Turtle","Tortoise","Rabbit","Mouse","Cat","Tiger","Puppy","Lion","Elephant","Dolphin","Koala","Cheetah","Panda","Gorilla","Penguin","Flamingo","Zebra","Lemur","Sloth","Ostrich","Raccoon","Meerkat","Peacock","Hyena","Monkey","Capybara","Goose"]
+  const adjectives = ["Joyful","Samurai","Warrior","Friendly","Cheerful","Delightful","Hungry","Ninja","Silly","Wonderful","Fantastic","Amazing","Enthusiastic","Trusting","Courageous","Optimistic","Talented","Funny","Hopeful","Charismatic","Genuine","Creative","Confident","Radiant","Splendid","Harmonious","Intelligent","Dynamic","Vibrant","Brilliant","Excited","Jubilant","Awesome","Happy","Strong","Brave","Witty","Charming","Eager","Caring","Lucky","Jovial","Honest","Polite","Fearless","Sincere","Ecstatic","Zealous","Earnest","Relaxed","Mindful","Energetic"];
+  const animals = ["Serpent","Hippo","Giraffe","Bunny","Turtle","Tortoise","Rabbit","Mouse","Cat","Tiger","Puppy","Lion","Elephant","Dolphin","Koala","Cheetah","Panda","Gorilla","Penguin","Flamingo","Zebra","Lemur","Sloth","Ostrich","Raccoon","Meerkat","Peacock","Hyena","Monkey","Capybara","Goose"];
   const name = adjectives[Math.floor(Math.random() * adjectives.length)] + " " + animals[Math.floor(Math.random() * animals.length)];
+  // const alphabet = ["Alpha","Bravo","Charlie","Delta","Echo","Foxtrot","Golf","Hotel","India","Juliett","Kilo","Lima","Mike","November","Oscar","Papa","Quebec","Romeo","Sierra","Tango","Uniform","Victor","Whiskey","X-ray","Yankee","Zulu"];
+  // const name = alphabet[Math.floor(Math.random() * alphabet.length)];
   return name;
 }
 
