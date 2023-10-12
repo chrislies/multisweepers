@@ -27,13 +27,12 @@ let gameState = {
   flaggedTilesValue: [],
   numMines: 0,
   randomMines: [],
-  buttonFlagCounter: 0,
   gameDifficulty: "",
   possibleMove: [],
   mineRadiusNB: [],
   mineRadiusLB: [],
   mineRadiusRB: []
-};
+}
 
 let joinServerButton = document.querySelector("#joinServerButton");
 joinServerButton.addEventListener("click", (event) => {
@@ -71,7 +70,6 @@ function onMessage(msg) {
       gameState.visitedTilesValue = [];
       gameState.numMines = numMines;
       gameState.randomMines = randomMines;
-      gameState.buttonFlagCounter = buttonFlagCounter;
       gameState.gameDifficulty = "easy"
       // Send the updated gameState to the server with the function below
       sendGameStateToServer();
@@ -138,7 +136,6 @@ function onMessage(msg) {
         gameState.visitedTilesValue = data.visitedTilesValue;
         gameState.flaggedTilesValue = data.flaggedTilesValue;
         gameState.randomMines = data.randomMines;
-        gameState.buttonFlagCounter = data.buttonFlagCounter;
         gameState.numMines = data.numMines;
         gameState.possibleMove = data.possibleMove;
         gameState.mineRadiusNB = data.mineRadiusNB;
@@ -179,9 +176,8 @@ function onMessage(msg) {
       // console.log(`Updating game state for player ${data.otherClient}`);
       gameState.visitedTilesValue = data.visitedTilesValue;
       gameState.flaggedTilesValue = data.flaggedTilesValue;
-      gameState.randomMines = data.randomMines;
-      gameState.buttonFlagCounter = data.buttonFlagCounter;
       gameState.numMines = data.numMines;
+      gameState.randomMines = data.randomMines;
       gameState.possibleMove = data.possibleMove;
       gameState.mineRadiusNB = data.mineRadiusNB;
       gameState.mineRadiusLB = data.mineRadiusLB;
@@ -198,7 +194,6 @@ function onMessage(msg) {
 
 function generateEasy(sendToServer) {
   gameState.gameDifficulty = "easy";
-  visitedTiles = [];
   // console.log(gw.rows.length);
   if (gw.rows.length > 0) {
     while (gw.rows.length > 0) {
@@ -239,7 +234,6 @@ function generateEasy(sendToServer) {
     gameState.visitedTilesValue = [];
     gameState.numMines = numMines;
     gameState.randomMines = randomMines;
-    gameState.buttonFlagCounter = buttonFlagCounter;
     gameState.gameDifficulty = "easy"
     // Send the updated gameState to the server with the function below
     sendGameStateToServer();
@@ -248,7 +242,6 @@ function generateEasy(sendToServer) {
 
 function generateMedium(sendToServer) {
   gameState.gameDifficulty = "medium";
-  visitedTiles = [];
   // console.log(gw.rows.length);
   if (gw.rows.length > 0) {
     while (gw.rows.length > 0) {
@@ -289,7 +282,6 @@ function generateMedium(sendToServer) {
     gameState.visitedTilesValue = [];
     gameState.numMines = numMines;
     gameState.randomMines = randomMines;
-    gameState.buttonFlagCounter = buttonFlagCounter;
     gameState.gameDifficulty = "medium"
     // Send the updated gameState to the server with the function below
     sendGameStateToServer();
@@ -298,7 +290,6 @@ function generateMedium(sendToServer) {
 
 function generateHard(sendToServer) {
   gameState.gameDifficulty = "hard";
-  visitedTiles = [];
   // console.log(gw.rows.length);
   if (gw.rows.length > 0) {
     while (gw.rows.length > 0) {
@@ -340,7 +331,6 @@ function generateHard(sendToServer) {
     gameState.visitedTilesValue = [];
     gameState.numMines = numMines;
     gameState.randomMines = randomMines;
-    gameState.buttonFlagCounter = buttonFlagCounter;
     gameState.gameDifficulty = "hard"
     // Send the updated gameState to the server with the function below
     sendGameStateToServer();
@@ -471,13 +461,10 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
       serverId: serverId
     }))
   }
-
-
   // console.clear()
-  for (key in gameState) {
-    console.log(`${key}: ${gameState[key]}`);
-  }
-
+  // for (key in gameState) {
+  //   console.log(`${key}: ${gameState[key]}`);
+  // }
 }
 
 function scanMineRadius(tile) {
@@ -557,7 +544,7 @@ function floodFill(tile) {
         gameState.visitedTilesValue.push(nextTileValue);
         tiles[nextTileValue].style.backgroundColor = "#707070";
         if (gameState.flaggedTilesValue.includes(nextTileValue)) {
-          console.log(`tile ${nextTileValue} is flagged`);
+          // console.log(`tile ${nextTileValue} is flagged`);
           tiles[nextTileValue].innerHTML = "";
           tiles[nextTileValue].setAttribute("rightClicked", "false");
           gameState.flaggedTilesValue.splice(gameState.flaggedTilesValue.indexOf(nextTileValue), 1);
@@ -607,8 +594,7 @@ function leftClick() {
     return;
   }
   if (!gameState.visitedTilesValue.includes(parseInt(currTile.dataset.value))) {
-    visitedTiles.push(currTile);  // this prevents currTile from being pushed more than once (ex. if user clicks too fast)
-    gameState.visitedTilesValue.push(parseInt(currTile.dataset.value));
+    gameState.visitedTilesValue.push(parseInt(currTile.dataset.value)); // this prevents currTile from being pushed more than once (ex. if user clicks too fast)
   }
   document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/smile-icon.png' alt='buddy-smile'>";
   currTile.style.backgroundColor = "#707070"; //gray=808080
@@ -657,7 +643,7 @@ const rightClickHandler = (event) => {
         document.querySelector(".flagCounter").innerHTML = buttonFlagCounter;
         clientFlags.splice(clientFlags.indexOf(parseInt(currTile.dataset.value)), 1);
       } else { // player removed other player's flag
-        console.log(`remove flag ${currTile.dataset.value} for other player`);
+        // console.log(`remove flag ${currTile.dataset.value} for other player`);
         if (socket.readyState === WebSocket.OPEN) {
           socket.send(JSON.stringify({
             method: "removeFlagForOtherClient",
@@ -672,7 +658,7 @@ const rightClickHandler = (event) => {
     updateFlagsToServer();
     sendGameStateToServer(); // update the gamestate
   }
-};
+}
 
 function paintContainerGrids() {
   const sidebar = document.querySelector("#sidebar");
@@ -703,7 +689,7 @@ const selectDifficulty = document.querySelector("#choice");
 selectDifficulty.addEventListener("change", () => {
   playAgain();
   generateBg();
-});
+})
 
 function createFlagButton() {
   const gameBoard = document.querySelector("#gameBoard");
@@ -729,7 +715,7 @@ function flagButtonClick() {
     flagButton.setAttribute("flagButtonClicked", true);
     flagButton.style.backgroundColor = "#707070";
     tdElements.forEach(td => {
-      if (!visitedTiles.includes(td.dataset.value)) {
+      if (!gameState.visitedTilesValue.includes(td.dataset.value)) {
         td.removeEventListener("click", leftClick);
         td.addEventListener("click", setFlagHandler);
       }
@@ -738,7 +724,7 @@ function flagButtonClick() {
     flagButton.setAttribute("flagButtonClicked", false);
     flagButton.style.backgroundColor = "lightgray";
     tdElements.forEach(td => {
-      if (!visitedTiles.includes(td.dataset.value)) {
+      if (!gameState.visitedTilesValue.includes(td.dataset.value)) {
         td.removeEventListener("click", setFlagHandler);
         td.addEventListener("click", leftClick);
       }
@@ -771,7 +757,7 @@ function setFlagHandler() {
         document.querySelector(".flagCounter").innerHTML = buttonFlagCounter;
         clientFlags.splice(clientFlags.indexOf(parseInt(currTile.dataset.value)), 1);
       } else { // player removed other player's flag
-        console.log(`remove flag ${currTile.dataset.value} for other player`);
+        // console.log(`remove flag ${currTile.dataset.value} for other player`);
         if (socket.readyState === WebSocket.OPEN) {
           socket.send(JSON.stringify({
             method: "removeFlagForOtherClient",
@@ -847,12 +833,9 @@ function gameWon() {
 function playAgain() {
   console.clear();
   gameOver = false;
-  numMines = 0;
-  randomMines = [];
-  visitedTiles = [];
   gameState.numMines = 0;
   gameState.randomMines = [];
-  gameState.visitedTiles = [];
+  gameState.visitedTilesValue = [];
   gameState.flaggedTilesValue = [];
   if (document.querySelector(".playAgainButton")) {
     document.querySelector(".playAgainButton").remove();
@@ -940,7 +923,7 @@ function updateClientBoard(data) {
       })
       break;
     case "removedFlagForOtherClient": // whenever a client removes other client's flag
-      console.log(`remove flag ${data.flagValueToRemove} for ${clientUsername}`);
+      // console.log(`remove flag ${data.flagValueToRemove} for ${clientUsername}`);
       clientFlags = data.clientFlags;
       tiles = document.querySelectorAll("td");
       tiles[data.flagValueToRemove].innerHTML = "";
@@ -962,7 +945,7 @@ function updateClientBoard(data) {
       }
       break;
     case "removedFlagsForOtherClient": // whenever other client's flags are removed by initialClick() or floodFill()
-      console.log(`remove flags ${data.flagValuesToRemove} for ${clientUsername}`);
+      // console.log(`remove flags ${data.flagValuesToRemove} for ${clientUsername}`);
       clientFlags = data.clientFlags;
       tiles = document.querySelectorAll("td");
       data.flagValuesToRemove.forEach(flagValue => {

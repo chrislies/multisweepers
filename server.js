@@ -21,7 +21,6 @@ socket.on("request", (req) => {
   let flaggedTilesValue = [];
   let numMines = 0;
   let randomMines = [];
-  let buttonFlagCounter = 0;
   let gameDifficulty = "";
   let possibleMove = [];
   let mineRadiusNB = [];
@@ -44,7 +43,6 @@ socket.on("request", (req) => {
     flaggedTilesValue: flaggedTilesValue,
     numMines: numMines,
     randomMines: randomMines,
-    buttonFlagCounter: buttonFlagCounter,
     gameDifficulty: gameDifficulty,
     possibleMove: possibleMove,
     mineRadiusNB: mineRadiusNB,
@@ -193,7 +191,6 @@ function onMessage(message) {
               "visitedTilesValue": gameState[data.serverId].visitedTilesValue,
               "flaggedTilesValue": gameState[data.serverId].flaggedTilesValue,
               "randomMines": gameState[data.serverId].randomMines,
-              "buttonFlagCounter": gameState[data.serverId].buttonFlagCounter,
               "numMines": gameState[data.serverId].numMines,
               "possibleMove": gameState[data.serverId].possibleMove,
               "mineRadiusNB": gameState[data.serverId].mineRadiusNB,
@@ -321,7 +318,6 @@ function onMessage(message) {
             "flaggedTilesValue": gameState[data.serverId].flaggedTilesValue,
             "numMines": gameState[data.serverId].numMines,
             "randomMines": gameState[data.serverId].randomMines,
-            "buttonFlagCounter": gameState[data.serverId].buttonFlagCounter,
             "gameDifficulty": gameState[data.serverId].gameDifficulty,
             "possibleMove": gameState[data.serverId].possibleMove,
             "mineRadiusNB": gameState[data.serverId].mineRadiusNB,
