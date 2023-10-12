@@ -10,6 +10,30 @@ let span;
 let buttonFlagCounter = 0;
 let flagCounter = document.querySelector(".flagCounter");
 
+const gw = document.querySelector("#gameWindow");
+let gameOver = false;
+let numMines = 0;
+let visitedTilesValue = [];
+let flaggedTilesValue = [];
+let randomMines = [];
+let possibleMove = [];
+let mineRadiusNB = [];
+let mineRadiusLB = [];
+let mineRadiusRB = [];
+let difficulty = "";
+
+let gameState = {
+  visitedTilesValue: [],
+  flaggedTilesValue: [],
+  numMines: 0,
+  randomMines: [],
+  buttonFlagCounter: 0,
+  gameDifficulty: "",
+  possibleMove: [],
+  mineRadiusNB: [],
+  mineRadiusLB: [],
+  mineRadiusRB: []
+};
 
 let joinServerButton = document.querySelector("#joinServerButton");
 joinServerButton.addEventListener("click", (event) => {
@@ -153,20 +177,6 @@ function onMessage(msg) {
       break;
     case "updateGameState": 
       // console.log(`Updating game state for player ${data.otherClient}`);
-      // console.log(`difficulty = ${difficulty}, data.gameDifficulty = ${data.gameDifficulty}`)
-      // if (difficulty !== data.gameDifficulty) {
-      //   switch (data.gameDifficulty) {
-      //     case "easy":
-      //       generateEasy(data.sendToServer);
-      //       break;
-      //     case "medium":
-      //       generateMedium(data.sendToServer);
-      //       break;
-      //     case "hard":
-      //       generateHard(data.sendToServer);
-      //       break;
-      //   }
-      // }
       gameState.visitedTilesValue = data.visitedTilesValue;
       gameState.flaggedTilesValue = data.flaggedTilesValue;
       gameState.randomMines = data.randomMines;
@@ -176,7 +186,6 @@ function onMessage(msg) {
       gameState.mineRadiusNB = data.mineRadiusNB;
       gameState.mineRadiusLB = data.mineRadiusLB;
       gameState.mineRadiusRB = data.mineRadiusRB;
-      // updateClientBoard();
       break;
     case "updateGameState_InitialClick":
       updateClientBoard(data);
@@ -186,31 +195,6 @@ function onMessage(msg) {
       break;
   }
 }
-
-const gw = document.querySelector("#gameWindow");
-let gameOver = false;
-let numMines = 0;
-let visitedTilesValue = [];
-let flaggedTilesValue = [];
-let randomMines = [];
-let possibleMove = [];
-let mineRadiusNB = [];
-let mineRadiusLB = [];
-let mineRadiusRB = [];
-let difficulty = "";
-
-let gameState = {
-  visitedTilesValue: [],
-  flaggedTilesValue: [],
-  numMines: 0,
-  randomMines: [],
-  buttonFlagCounter: 0,
-  gameDifficulty: "",
-  possibleMove: [],
-  mineRadiusNB: [],
-  mineRadiusLB: [],
-  mineRadiusRB: []
-};
 
 function generateEasy(sendToServer) {
   gameState.gameDifficulty = "easy";
@@ -373,101 +357,84 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
     document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/smile-icon.png' alt='buddy-smile'>";
   }, 400);
   let initialTile = this;
-  // console.log(`initial tile = ${parseInt(initialTile.dataset.value)}`);
-  visitedTiles.push(initialTile);
   gameState.visitedTilesValue.push(parseInt(initialTile.dataset.value));
   let tableSize = document.querySelectorAll("td").length - 1; // get the last td element to determine tableSize
-  // console.log("tableSize = " + tableSize);
   let numRandomTiles = 0;
-  // console.log(parseInt(initialTile.dataset.value) + possibleMove[0]); // parseInt() converts string to int
-
-  // difficulty = selectDifficulty.value;  // Check selected difficulty
-  difficulty = gameState.gameDifficulty;  // Check selected difficulty
-  switch (difficulty) {
-    case "easy":
-      numMines = 10;
-      possibleMove = [9, 1, -9, -1];  // can either move [up,right,down,left] by adding possibleMove[x] current tile
-      mineRadiusNB = [-10, -9, -8, -1, 1, 8, 9, 10];  // possible mine locations for each NON-BORDER tile
-      mineRadiusLB = [-9, -8, 1, 9, 10];  // possible mine locations for each left border tile
-      mineRadiusRB = [-10, -9, -1, 8, 9];  // possible mine locations for each right border tile
+  switch(gameState.gameDifficulty) {
+    case "easy": 
+      gameState.numMines = 10;
+      gameState.possibleMove = [9, 1, -9, -1];  // can either move [up,right,down,left] by adding possibleMove[x] current tile
+      gameState.mineRadiusNB = [-10, -9, -8, -1, 1, 8, 9, 10];  // possible mine locations for each NON-BORDER tile
+      gameState.mineRadiusLB = [-9, -8, 1, 9, 10];  // possible mine locations for each left border tile
+      gameState.mineRadiusRB = [-10, -9, -1, 8, 9];  // possible mine locations for each right border tile
       numRandomTiles = Math.round(Math.random() * (25 - 8) + 8);  // generate random # between [8-25)
       console.log("[easy: initial click] Number of random tiles: " + numRandomTiles);
       break;
     case "medium":
-      numMines = 40;
-      possibleMove = [16, 1, -16, -1];  // can either move [up,right,down,left] by adding possibleMove[x] current tile
-      mineRadiusNB = [-17, -16, -15, -1, 1, 15, 16, 17];  // possible mine locations for each NON-BORDER tile
-      mineRadiusLB = [-16, -15, 1, 16, 17];  // possible mine locations for each left border tile
-      mineRadiusRB = [-17, -16, -1, 15, 16];  // possible mine locations for each right border tile
+      gameState.numMines = 40;
+      gameState.possibleMove = [16, 1, -16, -1];  // can either move [up,right,down,left] by adding possibleMove[x] current tile
+      gameState.mineRadiusNB = [-17, -16, -15, -1, 1, 15, 16, 17];  // possible mine locations for each NON-BORDER tile
+      gameState.mineRadiusLB = [-16, -15, 1, 16, 17];  // possible mine locations for each left border tile
+      gameState.mineRadiusRB = [-17, -16, -1, 15, 16];  // possible mine locations for each right border tile
       numRandomTiles = Math.round(Math.random() * (34 - 17) + 17);  // generate random # between [17-34)
       console.log("[medium: initial click] Number of random tiles: " + numRandomTiles);
       break;
     case "hard":
-      numMines = 99;
-      possibleMove = [30, 1, -30, -1];  // can either move [up,right,down,left] by adding possibleMove[x] current tile
-      mineRadiusNB = [-31, -30, -29, -1, 1, 29, 30, 31];  // possible mine locations for each NON-BORDER tile
-      mineRadiusLB = [-30, -29, 1, 30, 31];  // possible mine locations for each left border tile
-      mineRadiusRB = [-31, -30, -1, 29, 30];  // possible mine locations for each right border tile
+      gameState.numMines = 99;
+      gameState.possibleMove = [30, 1, -30, -1];  // can either move [up,right,down,left] by adding possibleMove[x] current tile
+      gameState.mineRadiusNB = [-31, -30, -29, -1, 1, 29, 30, 31];  // possible mine locations for each NON-BORDER tile
+      gameState.mineRadiusLB = [-30, -29, 1, 30, 31];  // possible mine locations for each left border tile
+      gameState.mineRadiusRB = [-31, -30, -1, 29, 30];  // possible mine locations for each right border tile
       numRandomTiles = Math.round(Math.random() * (48 - 31) + 31);  // generate random # between [31-48)
       console.log("[hard: initial click] Number of random tiles: " + numRandomTiles);
       break;
   }
-
-  while (visitedTiles.length < numRandomTiles) {
+  while (gameState.visitedTilesValue.length < numRandomTiles) {
     let randomMove = Math.round(Math.random() * 3);
-    let nextTileValue = parseInt(initialTile.dataset.value) + possibleMove[randomMove];
+    let nextTileValue = parseInt(initialTile.dataset.value) + gameState.possibleMove[randomMove];
     let nextTile = document.querySelector(`[data-value="${nextTileValue}"]`);
     while (nextTileValue === null || nextTileValue < 0 || nextTileValue >= tableSize) {
       randomMove = Math.round(Math.random() * 3);
-      nextTileValue = parseInt(initialTile.dataset.value) + possibleMove[randomMove];
+      nextTileValue = parseInt(initialTile.dataset.value) + gameState.possibleMove[randomMove];
       nextTile = document.querySelector(`[data-value="${nextTileValue}"]`);
     }
-    while ((visitedTiles.includes(nextTile) || nextTile === initialTile)) { // add check for nextTile not being initialTile and not already visited
+    while ((gameState.visitedTilesValue.includes(nextTileValue) || nextTile === initialTile)) { // add check for nextTile not being initialTile and not already visited
       randomMove = Math.round(Math.random() * 3);
-      nextTileValue += possibleMove[randomMove];
+      nextTileValue += gameState.possibleMove[randomMove];
       nextTile = document.querySelector(`[data-value="${nextTileValue}"]`);
       while (nextTileValue === null || nextTileValue < 0 || nextTileValue >= tableSize) {
         randomMove = Math.round(Math.random() * 3);
-        nextTileValue = parseInt(initialTile.dataset.value) + possibleMove[randomMove];
+        nextTileValue = parseInt(initialTile.dataset.value) + gameState.possibleMove[randomMove];
         nextTile = document.querySelector(`[data-value="${nextTileValue}"]`);
       }
     }
-    visitedTiles.push(nextTile);
-    gameState.visitedTilesValue.push(parseInt(nextTile.dataset.value))
+    gameState.visitedTilesValue.push(nextTileValue);
   }
-
-  // convert the string dataset.value of each visitedTiles[] into int
-  let valueVisitedTiles = visitedTiles.map(td => parseInt(td.dataset.value));
-
   // Generate mines
   let tiles = document.querySelectorAll("td");
-  while (randomMines.length < numMines) {
+  while (gameState.randomMines.length < gameState.numMines) {
     let randomNum = Math.round(Math.random() * tableSize); // generate random # between [0-tableSize)
-    while (randomMines.includes(randomNum) || valueVisitedTiles.includes(randomNum)) {
+    while (gameState.randomMines.includes(randomNum) || gameState.visitedTilesValue.includes(randomNum)) {
       randomNum = Math.round(Math.random() * tableSize); // generate random # between [0-tableSize)
     }
-    randomMines.push(randomNum);
+    gameState.randomMines.push(randomNum);
     tiles[randomNum].style.backgroundColor = "red";
   }
-  tiles = document.querySelectorAll("td");
-  // console.log(gameState.visitedTilesValue)
+
   gameState.visitedTilesValue.forEach(tileVal => {
-    // console.log(`tile ${tileVal}= ${tiles[tileVal].getAttribute("rightClicked")}`);
+    tiles[tileVal].style.backgroundColor = "#707070";
     if (tiles[tileVal].getAttribute("rightClicked") === "true" || gameState.flaggedTilesValue.includes(tileVal)) {
-      tiles[tileVal].setAttribute("rightClicked", "false");
-      tiles[tileVal].innerHTML = "";  // clears the innerHTML of a td element to account for flag icon
-      // console.log(`unflagging tile ${tileVal}`)
-      let removeFlagsForOtherClient = [];
-  
+      tiles[tileVal].setAttribute("rightClicked", false);
+      tiles[tileVal].innerHTML = "";
       gameState.flaggedTilesValue.splice(gameState.flaggedTilesValue.indexOf(tileVal), 1);
       if (clientFlags.includes(tileVal)) {
         buttonFlagCounter += 1; // update the total flag counter by 'returning' the flag to the counter
         document.querySelector(".flagCounter").innerHTML = buttonFlagCounter;
         clientFlags.splice(clientFlags.indexOf(tileVal), 1);
-        updateFlagsToServer();
+        updateFlagsToServer(); // send this client's flags values to the other client (in order to update flags properly)
       } else {
-        // remove flags for other client
-        console.log(`remove flag ${tileVal} for other player`);
+        // the current tile is flagged by the other cient; remove other client's flag and update for both clients
+        let removeFlagsForOtherClient = [];        
         removeFlagsForOtherClient.push(tileVal);
         if (socket.readyState === WebSocket.OPEN) {
           socket.send(JSON.stringify({
@@ -479,28 +446,23 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
         }
       }
     }
-    sendGameStateToServer();
     scanMineRadius(tiles[tileVal]);
     if (tiles[tileVal].innerHTML === "") {
       floodFill(tiles[tileVal]);
     }
-    tiles[tileVal].style.backgroundColor = "#909090";
-  });
+  })
 
   // after doing initial click, for each td element:
   // remove "initialClick" event listener 
   // add "leftClick" event listener ONLY IF tile has not been visited
   tiles.forEach(td => {
     td.removeEventListener("click", initialClick);
-    if (!visitedTiles.includes(td)) {
+    if (!gameState.visitedTilesValue.includes(parseInt(td.dataset.value))) {
       td.addEventListener("click", leftClick);
     }
   });
-  gameState.randomMines = randomMines;
-  gameState.possibleMove = possibleMove;
-  gameState.mineRadiusNB = mineRadiusNB;
-  gameState.mineRadiusLB = mineRadiusLB;
-  gameState.mineRadiusRB = mineRadiusRB;
+
+  sendGameStateToServer();
   if (socket.readyState === WebSocket.OPEN) {
     socket.send(JSON.stringify({
       method: "updateGameState_InitialClick",
@@ -509,6 +471,13 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
       serverId: serverId
     }))
   }
+
+
+  // console.clear()
+  for (key in gameState) {
+    console.log(`${key}: ${gameState[key]}`);
+  }
+
 }
 
 function scanMineRadius(tile) {
@@ -519,25 +488,13 @@ function scanMineRadius(tile) {
 
   if (tileValue % colLength === 0) {
     // If current tile is on the left border, mineRadius becomes limited to mineRadiusLB
-    if (mineRadiusLB.length === 0) {
-      mineRadius = gameState.mineRadiusLB;
-    } else {
-      mineRadius = mineRadiusLB;
-    } 
+    mineRadius = gameState.mineRadiusLB;
   } else if (tileValue % colLength === colLength - 1) {
     // If current tile is on the right border, mineRadius becomes limited to mineRadiusRB
-    if (mineRadiusRB.length === 0) {
-      mineRadius = gameState.mineRadiusRB;
-    } else {
-      mineRadius = mineRadiusRB;
-    } 
+    mineRadius = gameState.mineRadiusRB;
   } else {
     // If current tile is not on either border, mineRadius does not need to be limited
-    if (mineRadiusNB.length === 0) {
-      mineRadius = gameState.mineRadiusNB;
-    } else {
-      mineRadius = mineRadiusNB;
-    } 
+    mineRadius = gameState.mineRadiusNB;
   }
   for (let i = 0; i < mineRadius.length; i++) {
     if (gameState.randomMines.includes(tileValue + mineRadius[i])) {
@@ -584,32 +541,19 @@ function floodFill(tile) {
 
   if (tileValue % colLength === 0) {
     // If current tile is on the left border, floodRadius becomes limited to mineRadiusLB
-    if (mineRadiusLB.length === 0) {
-      floodRadius = gameState.mineRadiusLB;
-    } else {
-      floodRadius = mineRadiusLB;
-    }
+    floodRadius = gameState.mineRadiusLB;
   } else if (tileValue % colLength === colLength - 1) {
     // If current tile is on the right border, floodRadius becomes limited to mineRadiusRB
-    if (mineRadiusRB.length === 0) {
-      floodRadius = gameState.mineRadiusRB;
-    } else {
-      floodRadius = mineRadiusRB;
-    }
+    floodRadius = gameState.mineRadiusRB;
   } else {
     // If current tile is not on either border, floodRadius does not need to be limited
-    if (mineRadiusNB.length === 0) {
-      floodRadius = gameState.mineRadiusNB;
-    } else {
-      floodRadius = mineRadiusNB;
-    }
+    floodRadius = gameState.mineRadiusNB;
   }
 
   for (let i = 0; i < floodRadius.length; i++) {
     let nextTileValue = tileValue + floodRadius[i];
     if (tiles[nextTileValue]) {
       if (!gameState.visitedTilesValue.includes(nextTileValue)) {
-        visitedTiles.push(tiles[nextTileValue]);
         gameState.visitedTilesValue.push(nextTileValue);
         tiles[nextTileValue].style.backgroundColor = "#707070";
         if (gameState.flaggedTilesValue.includes(nextTileValue)) {
@@ -637,12 +581,6 @@ function floodFill(tile) {
             }
           }
         }
-        sendGameStateToServer();
-        gameState.randomMines = randomMines;
-        gameState.possibleMove = possibleMove;
-        gameState.mineRadiusNB = mineRadiusNB;
-        gameState.mineRadiusLB = mineRadiusLB;
-        gameState.mineRadiusRB = mineRadiusRB;
         scanMineRadius(tiles[nextTileValue]);
         if (socket.readyState === WebSocket.OPEN) {
           socket.send(JSON.stringify({
@@ -652,7 +590,6 @@ function floodFill(tile) {
             clientId: clientId
           }))
         }
-        sendGameStateToServer();
         if (tiles[nextTileValue].innerHTML === "") {
           floodFill(tiles[nextTileValue]);
         }
@@ -673,22 +610,24 @@ function leftClick() {
     visitedTiles.push(currTile);  // this prevents currTile from being pushed more than once (ex. if user clicks too fast)
     gameState.visitedTilesValue.push(parseInt(currTile.dataset.value));
   }
-  // console.log(`[LEFT CLICK]` + " on tile " + currTile.dataset.value);
   document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/smile-icon.png' alt='buddy-smile'>";
   currTile.style.backgroundColor = "#707070"; //gray=808080
-  scanMineRadius(currTile);
   currTile.removeEventListener("click", leftClick);
-
+  scanMineRadius(currTile);
   if (currTile.innerHTML === "") {
     floodFill(currTile);
   }
-
   if (document.querySelectorAll("td").length - gameState.visitedTilesValue.length === gameState.numMines) {
     gameWon();
   }
-
-  gameState.visitedTilesValue = gameState.visitedTilesValue;
-  // console.log(gameState.visitedTilesValue);
+  if (socket.readyState === WebSocket.OPEN) {
+    socket.send(JSON.stringify({
+      method: "updateVisitedTilesForOtherClient",
+      gameState: gameState,
+      serverId: serverId,
+      clientId: clientId
+    }))
+  }
   sendGameStateToServer();
 }
 
@@ -955,7 +894,6 @@ function updateFlagsToServer() {
 function updateJoiningClientBoard() {
   console.log(`Updating board for the joining client: ${clientUsername}`);
   let tiles = document.querySelectorAll("td");
-
   // if initialClick() was already executed by other client, remove it for the joining client
   if (gameState.visitedTilesValue.length > 0) {
     tiles.forEach(t => {
@@ -987,6 +925,7 @@ function updateClientBoard(data) {
   
   switch (data.method) {
     case "updateFlagsForOtherClient": // whenever a client adds or removes their own flag
+      gameState.flaggedTilesValue = data.serverFlags;
       tiles.forEach(td => {
         if (gameState.visitedTilesValue.includes(parseInt(td.dataset.value)) || clientFlags.includes(parseInt(td.dataset.value))) {
           return;
@@ -1061,14 +1000,13 @@ function updateClientBoard(data) {
             break;
         }
       }
-      gameState.visitedTilesValue = data.visitedTilesValue;
-      gameState.randomMines = data.randomMines;
-      gameState.numMines = data.numMines;
-      gameState.possibleMove = data.possibleMove;
-      gameState.mineRadiusNB = data.mineRadiusNB;
-      gameState.mineRadiusLB = data.mineRadiusLB;
-      gameState.mineRadiusRB = data.mineRadiusRB;
-
+      // gameState.visitedTilesValue = data.visitedTilesValue;
+      // gameState.randomMines = data.randomMines;
+      // gameState.numMines = data.numMines;
+      // gameState.possibleMove = data.possibleMove;
+      // gameState.mineRadiusNB = data.mineRadiusNB;
+      // gameState.mineRadiusLB = data.mineRadiusLB;
+      // gameState.mineRadiusRB = data.mineRadiusRB;
       tiles = document.querySelectorAll("td");
       gameState.visitedTilesValue.forEach(tileValue => {
         tiles[tileValue].innerHTML = "";

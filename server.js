@@ -303,7 +303,6 @@ function onMessage(message) {
       gameState[data.serverId].flaggedTilesValue = data.gameState.flaggedTilesValue;
       gameState[data.serverId].numMines = data.gameState.numMines;
       gameState[data.serverId].randomMines = data.gameState.randomMines;
-      gameState[data.serverId].buttonFlagCounter = data.gameState.buttonFlagCounter;
       gameState[data.serverId].gameDifficulty = data.gameState.gameDifficulty; 
       gameState[data.serverId].possibleMove = data.gameState.possibleMove;
       gameState[data.serverId].mineRadiusNB = data.gameState.mineRadiusNB;
@@ -335,7 +334,7 @@ function onMessage(message) {
     case "updateGameState_InitialClick":
       // update the game state for the other player when initialClick() executes
       gameState[data.serverId].visitedTilesValue = data.gameState.visitedTilesValue;
-      // gameState[data.serverId].flaggedTilesValue = data.gameState.flaggedTilesValue;
+      gameState[data.serverId].numMines = data.gameState.numMines;
       gameState[data.serverId].randomMines = data.gameState.randomMines;
       gameState[data.serverId].possibleMove = data.gameState.possibleMove;
       gameState[data.serverId].mineRadiusNB = data.gameState.mineRadiusNB;
@@ -349,6 +348,7 @@ function onMessage(message) {
             "otherClient": otherClient.username,
             "visitedTilesValue": gameState[data.serverId].visitedTilesValue,
             // "flaggedTilesValue": gameState[data.serverId].flaggedTilesValue,
+            "numMines": gameState[data.serverId].numMines,
             "randomMines": gameState[data.serverId].randomMines,
             "possibleMove": gameState[data.serverId].possibleMove,
             "mineRadiusNB": gameState[data.serverId].mineRadiusNB,
