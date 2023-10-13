@@ -779,9 +779,9 @@ function setFlagHandler() {
   if (!gameState.visitedTilesValue.includes(parseInt(currTile.dataset.value))) {
     if (currTile.getAttribute("rightClicked") === "false") {
       currTile.innerHTML = "<img src='./img/flag-icon.png' alt='flag'>";
-      currTile.setAttribute("rightClicked", true);
-      buttonFlagCounter -= 1;
-      document.querySelector(".flagCounter").innerHTML = buttonFlagCounter;
+      currTile.setAttribute("rightClicked", "true");
+      gameState.buttonFlagCounter -= 1;
+      document.querySelector(".flagCounter").innerHTML = gameState.buttonFlagCounter;
       // update the gamestate
       gameState.flaggedTilesValue.push(parseInt(currTile.dataset.value));
       clientFlags.push(parseInt(currTile.dataset.value));
@@ -790,11 +790,15 @@ function setFlagHandler() {
       setTimeout(() => {
         document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/smile-icon.png' alt='buddy-smile'>";
       }, 600);
-      currTile.innerHTML = "";
-      currTile.setAttribute("rightClicked", false);
+      if (currTile.style.backgroundColor === "brown") { // check if the tile has an exposed mine (caused by other client)
+        currTile.innerHTML = "<img src='./img/bomb-icon.png' alt='bomb'>";
+      } else {
+        currTile.innerHTML = "";
+      }
+      currTile.setAttribute("rightClicked", "false");
+      gameState.buttonFlagCounter += 1;
+      document.querySelector(".flagCounter").innerHTML = gameState.buttonFlagCounter;
       if (clientFlags.includes(parseInt(currTile.dataset.value))) {
-        buttonFlagCounter += 1;
-        document.querySelector(".flagCounter").innerHTML = buttonFlagCounter;
         clientFlags.splice(clientFlags.indexOf(parseInt(currTile.dataset.value)), 1);
       } else { // player removed other player's flag
         // console.log(`remove flag ${currTile.dataset.value} for other player`);
@@ -802,6 +806,7 @@ function setFlagHandler() {
           socket.send(JSON.stringify({
             method: "removeFlagForOtherClient",
             flagValueToRemove: parseInt(currTile.dataset.value),
+            buttonFlagCounter: gameState.buttonFlagCounter,
             serverId: serverId,
             clientId: clientId
           }))
