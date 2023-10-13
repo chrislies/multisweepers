@@ -73,6 +73,7 @@ function onMessage(msg) {
       gameState.numMines = numMines;
       gameState.randomMines = randomMines;
       gameState.gameDifficulty = "easy";
+      gameState.buttonFlagCounter = 10;
       // Send the updated gameState to the server with the function below
       sendGameStateToServer();
       break;
@@ -182,6 +183,7 @@ function onMessage(msg) {
       // console.log(`Updating game state for player ${data.otherClient}`);
       gameState.visitedTilesValue = data.visitedTilesValue;
       gameState.flaggedTilesValue = data.flaggedTilesValue;
+      gameState.buttonFlagCounter = data.buttonFlagCounter;
       gameState.randomMines = data.randomMines;
       gameState.numMines = data.numMines;
       gameState.possibleMove = data.possibleMove;
@@ -248,8 +250,10 @@ function generateEasy(sendToServer) {
     document.querySelector(".playAgainButton").remove();
   }
   let n = 9; // n x n grid
-  numMines = 10;
-  gameState.buttonFlagCounter = numMines;
+  createFlagButton();
+  gameState.numMines = 10;
+  gameState.buttonFlagCounter = gameState.numMines;
+  document.querySelector(".flagCounter").innerHTML = gameState.buttonFlagCounter;
   let tileCounter = 0;
   for (let i = 0; i < n; i++) {
     let row = document.createElement("tr");
@@ -268,8 +272,8 @@ function generateEasy(sendToServer) {
   const container = document.querySelector("#container");
   container.style.transform = "translate(-50%, -50%) scale(2.2)";
   createBuddy();
-  createFlagButton();
   paintContainerGrids();
+  sendGameStateToServer();
   if (sendToServer) {
     // Send the updated gameState to the server and client with the function below
     generateGameForOtherClient();
@@ -295,8 +299,10 @@ function generateMedium(sendToServer) {
     document.querySelector(".playAgainButton").remove();
   }
   let n = 16; // n x n grid
-  numMines = 40;
-  gameState.buttonFlagCounter = numMines;
+  createFlagButton();
+  gameState.numMines = 40;
+  gameState.buttonFlagCounter = gameState.numMines;
+  document.querySelector(".flagCounter").innerHTML = gameState.buttonFlagCounter;
   let tileCounter = 0;
   for (let i = 0; i < n; i++) {
     let row = document.createElement("tr");
@@ -315,8 +321,8 @@ function generateMedium(sendToServer) {
   const container = document.querySelector("#container");
   container.style.transform = "translate(-50%, -50%) scale(1.6)";
   createBuddy();
-  createFlagButton();
   paintContainerGrids();
+  sendGameStateToServer();
   if (sendToServer) {
     // Send the updated gameState to the server and client with the function below
     generateGameForOtherClient();
@@ -343,8 +349,10 @@ function generateHard(sendToServer) {
   }
   let n = 16; // n x m grid
   let m = 30
-  numMines = 99;
-  gameState.buttonFlagCounter = numMines;
+  createFlagButton();
+  gameState.numMines = 99;
+  gameState.buttonFlagCounter = gameState.numMines;
+  document.querySelector(".flagCounter").innerHTML = gameState.buttonFlagCounter;
   let tileCounter = 0;
   for (let i = 0; i < n; i++) {
     let row = document.createElement("tr");
@@ -363,8 +371,8 @@ function generateHard(sendToServer) {
   const container = document.querySelector("#container");
   container.style.transform = "translate(-50%, -50%) scale(1.6)";
   createBuddy();
-  createFlagButton();
   paintContainerGrids();
+  sendGameStateToServer();
   if (sendToServer) {
     // Send the updated gameState to the server and client with the function below
     generateGameForOtherClient();
@@ -442,7 +450,7 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
       randomNum = Math.round(Math.random() * tableSize); // generate random # between [0-tableSize)
     }
     gameState.randomMines.push(randomNum);
-    // tiles[randomNum].style.backgroundColor = "red";
+    tiles[randomNum].style.backgroundColor = "red";
   }
 
   gameState.visitedTilesValue.forEach(tileVal => {
@@ -957,6 +965,7 @@ function updateFlagsToServer() {
 
 function updateJoiningClientBoard() {
   console.log(`Updating board for the joining client: ${clientUsername}`);
+  console.log(gameState);
   let tiles = document.querySelectorAll("td");
   // if initialClick() was already executed by other client, remove it for the joining client
   if (gameState.visitedTilesValue.length > 0) {
@@ -1072,4 +1081,4 @@ function updateClientBoard(data) {
   }
 }
 
-generateEasy(true);
+generateEasy(false);

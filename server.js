@@ -8,6 +8,7 @@ let gameState = {};
 const http = require("http").createServer().listen(8080, () => {
   console.log("Listening on port 8080");
 });
+
 const server = require("websocket").server;
 const socket = new server({ httpServer: http });
 
@@ -183,6 +184,7 @@ function onMessage(message) {
         for (const clientId in clients) { 
           if (clients[clientId].serverId === data.serverId && clients[clientId].clientId === data.clientId) {
             console.log(`${clients[clientId].username} joined server ${data.serverId}`);
+            // console.log(gameState[data.serverId])
             clients[clientId].connection.send(JSON.stringify({
               "method": "joinedServer",
               "serverId": data.serverId,
@@ -306,6 +308,7 @@ function onMessage(message) {
       // console.log(`${clients[data.clientId].username}'s flags: ${clients[data.clientId].clientFlags}`);
       gameState[data.serverId].visitedTilesValue = data.gameState.visitedTilesValue;
       gameState[data.serverId].flaggedTilesValue = data.gameState.flaggedTilesValue;
+      gameState[data.serverId].buttonFlagCounter = data.gameState.buttonFlagCounter;
       gameState[data.serverId].numMines = data.gameState.numMines;
       gameState[data.serverId].randomMines = data.gameState.randomMines;
       gameState[data.serverId].gameDifficulty = data.gameState.gameDifficulty; 
@@ -324,6 +327,7 @@ function onMessage(message) {
             "playerOneFlags": clients[data.clientId].clientFlags,
             "visitedTilesValue": gameState[data.serverId].visitedTilesValue,
             "flaggedTilesValue": gameState[data.serverId].flaggedTilesValue,
+            "buttonFlagCounter": gameState[data.serverId].buttonFlagCounter,
             "numMines": gameState[data.serverId].numMines,
             "randomMines": gameState[data.serverId].randomMines,
             "gameDifficulty": gameState[data.serverId].gameDifficulty,
