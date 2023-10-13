@@ -11,6 +11,9 @@ let buttonFlagCounter = 0;
 let flagCounter = document.querySelector(".flagCounter");
 
 const gw = document.querySelector("#gameWindow");
+const gameBoard = document.querySelector("#gameBoard");
+gw.addEventListener("contextmenu", (event) => {event.preventDefault();})
+gameBoard.addEventListener("contextmenu", (event) => {event.preventDefault();})
 let gameOver = false;
 let numMines = 0;
 let visitedTilesValue = [];
@@ -264,6 +267,8 @@ function generateEasy(sendToServer) {
       data.setAttribute("rightClicked", "false");
       data.addEventListener("click", initialClick);
       data.addEventListener("contextmenu", rightClickHandler);
+      data.addEventListener("mousedown", mouseDownHandler);
+      data.addEventListener("mouseup", mouseUpHandler);
       row.appendChild(data);
       tileCounter++;
     }
@@ -313,6 +318,8 @@ function generateMedium(sendToServer) {
       data.setAttribute("rightClicked", "false");
       data.addEventListener("click", initialClick);
       data.addEventListener("contextmenu", rightClickHandler);
+      data.addEventListener("mousedown", mouseDownHandler);
+      data.addEventListener("mouseup", mouseUpHandler);
       row.appendChild(data);
       tileCounter++;
     }
@@ -363,6 +370,8 @@ function generateHard(sendToServer) {
       data.setAttribute("rightClicked", "false");
       data.addEventListener("click", initialClick);
       data.addEventListener("contextmenu", rightClickHandler);
+      data.addEventListener("mousedown", mouseDownHandler);
+      data.addEventListener("mouseup", mouseUpHandler);
       row.appendChild(data);
       tileCounter++;
     }
@@ -450,7 +459,7 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
       randomNum = Math.round(Math.random() * tableSize); // generate random # between [0-tableSize)
     }
     gameState.randomMines.push(randomNum);
-    tiles[randomNum].style.backgroundColor = "red";
+    // tiles[randomNum].style.backgroundColor = "red";
   }
 
   gameState.visitedTilesValue.forEach(tileVal => {
@@ -660,6 +669,110 @@ function leftClick() {
   sendGameStateToServer();
 }
 
+let leftClicked = false;
+let rightClicked = false;
+const mouseDownHandler = (event) => {
+  if (gameOver) { return; }
+  if (event.button === 0) {
+    leftClicked = true;
+  } else if (event.button === 2) {
+    rightClicked = true;
+  }
+
+  if (leftClicked && rightClicked || event.button === 1) {  // chord the adjacent tiles
+    let currTile = event.target;
+    let currTileVal = parseInt(currTile.dataset.value);
+    let colLength = document.querySelector("tr").children.length; // the number of elements in a row
+    let chordRadius = [];
+    let mineCounter = 0;
+    let flagCounter = 0;
+
+    if (currTile.innerText === "") {
+      return;
+    }
+ 
+    if (currTileVal % colLength === 0) {
+      // If current tile is on the left border, chordRadius becomes limited to mineRadiusLB
+      chordRadius = gameState.mineRadiusLB;
+    } else if (currTileVal % colLength === colLength - 1) {
+      // If current tile is on the right border, chordRadius becomes limited to mineRadiusRB
+      chordRadius = gameState.mineRadiusRB;
+    } else {
+      // If current tile is not on either border, chordRadius does not need to be limited
+      chordRadius = gameState.mineRadiusNB;
+    }
+
+    chordRadius.forEach(value => {
+      let adjacentTile = document.querySelector(`[data-value="${currTileVal + value}"]`);
+      if (adjacentTile) {
+        if (gameState.randomMines.includes(parseInt(adjacentTile.dataset.value))) {
+          mineCounter += 1;
+        }
+        if (gameState.flaggedTilesValue.includes(parseInt(adjacentTile.dataset.value))) {
+          flagCounter += 1;
+        }
+      }
+    })
+
+    if (mineCounter === flagCounter) {  // Check if current tile is able to chord/reveal surrounding tiles
+      for (const value of chordRadius) {
+        let adjacentTile = document.querySelector(`[data-value="${currTileVal + value}"]`);
+        if (adjacentTile) {
+          if (!gameState.visitedTilesValue.includes(parseInt(adjacentTile.dataset.value)) && gameState.randomMines.includes(parseInt(adjacentTile.dataset.value)) && adjacentTile.innerHTML === "") {
+            // GAME OVER: client placed a flag on a safe tile and exposed a mine!
+            gameLost();
+            return;
+          } 
+        }
+      }
+      chordRadius.forEach(value => {
+        let adjacentTile = document.querySelector(`[data-value="${currTileVal + value}"]`);
+        if (adjacentTile) {
+          if (!gameState.visitedTilesValue.includes(parseInt(adjacentTile.dataset.value)) && !gameState.randomMines.includes(parseInt(adjacentTile.dataset.value))) {
+            // Tile is able to chord/reveal surrounding tiles
+            console.log(`chording tile ${currTileVal}`);
+            adjacentTile.style.backgroundColor = "#707070";
+            gameState.visitedTilesValue.push(parseInt(adjacentTile.dataset.value));
+            scanMineRadius(adjacentTile);
+            if (adjacentTile.innerHTML === "") {
+              floodFill(adjacentTile);
+            }
+          }
+        } 
+      })
+    }
+  }
+}
+
+const mouseUpHandler = (event) => { // when user releases left and right click
+  if (event.button === 0) {
+    leftClicked = false;
+  } else if (event.button === 2) {
+    rightClicked = false;
+  }
+
+  // let currTile = event.target;
+  // let currTileVal = parseInt(currTile.dataset.value);
+  // let colLength = document.querySelector("tr").children.length; // the number of elements in a row
+  // let chordRadius = [];
+  // if (currTileVal % colLength === 0) {
+  //   // If current tile is on the left border, chordRadius becomes limited to mineRadiusLB
+  //   chordRadius = gameState.mineRadiusLB;
+  // } else if (currTileVal % colLength === colLength - 1) {
+  //   // If current tile is on the right border, chordRadius becomes limited to mineRadiusRB
+  //   chordRadius = gameState.mineRadiusRB;
+  // } else {
+  //   // If current tile is not on either border, chordRadius does not need to be limited
+  //   chordRadius = gameState.mineRadiusNB;
+  // }
+  // // console.log(chordRadius);
+  // currTile.style.backgroundColor = "lightgray";
+  // chordRadius.forEach(value => {
+  //   document.querySelector(`[data-value="${currTileVal + value}"]`).style.backgroundColor = "lightgray"
+  // })
+
+}
+
 const rightClickHandler = (event) => {
   event.preventDefault();
   // If game is over, ignore right click feature 
@@ -750,6 +863,7 @@ function createFlagButton() {
   fButton.classList.add("flagButton");
   fCounter.classList.add("flagCounter");
   fButton.addEventListener("click", flagButtonClick);
+  fButton.addEventListener("contextmenu", (event) => {event.preventDefault();});
   fButton.setAttribute("flagButtonClicked", false);
 }
 
@@ -832,6 +946,7 @@ function createBuddy() {
   bButton.innerHTML = "<img class='buddyImg' src='./img/smile-icon.png' alt='buddy-smile'>";
   bButton.classList.add("buddyButton");
   bButton.addEventListener("click", buddyButtonClick);
+  bButton.addEventListener("contextmenu", (event) => {event.preventDefault();});
   const gameBoard = document.querySelector("#gameBoard");
   gameBoard.insertBefore(bButton, gameBoard.querySelector("#gameWindow"));
 }
@@ -852,6 +967,7 @@ function createPlayAgainButton() {
   gameBoard.append(playAgainButton);
   playAgainButton.classList.add("playAgainButton");
   playAgainButton.addEventListener("click", playAgain);
+  playAgainButton.addEventListener("contextmenu", (event) => {event.preventDefault();})
 }
 
 function gameLost(tileValue) {
@@ -872,7 +988,7 @@ function gameLost(tileValue) {
       }))
     }
   } else {
-    randomMines.forEach(td => {
+    gameState.randomMines.forEach(td => {
       tiles[td].innerHTML = "<img src='./img/bomb-icon.png' alt='bomb'>";
       tiles[td].style.backgroundColor = "brown";
       if (tiles[td].getAttribute("rightClicked") === "true") {
