@@ -19,6 +19,7 @@ socket.on("request", (req) => {
   let clientFlags = [];
   let visitedTilesValue = [];
   let flaggedTilesValue = [];
+  let buttonFlagCounter = 0;
   let numMines = 0;
   let randomMines = [];
   let gameDifficulty = "";
@@ -31,7 +32,8 @@ socket.on("request", (req) => {
     serverId: serverId,
     username: username,
     connection: connection,
-    clientFlags: clientFlags
+    clientFlags: clientFlags,
+    wins: 0
   };
   servers[serverId] = {
     serverId: serverId,
@@ -41,6 +43,7 @@ socket.on("request", (req) => {
   gameState[serverId] = {
     visitedTilesValue: visitedTilesValue,
     flaggedTilesValue: flaggedTilesValue,
+    buttonFlagCounter: buttonFlagCounter,
     numMines: numMines,
     randomMines: randomMines,
     gameDifficulty: gameDifficulty,
@@ -179,7 +182,7 @@ function onMessage(message) {
 
         for (const clientId in clients) { 
           if (clients[clientId].serverId === data.serverId && clients[clientId].clientId === data.clientId) {
-            console.log(`Player: ${clients[clientId].username} joined server ${data.serverId}`);
+            console.log(`${clients[clientId].username} joined server ${data.serverId}`);
             clients[clientId].connection.send(JSON.stringify({
               "method": "joinedServer",
               "serverId": data.serverId,
@@ -190,6 +193,7 @@ function onMessage(message) {
               "gameDifficulty": gameState[data.serverId].gameDifficulty,
               "visitedTilesValue": gameState[data.serverId].visitedTilesValue,
               "flaggedTilesValue": gameState[data.serverId].flaggedTilesValue,
+              "buttonFlagCounter": gameState[data.serverId].buttonFlagCounter,
               "randomMines": gameState[data.serverId].randomMines,
               "numMines": gameState[data.serverId].numMines,
               "possibleMove": gameState[data.serverId].possibleMove,
@@ -255,7 +259,8 @@ function onMessage(message) {
           otherClient.connection.send(JSON.stringify({
             "method": "removedFlagForOtherClient",
             "clientFlags": otherClient.clientFlags,
-            "flagValueToRemove": data.flagValueToRemove
+            "flagValueToRemove": data.flagValueToRemove,
+            "buttonFlagCounter": data.buttonFlagCounter
           }))
         }
       }
@@ -271,7 +276,8 @@ function onMessage(message) {
           otherClient.connection.send(JSON.stringify({
             "method": "removedFlagsForOtherClient",
             "clientFlags": otherClient.clientFlags,
-            "flagValuesToRemove": data.flagValuesToRemove
+            "flagValuesToRemove": data.flagValuesToRemove,
+            "buttonFlagCounter": data.buttonFlagCounter
           }))
         }
       }
@@ -280,6 +286,7 @@ function onMessage(message) {
     case "updateFlags":
       clients[data.clientId].clientFlags = data.clientFlags;
       gameState[data.serverId].flaggedTilesValue = data.serverFlags;
+      gameState[data.serverId].buttonFlagCounter = data.buttonFlagCounter;
       // console.log(`data.serverFlags = ${data.serverFlags}`)
       // console.log(`gameState[data.serverId].flaggedTilesValue = ${gameState[data.serverId].flaggedTilesValue}`)
       for (const client in clients) {
@@ -288,7 +295,8 @@ function onMessage(message) {
           otherClient.connection.send(JSON.stringify({
             "method": "updateFlagsForOtherClient",
             "otherClientFlags": data.clientFlags,
-            "serverFlags": data.serverFlags
+            "serverFlags": data.serverFlags,
+            "buttonFlagCounter": data.buttonFlagCounter
           }))
         }
       }
@@ -395,7 +403,17 @@ function onMessage(message) {
         }
       }
       break;
-
+    case "foundMine":
+      for (const client in clients) {
+        if (clients[client].serverId === data.serverId && clients[client].clientId !== data.clientId) {
+          const otherClient = clients[client];
+          otherClient.connection.send(JSON.stringify({
+            "method": "foundMine",
+            mineValue: data.mineValue
+          }))
+        }
+      }
+      break;
     }
 }
 
