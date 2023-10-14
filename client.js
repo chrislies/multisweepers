@@ -621,14 +621,7 @@ function floodFill(tile) {
           }
         }
         scanMineRadius(tiles[nextTileValue]);
-        if (socket.readyState === WebSocket.OPEN) {
-          socket.send(JSON.stringify({
-            method: "updateVisitedTilesForOtherClient",
-            gameState: gameState,
-            serverId: serverId,
-            clientId: clientId
-          }))
-        }
+        updateVisitedTilesForOtherClient();
         if (tiles[nextTileValue].innerHTML === "") {
           floodFill(tiles[nextTileValue]);
         }
@@ -658,14 +651,7 @@ function leftClick() {
   if (document.querySelectorAll("td").length - gameState.visitedTilesValue.length === gameState.numMines) {
     gameWon();
   }
-  if (socket.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify({
-      method: "updateVisitedTilesForOtherClient",
-      gameState: gameState,
-      serverId: serverId,
-      clientId: clientId
-    }))
-  }
+  updateVisitedTilesForOtherClient();
   sendGameStateToServer();
 }
 
@@ -681,15 +667,14 @@ const mouseDownHandler = (event) => {
 
   if (leftClicked && rightClicked || event.button === 1) {  // chord the adjacent tiles
     let currTile = event.target;
+    if (currTile.innerText === "") {
+      return;
+    }
     let currTileVal = parseInt(currTile.dataset.value);
     let colLength = document.querySelector("tr").children.length; // the number of elements in a row
     let chordRadius = [];
     let mineCounter = 0;
     let flagCounter = 0;
-
-    if (currTile.innerText === "") {
-      return;
-    }
  
     if (currTileVal % colLength === 0) {
       // If current tile is on the left border, chordRadius becomes limited to mineRadiusLB
@@ -720,7 +705,7 @@ const mouseDownHandler = (event) => {
         if (adjacentTile) {
           if (!gameState.visitedTilesValue.includes(parseInt(adjacentTile.dataset.value)) && gameState.randomMines.includes(parseInt(adjacentTile.dataset.value)) && adjacentTile.innerHTML === "") {
             // GAME OVER: client placed a flag on a safe tile and exposed a mine!
-            gameLost();
+            gameLost(parseInt(adjacentTile.dataset.value));
             return;
           } 
         }
@@ -733,6 +718,8 @@ const mouseDownHandler = (event) => {
             console.log(`chording tile ${currTileVal}`);
             adjacentTile.style.backgroundColor = "#707070";
             gameState.visitedTilesValue.push(parseInt(adjacentTile.dataset.value));
+            // update the gameState
+            updateVisitedTilesForOtherClient();
             scanMineRadius(adjacentTile);
             if (adjacentTile.innerHTML === "") {
               floodFill(adjacentTile);
@@ -750,27 +737,6 @@ const mouseUpHandler = (event) => { // when user releases left and right click
   } else if (event.button === 2) {
     rightClicked = false;
   }
-
-  // let currTile = event.target;
-  // let currTileVal = parseInt(currTile.dataset.value);
-  // let colLength = document.querySelector("tr").children.length; // the number of elements in a row
-  // let chordRadius = [];
-  // if (currTileVal % colLength === 0) {
-  //   // If current tile is on the left border, chordRadius becomes limited to mineRadiusLB
-  //   chordRadius = gameState.mineRadiusLB;
-  // } else if (currTileVal % colLength === colLength - 1) {
-  //   // If current tile is on the right border, chordRadius becomes limited to mineRadiusRB
-  //   chordRadius = gameState.mineRadiusRB;
-  // } else {
-  //   // If current tile is not on either border, chordRadius does not need to be limited
-  //   chordRadius = gameState.mineRadiusNB;
-  // }
-  // // console.log(chordRadius);
-  // currTile.style.backgroundColor = "lightgray";
-  // chordRadius.forEach(value => {
-  //   document.querySelector(`[data-value="${currTileVal + value}"]`).style.backgroundColor = "lightgray"
-  // })
-
 }
 
 const rightClickHandler = (event) => {
@@ -1062,6 +1028,17 @@ function clearGameState() { // whenever a client plays new game or changes diffi
     socket.send(JSON.stringify({
       method: "clearGameState",
       serverId: serverId
+    }))
+  }
+}
+
+function updateVisitedTilesForOtherClient() {
+  if (socket.readyState === WebSocket.OPEN) {
+    socket.send(JSON.stringify({
+      method: "updateVisitedTilesForOtherClient",
+      gameState: gameState,
+      serverId: serverId,
+      clientId: clientId
     }))
   }
 }
