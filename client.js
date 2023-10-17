@@ -1,20 +1,21 @@
-let socket;
-let clientId;
-let serverId;
-let clientUsername;
-const serverList = document.querySelector(".servers");
-let playerCount = document.querySelector("#playerCount");
-let playerList = document.querySelector("#playerList");
-let clientFlags = [];
-let span;
-let buttonFlagCounter = 0;
-let flagCounter = document.querySelector(".flagCounter");
-
 const gw = document.querySelector("#gameWindow");
 const gameBoard = document.querySelector("#gameBoard");
 gw.addEventListener("contextmenu", (event) => {event.preventDefault();})
 gameBoard.addEventListener("contextmenu", (event) => {event.preventDefault();})
-let gameOver = false;
+const serverList = document.querySelector(".servers");
+let playerCount = document.querySelector("#playerCount");
+let playerList = document.querySelector("#playerList");
+let flagCounter = document.querySelector(".flagCounter");
+let span;
+
+let socket;
+let clientId;
+let serverId;
+let clientUsername;
+let clientFlags = [];
+let spectate = false;
+let buttonFlagCounter = 0;
+
 let numMines = 0;
 let visitedTilesValue = [];
 let flaggedTilesValue = [];
@@ -27,6 +28,8 @@ let difficulty = "";
 
 let gameState = {
   multiplayer: false,
+  gameOver: false,
+  playersSpectating: 0,
   visitedTilesValue: [],
   flaggedTilesValue: [],
   buttonFlagCounter: 0,
@@ -100,7 +103,9 @@ function onMessage(msg) {
       break;
     case "joinedServer":
       console.log(`Player ${data.player} joined server "${data.serverId}"`);
+      console.log(data)
       gameState.multiplayer = true;
+      spectate = false;
       serverId = data.serverId; 
       serverCode.innerHTML = data.serverId;
       playerCount.innerHTML = data.playerCount;
@@ -131,15 +136,19 @@ function onMessage(msg) {
         switch (data.gameDifficulty) {
           case "easy":
             generateEasy(data.sendToServer);
+            // generateEasy();
             break;
           case "medium":
-            generateMedium(data.sendToServer);
+            // generateMedium(data.sendToServer);
+            generateMedium();
             break;
           case "hard":
-            generateHard(data.sendToServer);
+            // generateHard(data.sendToServer);
+            generateHard();
             break;
         }
         clientFlags = data.clientFlags;
+        gameState.playersSpectating = data.playersSpectating;
         gameState.visitedTilesValue = data.visitedTilesValue;
         gameState.flaggedTilesValue = data.flaggedTilesValue;
         gameState.buttonFlagCounter = data.buttonFlagCounter;
@@ -184,6 +193,8 @@ function onMessage(msg) {
       break;
     case "updateGameState": 
       // console.log(`Updating game state for player ${data.otherClient}`);
+      gameState.gameOver = data.gameOver;
+      gameState.playersSpectating = data.playersSpectating;
       gameState.visitedTilesValue = data.visitedTilesValue;
       gameState.flaggedTilesValue = data.flaggedTilesValue;
       gameState.buttonFlagCounter = data.buttonFlagCounter;
@@ -193,6 +204,16 @@ function onMessage(msg) {
       gameState.mineRadiusNB = data.mineRadiusNB;
       gameState.mineRadiusLB = data.mineRadiusLB;
       gameState.mineRadiusRB = data.mineRadiusRB;
+      if (gameState.gameOver == true && gameState.playersSpectating === 2) {
+        gameState.randomMines.forEach(td => {
+          tiles[td].innerHTML = "<img src='./img/bomb-icon.png' alt='bomb'>";
+          tiles[td].style.backgroundColor = "brown";
+          if (tiles[td].getAttribute("rightClicked") === "true") {
+            tiles[td].innerHTML += "<img class='flagOnMine' src='./img/flag-icon.png' alt='flag'>";
+          }
+        });
+        createPlayAgainButton();
+      }
       break;
     case "updateGameState_InitialClick":
       updateClientBoard(data);
@@ -201,6 +222,7 @@ function onMessage(msg) {
       updateClientBoard(data);
       break;
     case "clearGameState":
+      gameState.playersSpectating = data.gameState.playersSpectating;
       gameState.visitedTilesValue = data.gameState.visitedTilesValue;
       gameState.flaggedTilesValue = data.gameState.flaggedTilesValue;
       gameState.randomMines = data.gameState.randomMines;
@@ -211,6 +233,8 @@ function onMessage(msg) {
       // console.log(gameState, `cleared`);
       break;
     case "generateGameForOtherClient":
+      spectate = false;
+      clientFlags = [];
       switch(data.gameDifficulty) {
         case "easy":
           generateEasy();
@@ -231,11 +255,29 @@ function onMessage(msg) {
       mine.innerHTML = "<img src='./img/bomb-icon.png' alt='bomb'>";
       mine.style.backgroundColor = "brown";
       break;
+    case "handleGameWon":
+      if (data.gameOver == true) {
+        if (!spectate) { // player is safe
+          console.log("[GAME WON]");
+          document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/chill-icon.png' alt='buddy-chill'>";
+        }
+        let tdElements = document.querySelectorAll("td");
+        tdElements.forEach(td => {
+          td.removeEventListener("click", leftClick);
+        });
+        createPlayAgainButton();
+      }
+      break;
+    case "updateClientSpectate":
+      if (data.playersSpectating === 2) {
+        console.log("Both players now spectating!");
+      }
+      break;
   }
 }
 
 function generateEasy(sendToServer) {
-  gameOver = false;
+  gameState.gameOver = false;
   gameState.gameDifficulty = "easy";
   // console.log(gw.rows.length);
   if (gw.rows.length > 0) {
@@ -278,15 +320,15 @@ function generateEasy(sendToServer) {
   container.style.transform = "translate(-50%, -50%) scale(2.2)";
   createBuddy();
   paintContainerGrids();
-  sendGameStateToServer();
   if (sendToServer) {
+    sendGameStateToServer();
     // Send the updated gameState to the server and client with the function below
-    generateGameForOtherClient();
+    // generateGameForOtherClient();
   }
 }
 
 function generateMedium(sendToServer) {
-  gameOver = false;
+  gameState.gameOver = false;
   gameState.gameDifficulty = "medium";
   // console.log(gw.rows.length);
   if (gw.rows.length > 0) {
@@ -337,7 +379,7 @@ function generateMedium(sendToServer) {
 }
 
 function generateHard(sendToServer) {
-  gameOver = false;
+  gameState.gameOver = false;
   gameState.gameDifficulty = "hard";
   // console.log(gw.rows.length);
   if (gw.rows.length > 0) {
@@ -593,7 +635,9 @@ function floodFill(tile) {
     if (tiles[nextTileValue]) {
       if (!gameState.visitedTilesValue.includes(nextTileValue)) {
         gameState.visitedTilesValue.push(nextTileValue);
+        updateVisitedTilesForOtherClient();
         tiles[nextTileValue].style.backgroundColor = "#707070";
+        // tiles[nextTileValue].style.backgroundColor = "cyan";
         if (gameState.flaggedTilesValue.includes(nextTileValue)) {
           // console.log(`tile ${nextTileValue} is flagged`);
           tiles[nextTileValue].innerHTML = "";
@@ -621,7 +665,10 @@ function floodFill(tile) {
           }
         }
         scanMineRadius(tiles[nextTileValue]);
-        updateVisitedTilesForOtherClient();
+        // check if game is won (if all safe tiles have been visited)
+        if (checkGameWon()) {
+          gameWon();
+        }
         if (tiles[nextTileValue].innerHTML === "") {
           floodFill(tiles[nextTileValue]);
         }
@@ -633,7 +680,7 @@ function floodFill(tile) {
 function leftClick() {
   let currTile = this;
   // return if currTile is right clicked (flagged); otherwise proceed
-  if (currTile.getAttribute("rightClicked") === "true" || gameOver) { return; }
+  if (currTile.getAttribute("rightClicked") === "true" || gameState.gameOver) { return; }
   if (gameState.randomMines.includes(parseInt(currTile.dataset.value))) {
     gameLost(parseInt(currTile.dataset.value));
     return;
@@ -651,14 +698,16 @@ function leftClick() {
   if (document.querySelectorAll("td").length - gameState.visitedTilesValue.length === gameState.numMines) {
     gameWon();
   }
-  updateVisitedTilesForOtherClient();
+  if (gameState.multiplayer) {
+    updateVisitedTilesForOtherClient();
+  }
   sendGameStateToServer();
 }
 
 let leftClicked = false;
 let rightClicked = false;
 const mouseDownHandler = (event) => {
-  if (gameOver) { return; }
+  if (gameState.gameOver) { return; }
   if (event.button === 0) {
     leftClicked = true;
   } else if (event.button === 2) {
@@ -703,7 +752,7 @@ const mouseDownHandler = (event) => {
       for (const value of chordRadius) {
         let adjacentTile = document.querySelector(`[data-value="${currTileVal + value}"]`);
         if (adjacentTile) {
-          if (!gameState.visitedTilesValue.includes(parseInt(adjacentTile.dataset.value)) && gameState.randomMines.includes(parseInt(adjacentTile.dataset.value)) && adjacentTile.innerHTML === "") {
+          if (!gameState.visitedTilesValue.includes(parseInt(adjacentTile.dataset.value)) && gameState.randomMines.includes(parseInt(adjacentTile.dataset.value)) && adjacentTile.innerHTML === "" || adjacentTile.innerHTML === "<img src='./img/bomb-icon.png' alt='bomb'>") {
             // GAME OVER: client placed a flag on a safe tile and exposed a mine!
             gameLost(parseInt(adjacentTile.dataset.value));
             return;
@@ -715,11 +764,16 @@ const mouseDownHandler = (event) => {
         if (adjacentTile) {
           if (!gameState.visitedTilesValue.includes(parseInt(adjacentTile.dataset.value)) && !gameState.randomMines.includes(parseInt(adjacentTile.dataset.value))) {
             // Tile is able to chord/reveal surrounding tiles
-            console.log(`chording tile ${currTileVal}`);
+            // console.log(`${currTileVal} able to chord -> ${parseInt(adjacentTile.dataset.value)}`);
             adjacentTile.style.backgroundColor = "#707070";
+            // adjacentTile.style.backgroundColor = "green";
             gameState.visitedTilesValue.push(parseInt(adjacentTile.dataset.value));
             // update the gameState
             updateVisitedTilesForOtherClient();
+            // check if game is won (if all safe tiles have been visited)
+            if (checkGameWon()) {
+              gameWon();
+            }
             scanMineRadius(adjacentTile);
             if (adjacentTile.innerHTML === "") {
               floodFill(adjacentTile);
@@ -742,7 +796,7 @@ const mouseUpHandler = (event) => { // when user releases left and right click
 const rightClickHandler = (event) => {
   event.preventDefault();
   // If game is over, ignore right click feature 
-  if (gameOver) { return; }
+  if (gameState.gameOver) { return; }
   let currTile = event.target;
   if (!gameState.visitedTilesValue.includes(parseInt(currTile.dataset.value))) {
     if (currTile.getAttribute("rightClicked") === "false") {
@@ -754,10 +808,6 @@ const rightClickHandler = (event) => {
       gameState.flaggedTilesValue.push(parseInt(currTile.dataset.value));
       clientFlags.push(parseInt(currTile.dataset.value));
     } else {
-      document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/nervous-icon.png' alt='buddy-nervous'>";
-      setTimeout(() => {
-        document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/smile-icon.png' alt='buddy-smile'>";
-      }, 600);
       if (currTile.style.backgroundColor === "brown") { // check if the tile has an exposed mine (caused by other client)
         currTile.innerHTML = "<img src='./img/bomb-icon.png' alt='bomb'>";
       } else {
@@ -835,7 +885,7 @@ function createFlagButton() {
 
 function flagButtonClick() {
   // If game is over, ignore flag button feature
-  if (gameOver) { return; }
+  if (gameState.gameOver) { return; }
   const flagButton = this;
   const tdElements = document.querySelectorAll("td");
   if (flagButton.getAttribute("flagButtonClicked") === "false") {
@@ -862,7 +912,7 @@ function flagButtonClick() {
 
 // setFlagHandler() should work in tandem with rightClickHandler()
 function setFlagHandler() {
-  if (gameOver) { return; }
+  if (gameState.gameOver) { return; }
   let currTile = this;
   if (!gameState.visitedTilesValue.includes(parseInt(currTile.dataset.value))) {
     if (currTile.getAttribute("rightClicked") === "false") {
@@ -874,10 +924,6 @@ function setFlagHandler() {
       gameState.flaggedTilesValue.push(parseInt(currTile.dataset.value));
       clientFlags.push(parseInt(currTile.dataset.value));
     } else {
-      document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/nervous-icon.png' alt='buddy-nervous'>";
-      setTimeout(() => {
-        document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/smile-icon.png' alt='buddy-smile'>";
-      }, 600);
       if (currTile.style.backgroundColor === "brown") { // check if the tile has an exposed mine (caused by other client)
         currTile.innerHTML = "<img src='./img/bomb-icon.png' alt='bomb'>";
       } else {
@@ -903,7 +949,7 @@ function setFlagHandler() {
       gameState.flaggedTilesValue.splice(gameState.flaggedTilesValue.indexOf(parseInt(currTile.dataset.value)), 1);
     }
     updateFlagsToServer();
-    sendGameStateToServer(); // update the gamestate
+    // sendGameStateToServer(); // update the gamestate
   }
 }
 
@@ -918,7 +964,7 @@ function createBuddy() {
 }
 
 function buddyButtonClick() {
-  if (gameOver) {
+  if (gameState.gameOver) {
     playAgain();
   }
 }
@@ -937,14 +983,19 @@ function createPlayAgainButton() {
 }
 
 function gameLost(tileValue) {
-  gameOver = true;
   console.log(`[GAME OVER]`);
+  spectate = true;
   document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/dizzy-icon.png' alt='buddy-dizzy'>";
   let tiles = document.querySelectorAll("td");
-  if (gameState.multiplayer) {
+  
+  gameState.playersSpectating += 1;
+  // console.log(`gameState.playersSpectating: ${gameState.playersSpectating}`);
+  sendGameStateToServer();
+
+  if (gameState.multiplayer && gameState.playersSpectating === 1) {
+    // if other client still able to play, relay the single mine to them 
     tiles[tileValue].innerHTML = "<img src='./img/bomb-icon.png' alt='bomb'>";
     tiles[tileValue].style.backgroundColor = "brown";
-    // relay this tile to the other client
     if (socket.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify({
         method: "foundMine",
@@ -954,6 +1005,7 @@ function gameLost(tileValue) {
       }))
     }
   } else {
+    gameState.gameOver = true;
     gameState.randomMines.forEach(td => {
       tiles[td].innerHTML = "<img src='./img/bomb-icon.png' alt='bomb'>";
       tiles[td].style.backgroundColor = "brown";
@@ -962,14 +1014,19 @@ function gameLost(tileValue) {
       }
     });
     createPlayAgainButton();
-  }
+    sendGameStateToServer();
+  } 
   tiles.forEach(td => {
     td.removeEventListener("click", leftClick);
   });
 }
 
+function checkGameWon() {
+  return document.querySelectorAll("td").length - gameState.visitedTilesValue.length === gameState.numMines ? true : false;
+}
+
 function gameWon() {
-  gameOver = true;
+  gameState.gameOver = true;
   console.log(`[GAME WON]`);
   document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/chill-icon.png' alt='buddy-chill'>";
   let tdElements = document.querySelectorAll("td");
@@ -977,15 +1034,30 @@ function gameWon() {
     td.removeEventListener("click", leftClick);
   });
   createPlayAgainButton();
+  sendGameStateToServer();
+  // handle gameWon() for other client
+  if (gameState.multiplayer) {
+    if (socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({
+        method: "handleGameWon",
+        gameState: gameState,
+        serverId: serverId,
+        clientId: clientId
+      }))
+    }
+  }
 }
 
 function playAgain() {
   console.clear();
-  gameOver = false;
+  spectate = false;
+  gameState.playersSpectating = 0;
+  gameState.gameOver = false;
   gameState.numMines = 0;
   gameState.randomMines = [];
   gameState.visitedTilesValue = [];
   gameState.flaggedTilesValue = [];
+  clientFlags = [];
   if (document.querySelector(".playAgainButton")) {
     document.querySelector(".playAgainButton").remove();
   }
@@ -993,12 +1065,14 @@ function playAgain() {
   document.querySelector(".flagButton").remove();
   clearGameState();
   if (selectDifficulty.value === "easy") {
-    generateEasy(true);
+    // generateEasy(true);
+    generateEasy();
   } else if (selectDifficulty.value === "medium") {
     generateMedium(true);
   } else {
     generateHard(true);
   }
+  generateGameForOtherClient();
 }
 
 function sendGameStateToServer() {
@@ -1163,6 +1237,7 @@ function updateClientBoard(data) {
       break;
     case "updateVisitedTilesForOtherClient":
       console.log(`update visited tiles w/ ${data.method} for ${clientUsername}`);
+      gameState.visitedTilesValue = data.visitedTilesValue;
       data.visitedTilesValue.forEach(tileValue => {
       tiles[tileValue].innerHTML = "";
       tiles[tileValue].style.backgroundColor = "#707070";

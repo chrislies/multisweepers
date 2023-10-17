@@ -34,6 +34,7 @@ socket.on("request", (req) => {
     username: username,
     connection: connection,
     clientFlags: clientFlags,
+    spectate: false,
     wins: 0
   };
   servers[serverId] = {
@@ -42,6 +43,8 @@ socket.on("request", (req) => {
     gameState: gameState
   };
   gameState[serverId] = {
+    gameOver: false,
+    playersSpectating: 0,
     visitedTilesValue: visitedTilesValue,
     flaggedTilesValue: flaggedTilesValue,
     buttonFlagCounter: buttonFlagCounter,
@@ -188,21 +191,23 @@ function onMessage(message) {
             clients[clientId].connection.send(JSON.stringify({
               "method": "joinedServer",
               "serverId": data.serverId,
-              "playerCount": Object.keys(servers[data.serverId].clients).length,
-              "usernameList": usernameList,
+              playerCount: Object.keys(servers[data.serverId].clients).length,
+              usernameList: usernameList,
               "player": clients[data.clientId].username,
-              "clientFlags": [],
+              clientFlags: [],
+              playersSpectating: gameState[data.serverId].playersSpectating,
               "gameDifficulty": gameState[data.serverId].gameDifficulty,
-              "visitedTilesValue": gameState[data.serverId].visitedTilesValue,
-              "flaggedTilesValue": gameState[data.serverId].flaggedTilesValue,
-              "buttonFlagCounter": gameState[data.serverId].buttonFlagCounter,
-              "randomMines": gameState[data.serverId].randomMines,
-              "numMines": gameState[data.serverId].numMines,
-              "possibleMove": gameState[data.serverId].possibleMove,
-              "mineRadiusNB": gameState[data.serverId].mineRadiusNB,
-              "mineRadiusLB": gameState[data.serverId].mineRadiusLB,
-              "mineRadiusRB": gameState[data.serverId].mineRadiusRB,
-              "sendToServer": false   
+              visitedTilesValue: gameState[data.serverId].visitedTilesValue,
+              flaggedTilesValue: gameState[data.serverId].flaggedTilesValue,
+              buttonFlagCounter: gameState[data.serverId].buttonFlagCounter,
+              randomMines: gameState[data.serverId].randomMines,
+              numMines: gameState[data.serverId].numMines,
+              possibleMove: gameState[data.serverId].possibleMove,
+              mineRadiusNB: gameState[data.serverId].mineRadiusNB,
+              mineRadiusLB: gameState[data.serverId].mineRadiusLB,
+              mineRadiusRB: gameState[data.serverId].mineRadiusRB,
+              "sendToServer": false,   
+              "isJoiningClient": true
             }));
           } else if (clients[clientId].serverId === data.serverId && clients[clientId].clientId !== data.clientId) {
             // send this to the other client ALREADY in server
@@ -214,6 +219,7 @@ function onMessage(message) {
               "usernameList": usernameList,
               "player": clients[data.clientId].username,
               "clientFlags": clients[clientId].clientFlags,
+              "isJoiningClient": false
             }))
           }
         }
@@ -306,6 +312,8 @@ function onMessage(message) {
     case "updateGameState":
       clients[data.clientId].clientFlags = clients[data.clientId].clientFlags;
       // console.log(`${clients[data.clientId].username}'s flags: ${clients[data.clientId].clientFlags}`);
+      gameState[data.serverId].gameOver = data.gameState.gameOver;
+      gameState[data.serverId].playersSpectating = data.gameState.playersSpectating;
       gameState[data.serverId].visitedTilesValue = data.gameState.visitedTilesValue;
       gameState[data.serverId].flaggedTilesValue = data.gameState.flaggedTilesValue;
       gameState[data.serverId].buttonFlagCounter = data.gameState.buttonFlagCounter;
@@ -324,17 +332,19 @@ function onMessage(message) {
           otherClient.connection.send(JSON.stringify({
             "method": "updateGameState",
             "otherClient": otherClient.username,
-            "playerOneFlags": clients[data.clientId].clientFlags,
-            "visitedTilesValue": gameState[data.serverId].visitedTilesValue,
-            "flaggedTilesValue": gameState[data.serverId].flaggedTilesValue,
-            "buttonFlagCounter": gameState[data.serverId].buttonFlagCounter,
-            "numMines": gameState[data.serverId].numMines,
-            "randomMines": gameState[data.serverId].randomMines,
+            "gameOver": gameState[data.serverId].gameOver,
+            playerOneFlags: clients[data.clientId].clientFlags,
+            playersSpectating: gameState[data.serverId].playersSpectating,
+            visitedTilesValue: gameState[data.serverId].visitedTilesValue,
+            flaggedTilesValue: gameState[data.serverId].flaggedTilesValue,
+            buttonFlagCounter: gameState[data.serverId].buttonFlagCounter,
+            numMines: gameState[data.serverId].numMines,
+            randomMines: gameState[data.serverId].randomMines,
             "gameDifficulty": gameState[data.serverId].gameDifficulty,
-            "possibleMove": gameState[data.serverId].possibleMove,
-            "mineRadiusNB": gameState[data.serverId].mineRadiusNB,
-            "mineRadiusLB": gameState[data.serverId].mineRadiusLB,
-            "mineRadiusRB": gameState[data.serverId].mineRadiusRB
+            possibleMove: gameState[data.serverId].possibleMove,
+            mineRadiusNB: gameState[data.serverId].mineRadiusNB,
+            mineRadiusLB: gameState[data.serverId].mineRadiusLB,
+            mineRadiusRB: gameState[data.serverId].mineRadiusRB
           }));
         }
       }
@@ -380,6 +390,8 @@ function onMessage(message) {
       }
       break;
     case "clearGameState":
+      gameState[data.serverId].gameOver = false;
+      gameState[data.serverId].playersSpectating = 0;
       gameState[data.serverId].visitedTilesValue = [];
       gameState[data.serverId].flaggedTilesValue = [];
       gameState[data.serverId].randomMines = [];
@@ -414,6 +426,18 @@ function onMessage(message) {
           otherClient.connection.send(JSON.stringify({
             "method": "foundMine",
             mineValue: data.mineValue
+          }))
+        }
+      }
+      break;
+    case "handleGameWon":
+      gameState[data.serverId].gameOver = data.gameState.gameOver;
+      for (const client in clients) {
+        if (clients[client].serverId === data.serverId && clients[client].clientId !== data.clientId) {
+          const otherClient = clients[client];
+          otherClient.connection.send(JSON.stringify({
+            "method": "handleGameWon",
+            gameOver: data.gameState.gameOver
           }))
         }
       }
