@@ -371,10 +371,10 @@ function generateMedium(sendToServer) {
   container.style.transform = "translate(-50%, -50%) scale(1.6)";
   createBuddy();
   paintContainerGrids();
-  sendGameStateToServer();
   if (sendToServer) {
+    sendGameStateToServer();
     // Send the updated gameState to the server and client with the function below
-    generateGameForOtherClient();
+    // generateGameForOtherClient();
   }
 }
 
@@ -423,10 +423,10 @@ function generateHard(sendToServer) {
   container.style.transform = "translate(-50%, -50%) scale(1.6)";
   createBuddy();
   paintContainerGrids();
-  sendGameStateToServer();
   if (sendToServer) {
+    sendGameStateToServer();
     // Send the updated gameState to the server and client with the function below
-    generateGameForOtherClient();
+    // generateGameForOtherClient();
   }
 }
 
@@ -796,7 +796,7 @@ const mouseUpHandler = (event) => { // when user releases left and right click
 const rightClickHandler = (event) => {
   event.preventDefault();
   // If game is over, ignore right click feature 
-  if (gameState.gameOver) { return; }
+  if (gameState.gameOver || spectate) { return; }
   let currTile = event.target;
   if (!gameState.visitedTilesValue.includes(parseInt(currTile.dataset.value))) {
     if (currTile.getAttribute("rightClicked") === "false") {
@@ -885,7 +885,7 @@ function createFlagButton() {
 
 function flagButtonClick() {
   // If game is over, ignore flag button feature
-  if (gameState.gameOver) { return; }
+  if (gameState.gameOver || spectate) { return; }
   const flagButton = this;
   const tdElements = document.querySelectorAll("td");
   if (flagButton.getAttribute("flagButtonClicked") === "false") {
@@ -912,7 +912,7 @@ function flagButtonClick() {
 
 // setFlagHandler() should work in tandem with rightClickHandler()
 function setFlagHandler() {
-  if (gameState.gameOver) { return; }
+  if (gameState.gameOver || spectate) { return; }
   let currTile = this;
   if (!gameState.visitedTilesValue.includes(parseInt(currTile.dataset.value))) {
     if (currTile.getAttribute("rightClicked") === "false") {
@@ -1131,7 +1131,7 @@ function updateFlagsToServer() {
 }
 
 function updateJoiningClientBoard() {
-  console.log(`Updating board for the joining client: ${clientUsername}`);
+  // console.log(`Updating board for the joining client: ${clientUsername}`);
   console.log(gameState);
   let tiles = document.querySelectorAll("td");
   // if initialClick() was already executed by other client, remove it for the joining client
@@ -1206,7 +1206,7 @@ function updateClientBoard(data) {
       flagCounter.innerHTML = data.buttonFlagCounter;
       break;
     case "updateGameState_InitialClick":
-      console.log(`update board w/ ${data.method} for ${clientUsername}`);
+      // console.log(`update board w/ ${data.method} for ${clientUsername}`);
       if (difficulty !== data.gameDifficulty) {
         switch (data.gameDifficulty) {
           case "easy":
@@ -1236,7 +1236,7 @@ function updateClientBoard(data) {
       })
       break;
     case "updateVisitedTilesForOtherClient":
-      console.log(`update visited tiles w/ ${data.method} for ${clientUsername}`);
+      // console.log(`update visited tiles w/ ${data.method} for ${clientUsername}`);
       gameState.visitedTilesValue = data.visitedTilesValue;
       data.visitedTilesValue.forEach(tileValue => {
       tiles[tileValue].innerHTML = "";
