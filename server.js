@@ -5,7 +5,7 @@ let clients = {};
 let servers = {};
 let gameState = {};
 
-const http = require("http").createServer().listen(8080, () => {
+const http = require("http").createServer().listen(8080, "0.0.0.0", () => {
   console.log("Listening on port 8080");
 });
 
