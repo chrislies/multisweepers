@@ -5,8 +5,8 @@ let clients = {};
 let servers = {};
 let gameState = {};
 
-const http = require("http").createServer().listen(8080, "0.0.0.0", () => {
-  console.log("Listening on port 8080");
+const http = require("http").createServer().listen(8080, process.env.ALWAYSDATA_HTTPD_PORT, process.env.ALWAYSDATA_HTTPD_IP, () => {
+  console.log("Listening on port");
 });
 
 const server = require("websocket").server;
