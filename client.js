@@ -56,7 +56,8 @@ joinServerButton.addEventListener("click", (event) => {
   socket.send(JSON.stringify(payLoad));
 });
 
-socket = new WebSocket("ws://localhost:8080");
+socket = new WebSocket("ws://multisweepers.netlify.app");
+// socket = new WebSocket("ws://localhost:8080");
 // socket = new WebSocket("ws://multisweepers.alwaysdata.net:80");
 socket.onmessage = onMessage;
 
