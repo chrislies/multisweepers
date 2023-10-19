@@ -208,10 +208,10 @@ function onMessage(msg) {
       gameState.mineRadiusRB = data.mineRadiusRB;
       if (gameState.gameOver == true && gameState.playersSpectating === 2) {
         gameState.randomMines.forEach(td => {
-          tiles[td].innerHTML = "<img src='./img/bomb-icon.png' alt='bomb'>";
+          tiles[td].innerHTML = "<img src='../img/bomb-icon.png' alt='bomb'>";
           tiles[td].style.backgroundColor = "brown";
           if (tiles[td].getAttribute("rightClicked") === "true") {
-            tiles[td].innerHTML += "<img class='flagOnMine' src='./img/flag-icon.png' alt='flag'>";
+            tiles[td].innerHTML += "<img class='flagOnMine' src='../img/flag-icon.png' alt='flag'>";
           }
         });
         createPlayAgainButton();
@@ -254,14 +254,14 @@ function onMessage(msg) {
       break;
     case "foundMine": 
       let mine = document.querySelector(`[data-value="${data.mineValue}"]`);
-      mine.innerHTML = "<img src='./img/bomb-icon.png' alt='bomb'>";
+      mine.innerHTML = "<img src='../img/bomb-icon.png' alt='bomb'>";
       mine.style.backgroundColor = "brown";
       break;
     case "handleGameWon":
       if (data.gameOver == true) {
         if (!spectate) { // player is safe
           console.log("[GAME WON]");
-          document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/chill-icon.png' alt='buddy-chill'>";
+          document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='../img/chill-icon.png' alt='buddy-chill'>";
         }
         let tdElements = document.querySelectorAll("td");
         tdElements.forEach(td => {
@@ -437,9 +437,9 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
   if (document.querySelector(".flagButton").getAttribute("flagButtonClicked") === "true") {
     return;
   }
-  document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/shocked-icon.png' alt='buddy-shocked'>";
+  document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='../img/shocked-icon.png' alt='buddy-shocked'>";
   setTimeout(() => {
-    document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/smile-icon.png' alt='buddy-smile'>";
+    document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='../img/smile-icon.png' alt='buddy-smile'>";
   }, 400);
   let initialTile = this;
   gameState.visitedTilesValue.push(parseInt(initialTile.dataset.value));
@@ -690,7 +690,7 @@ function leftClick() {
   if (!gameState.visitedTilesValue.includes(parseInt(currTile.dataset.value))) {
     gameState.visitedTilesValue.push(parseInt(currTile.dataset.value)); // this prevents currTile from being pushed more than once (ex. if user clicks too fast)
   }
-  document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/smile-icon.png' alt='buddy-smile'>";
+  document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='../img/smile-icon.png' alt='buddy-smile'>";
   currTile.style.backgroundColor = "#707070"; //gray=808080
   currTile.removeEventListener("click", leftClick);
   scanMineRadius(currTile);
@@ -754,7 +754,7 @@ const mouseDownHandler = (event) => {
       for (const value of chordRadius) {
         let adjacentTile = document.querySelector(`[data-value="${currTileVal + value}"]`);
         if (adjacentTile) {
-          if (!gameState.visitedTilesValue.includes(parseInt(adjacentTile.dataset.value)) && gameState.randomMines.includes(parseInt(adjacentTile.dataset.value)) && adjacentTile.innerHTML === "" || adjacentTile.innerHTML === "<img src='./img/bomb-icon.png' alt='bomb'>") {
+          if (!gameState.visitedTilesValue.includes(parseInt(adjacentTile.dataset.value)) && gameState.randomMines.includes(parseInt(adjacentTile.dataset.value)) && adjacentTile.innerHTML === "" || adjacentTile.innerHTML === "<img src='../img/bomb-icon.png' alt='bomb'>") {
             // GAME OVER: client placed a flag on a safe tile and exposed a mine!
             gameLost(parseInt(adjacentTile.dataset.value));
             return;
@@ -802,7 +802,7 @@ const rightClickHandler = (event) => {
   let currTile = event.target;
   if (!gameState.visitedTilesValue.includes(parseInt(currTile.dataset.value))) {
     if (currTile.getAttribute("rightClicked") === "false") {
-      currTile.innerHTML = "<img src='./img/flag-icon.png' alt='flag'>";
+      currTile.innerHTML = "<img src='../img/flag-icon.png' alt='flag'>";
       currTile.setAttribute("rightClicked", "true");
       gameState.buttonFlagCounter -= 1;
       document.querySelector(".flagCounter").innerHTML = gameState.buttonFlagCounter;
@@ -811,7 +811,7 @@ const rightClickHandler = (event) => {
       clientFlags.push(parseInt(currTile.dataset.value));
     } else {
       if (currTile.style.backgroundColor === "brown") { // check if the tile has an exposed mine (caused by other client)
-        currTile.innerHTML = "<img src='./img/bomb-icon.png' alt='bomb'>";
+        currTile.innerHTML = "<img src='../img/bomb-icon.png' alt='bomb'>";
       } else {
         currTile.innerHTML = "";
       }
@@ -918,7 +918,7 @@ function setFlagHandler() {
   let currTile = this;
   if (!gameState.visitedTilesValue.includes(parseInt(currTile.dataset.value))) {
     if (currTile.getAttribute("rightClicked") === "false") {
-      currTile.innerHTML = "<img src='./img/flag-icon.png' alt='flag'>";
+      currTile.innerHTML = "<img src='../img/flag-icon.png' alt='flag'>";
       currTile.setAttribute("rightClicked", "true");
       gameState.buttonFlagCounter -= 1;
       document.querySelector(".flagCounter").innerHTML = gameState.buttonFlagCounter;
@@ -927,7 +927,7 @@ function setFlagHandler() {
       clientFlags.push(parseInt(currTile.dataset.value));
     } else {
       if (currTile.style.backgroundColor === "brown") { // check if the tile has an exposed mine (caused by other client)
-        currTile.innerHTML = "<img src='./img/bomb-icon.png' alt='bomb'>";
+        currTile.innerHTML = "<img src='../img/bomb-icon.png' alt='bomb'>";
       } else {
         currTile.innerHTML = "";
       }
@@ -957,7 +957,7 @@ function setFlagHandler() {
 
 function createBuddy() {
   const bButton = document.createElement("button");
-  bButton.innerHTML = "<img class='buddyImg' src='./img/smile-icon.png' alt='buddy-smile'>";
+  bButton.innerHTML = "<img class='buddyImg' src='../img/smile-icon.png' alt='buddy-smile'>";
   bButton.classList.add("buddyButton");
   bButton.addEventListener("click", buddyButtonClick);
   bButton.addEventListener("contextmenu", (event) => {event.preventDefault();});
@@ -987,7 +987,7 @@ function createPlayAgainButton() {
 function gameLost(tileValue) {
   console.log(`[GAME OVER]`);
   spectate = true;
-  document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/dizzy-icon.png' alt='buddy-dizzy'>";
+  document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='../img/dizzy-icon.png' alt='buddy-dizzy'>";
   let tiles = document.querySelectorAll("td");
   
   gameState.playersSpectating += 1;
@@ -996,7 +996,7 @@ function gameLost(tileValue) {
 
   if (gameState.multiplayer && gameState.playersSpectating === 1) {
     // if other client still able to play, relay the single mine to them 
-    tiles[tileValue].innerHTML = "<img src='./img/bomb-icon.png' alt='bomb'>";
+    tiles[tileValue].innerHTML = "<img src='../img/bomb-icon.png' alt='bomb'>";
     tiles[tileValue].style.backgroundColor = "brown";
     if (socket.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify({
@@ -1009,10 +1009,10 @@ function gameLost(tileValue) {
   } else {
     gameState.gameOver = true;
     gameState.randomMines.forEach(td => {
-      tiles[td].innerHTML = "<img src='./img/bomb-icon.png' alt='bomb'>";
+      tiles[td].innerHTML = "<img src='../img/bomb-icon.png' alt='bomb'>";
       tiles[td].style.backgroundColor = "brown";
       if (tiles[td].getAttribute("rightClicked") === "true") {
-        tiles[td].innerHTML += "<img class='flagOnMine' src='./img/flag-icon.png' alt='flag'>";
+        tiles[td].innerHTML += "<img class='flagOnMine' src='../img/flag-icon.png' alt='flag'>";
       }
     });
     createPlayAgainButton();
@@ -1030,7 +1030,7 @@ function checkGameWon() {
 function gameWon() {
   gameState.gameOver = true;
   console.log(`[GAME WON]`);
-  document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='./img/chill-icon.png' alt='buddy-chill'>";
+  document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='../img/chill-icon.png' alt='buddy-chill'>";
   let tdElements = document.querySelectorAll("td");
   tdElements.forEach(td => {
     td.removeEventListener("click", leftClick);
@@ -1153,7 +1153,7 @@ function updateJoiningClientBoard() {
   // if they exist, place other client's flags on client's board 
   if (gameState.flaggedTilesValue.length > 0) {
     gameState.flaggedTilesValue.forEach(flagValue => {
-      tiles[flagValue].innerHTML = "<img src='./img/blueflag-icon.png' alt='blueflag'>";
+      tiles[flagValue].innerHTML = "<img src='../img/blueflag-icon.png' alt='blueflag'>";
       tiles[flagValue].setAttribute("rightClicked", true);
     })
   }
@@ -1175,12 +1175,12 @@ function updateClientBoard(data) {
           return;
         }
         if (data.otherClientFlags.includes(parseInt(td.dataset.value))) {
-          td.innerHTML = "<img src='./img/blueflag-icon.png' alt='blueflag'>";
+          td.innerHTML = "<img src='../img/blueflag-icon.png' alt='blueflag'>";
           td.setAttribute("rightClicked", true);
         } else {
           td.setAttribute("rightClicked", false);
           if (td.style.backgroundColor === "brown") {
-            td.innerHTML = "<img src='./img/bomb-icon.png' alt='bomb'>";
+            td.innerHTML = "<img src='../img/bomb-icon.png' alt='bomb'>";
           } else {
             td.innerHTML = "";
           }
