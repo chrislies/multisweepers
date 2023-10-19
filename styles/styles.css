@@ -143,7 +143,7 @@ button {
   padding: 5px;
   margin-top: 0;
   margin-bottom: 10px;
-  /* background: lightgray url(./img/smile-icon.png);
+  /* background: lightgray url(../img/smile-icon.png);
   background-repeat: no-repeat;
   background-position: 50%; */
 }
@@ -156,7 +156,7 @@ button {
   width: 50px;
   height: 50px;
   margin-top: 10px;
-  background: lightgray url(./img/flag-icon.png);
+  background: lightgray url(../img/flag-icon.png);
   background-repeat: no-repeat;
   background-position: 50%;
 }
