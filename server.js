@@ -1,16 +1,17 @@
-const { send } = require("process");
-const { client } = require("websocket");
-
 let clients = {};
 let servers = {};
 let gameState = {};
 
-const http = require("http").createServer().listen(8080, () => {
+const express = require("express");
+const app = express();
+const http = require("http").createServer(app).listen(process.env.PORT || 8080, () => {
   console.log("Listening on port");
 });
 
 const server = require("websocket").server;
 const socket = new server({ httpServer: http });
+const cors = require("cors");
+app.use(cors());
 
 socket.on("request", (req) => {
   const connection = req.accept(null, req.origin);
