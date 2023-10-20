@@ -5,6 +5,7 @@ gameBoard.addEventListener("contextmenu", (event) => {event.preventDefault();})
 const serverList = document.querySelector(".servers");
 let playerCount = document.querySelector("#playerCount");
 let playerList = document.querySelector("#playerList");
+let leaderboard = document.querySelector("#leaderboard tbody");
 let flagCounter = document.querySelector(".flagCounter");
 let span;
 
@@ -15,6 +16,7 @@ let clientUsername;
 let clientFlags = [];
 let spectate = false;
 let buttonFlagCounter = 0;
+let wins = 0;
 
 let numMines = 0;
 let visitedTilesValue = [];
@@ -56,13 +58,13 @@ joinServerButton.addEventListener("click", (event) => {
   socket.send(JSON.stringify(payLoad));
 });
 
-socket = new WebSocket("ws://multisweepers.netlify.app");
-// socket = new WebSocket("ws://localhost:8080");
+socket = new WebSocket("wss://multisweepers.netlify.app");
+socket = new WebSocket("ws://localhost:8080");
 // socket = new WebSocket("ws://multisweepers.alwaysdata.net:80");
 socket.onmessage = onMessage;
 
 function onMessage(msg) {
-  let tiles = document.querySelectorAll("td");
+  let tiles = document.querySelectorAll("#gameWindow td");
   const data = JSON.parse(msg.data);
   switch (data.method) {
     case "connected":
@@ -71,12 +73,16 @@ function onMessage(msg) {
       serverId = data.serverId;
       console.log(`Server id = ${serverId}`);
       serverCode.innerHTML = serverId;
-      playerCount.innerHTML = data.playerCount;
-      span = document.createElement("span");
-      span.innerHTML = data.username;
-      playerList.append(span);
+      let tr = document.createElement("tr");
+      tr.classList.add("leaderboard-player");
+      let tdPlayer = document.createElement("td");
+      let tdPlayerWins = document.createElement("td");
+      tdPlayer.innerText = data.username;
+      tdPlayerWins.innerText = 0;
+      tr.appendChild(tdPlayer);
+      tr.appendChild(tdPlayerWins);
+      document.querySelector("tbody").appendChild(tr);
       clientUsername = data.username;
-
       gameState.visitedTilesValue = [];
       gameState.numMines = numMines;
       gameState.randomMines = randomMines;
@@ -110,23 +116,29 @@ function onMessage(msg) {
       spectate = false;
       serverId = data.serverId; 
       serverCode.innerHTML = data.serverId;
-      playerCount.innerHTML = data.playerCount;
+      // playerCount.innerHTML = data.playerCount;
       // clear existing leaderboard
-      while (playerList.firstChild) {
-        playerList.removeChild(playerList.firstChild);
+      while (leaderboard.firstChild) {
+        leaderboard.removeChild(leaderboard.firstChild);
       };
       let clientUsernameElement; // store a reference to the client's username element
       for (const playerName in data.usernameList) {
-        const span = document.createElement("span");
-        span.innerHTML = data.usernameList[playerName] + "<br>";
-        playerList.append(span);
+        let tr = document.createElement("tr");
+        tr.classList.add("leaderboard-player");
+        let tdPlayer = document.createElement("td");
+        let tdPlayerWins = document.createElement("td");
+        tdPlayer.innerText = data.usernameList[playerName];
+        tdPlayerWins.innerText = 0;
+        tr.appendChild(tdPlayer);
+        tr.appendChild(tdPlayerWins);
+        leaderboard.append(tr);
         if (data.usernameList[playerName] === clientUsername) {
-          span.setAttribute("id", "clientUsername");
-          clientUsernameElement = span;
+          tr.setAttribute("id", "clientUsername");
+          clientUsernameElement = tr;
         }
       }
       // rearrange player leaderboard so that the client's username is first
-      playerList.prepend(clientUsernameElement);
+      leaderboard.prepend(clientUsernameElement);
       
       // update player's gameboard to new server's gameboard
       // update the new player's gamestate
@@ -169,16 +181,21 @@ function onMessage(msg) {
       break;
     case "updatePlayersList": // when a user DISCONNECTS/LEAVES from a full server
       // clear the existing player list/leaderboard
-      while (playerList.firstChild) {
-        playerList.removeChild(playerList.firstChild);
+      while (leaderboard.firstChild) {
+        leaderboard.removeChild(leaderboard.firstChild);
       }
       // add players to the player list
       for (const playerName in data.updatedPlayerList) {
-        const span = document.createElement("span");
-        span.innerHTML = data.updatedPlayerList[playerName] + "<br>";;
-        playerList.appendChild(span);
+        let tr = document.createElement("tr");
+        tr.classList.add("leaderboard-player");
+        let tdPlayer = document.createElement("td");
+        let tdPlayerWins = document.createElement("td");
+        tdPlayer.innerText = data.updatedPlayerList[playerName];
+        tdPlayerWins.innerText = 0;
+        tr.appendChild(tdPlayer);
+        tr.appendChild(tdPlayerWins);
+        leaderboard.append(tr);
       }
-      playerCount.innerHTML = data.playerCount;
       gameState.multiplayer = false;
       break;
     case "removedFlagForOtherClient":
@@ -263,7 +280,7 @@ function onMessage(msg) {
           console.log("[GAME WON]");
           document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='../img/chill-icon.png' alt='buddy-chill'>";
         }
-        let tdElements = document.querySelectorAll("td");
+        let tdElements = document.querySelectorAll("#gameWindow td");
         tdElements.forEach(td => {
           td.removeEventListener("click", leftClick);
         });
@@ -306,7 +323,7 @@ function generateEasy(sendToServer) {
     let row = document.createElement("tr");
     for (let j = 0; j < n; j++) {
       let data = document.createElement("td");
-      data.classList.add("tile-" + tileCounter);
+      data.classList.add("tile", tileCounter);
       data.dataset.value = tileCounter;
       data.setAttribute("rightClicked", "false");
       data.addEventListener("click", initialClick);
@@ -357,7 +374,7 @@ function generateMedium(sendToServer) {
     let row = document.createElement("tr");
     for (let j = 0; j < n; j++) {
       let data = document.createElement("td");
-      data.classList.add("tile-" + tileCounter);
+      data.classList.add("tile", tileCounter);
       data.dataset.value = tileCounter;
       data.setAttribute("rightClicked", "false");
       data.addEventListener("click", initialClick);
@@ -409,7 +426,7 @@ function generateHard(sendToServer) {
     let row = document.createElement("tr");
     for (let j = 0; j < m; j++) {
       let data = document.createElement("td");
-      data.classList.add("tile-" + tileCounter);
+      data.classList.add("tile", tileCounter);
       data.dataset.value = tileCounter;
       data.setAttribute("rightClicked", "false");
       data.addEventListener("click", initialClick);
@@ -443,7 +460,7 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
   }, 400);
   let initialTile = this;
   gameState.visitedTilesValue.push(parseInt(initialTile.dataset.value));
-  let tableSize = document.querySelectorAll("td").length - 1; // get the last td element to determine tableSize
+  let tableSize = document.getElementsByClassName("tile").length - 1; // get the last td element to determine tableSize
   let numRandomTiles = 0;
   switch(gameState.gameDifficulty) {
     case "easy": 
@@ -496,14 +513,14 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
     gameState.visitedTilesValue.push(nextTileValue);
   }
   // Generate mines
-  let tiles = document.querySelectorAll("td");
+  let tiles = document.querySelectorAll("#gameWindow td");
   while (gameState.randomMines.length < gameState.numMines) {
     let randomNum = Math.round(Math.random() * tableSize); // generate random # between [0-tableSize)
     while (gameState.randomMines.includes(randomNum) || gameState.visitedTilesValue.includes(randomNum)) {
       randomNum = Math.round(Math.random() * tableSize); // generate random # between [0-tableSize)
     }
     gameState.randomMines.push(randomNum);
-    // tiles[randomNum].style.backgroundColor = "red";
+    tiles[randomNum].style.backgroundColor = "red";
   }
 
   gameState.visitedTilesValue.forEach(tileVal => {
@@ -563,7 +580,7 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
 }
 
 function scanMineRadius(tile) {
-  let colLength = document.querySelector("tr").children.length; // the number of elements in a row
+  let colLength = document.querySelector("#gameWindow tr").children.length; // the number of elements in a row
   let mineCounter = 0;
   let mineRadius = [];
   let tileValue = parseInt(tile.dataset.value);
@@ -615,10 +632,10 @@ function scanMineRadius(tile) {
 }
 
 function floodFill(tile) {
-  let colLength = document.querySelector("tr").children.length; // the number of elements in a row
+  let colLength = document.querySelector("#gameWindow tr").children.length; // the number of elements in a row
   let floodRadius = [];
   let tileValue = parseInt(tile.dataset.value);
-  let tiles = document.querySelectorAll("td");
+  let tiles = document.querySelectorAll("#gameWindow td");
   let removeFlagsForOtherClient = [];
 
   if (tileValue % colLength === 0) {
@@ -697,7 +714,7 @@ function leftClick() {
   if (currTile.innerHTML === "") {
     floodFill(currTile);
   }
-  if (document.querySelectorAll("td").length - gameState.visitedTilesValue.length === gameState.numMines) {
+  if (document.getElementsByClassName("tile").length - gameState.visitedTilesValue.length === gameState.numMines) {
     gameWon();
   }
   if (gameState.multiplayer) {
@@ -722,7 +739,7 @@ const mouseDownHandler = (event) => {
       return;
     }
     let currTileVal = parseInt(currTile.dataset.value);
-    let colLength = document.querySelector("tr").children.length; // the number of elements in a row
+    let colLength = document.querySelector("#gameWindow tr").children.length; // the number of elements in a row
     let chordRadius = [];
     let mineCounter = 0;
     let flagCounter = 0;
@@ -889,7 +906,7 @@ function flagButtonClick() {
   // If game is over, ignore flag button feature
   if (gameState.gameOver || spectate) { return; }
   const flagButton = this;
-  const tdElements = document.querySelectorAll("td");
+  const tdElements = document.querySelectorAll("#gameWindow td");
   if (flagButton.getAttribute("flagButtonClicked") === "false") {
     // console.log(`[FLAG BUTTON CLICKED]`);
     flagButton.setAttribute("flagButtonClicked", true);
@@ -988,7 +1005,7 @@ function gameLost(tileValue) {
   console.log(`[GAME OVER]`);
   spectate = true;
   document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='../img/dizzy-icon.png' alt='buddy-dizzy'>";
-  let tiles = document.querySelectorAll("td");
+  let tiles = document.querySelectorAll("#gameWindow td");
   
   gameState.playersSpectating += 1;
   // console.log(`gameState.playersSpectating: ${gameState.playersSpectating}`);
@@ -1024,14 +1041,14 @@ function gameLost(tileValue) {
 }
 
 function checkGameWon() {
-  return document.querySelectorAll("td").length - gameState.visitedTilesValue.length === gameState.numMines ? true : false;
+  return document.getElementsByClassName("tile").length - gameState.visitedTilesValue.length === gameState.numMines ? true : false;
 }
 
 function gameWon() {
   gameState.gameOver = true;
   console.log(`[GAME WON]`);
   document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='../img/chill-icon.png' alt='buddy-chill'>";
-  let tdElements = document.querySelectorAll("td");
+  let tdElements = document.querySelectorAll("#gameWindow td");
   tdElements.forEach(td => {
     td.removeEventListener("click", leftClick);
   });
@@ -1135,7 +1152,7 @@ function updateFlagsToServer() {
 function updateJoiningClientBoard() {
   // console.log(`Updating board for the joining client: ${clientUsername}`);
   console.log(gameState);
-  let tiles = document.querySelectorAll("td");
+  let tiles = document.querySelectorAll("#gameWindow td");
   // if initialClick() was already executed by other client, remove it for the joining client
   if (gameState.visitedTilesValue.length > 0) {
     tiles.forEach(t => {
@@ -1162,7 +1179,7 @@ function updateJoiningClientBoard() {
 function updateClientBoard(data) {  
   // console.log(`updateClientBoard(${data.method}) for ${clientUsername}`);
   randomMines = gameState.randomMines;
-  let tiles = document.querySelectorAll("td");
+  let tiles = document.querySelectorAll("#gameWindow td");
   let flagCounter = document.querySelector(".flagCounter");
   
   switch (data.method) {
@@ -1190,7 +1207,7 @@ function updateClientBoard(data) {
     case "removedFlagForOtherClient": // whenever a client removes other client's flag
       // console.log(`remove flag ${data.flagValueToRemove} for ${clientUsername}`);
       clientFlags = data.clientFlags;
-      tiles = document.querySelectorAll("td");
+      tiles = document.querySelectorAll("#gameWindow td");
       tiles[data.flagValueToRemove].setAttribute("rightClicked", false);
       tiles[data.flagValueToRemove].innerHTML = "";
       flagCounter = document.querySelector(".flagCounter");
@@ -1199,7 +1216,7 @@ function updateClientBoard(data) {
     case "removedFlagsForOtherClient": // whenever other client's flags are removed by initialClick() or floodFill()
       // console.log(`remove flags ${data.flagValuesToRemove} for ${clientUsername}`);
       clientFlags = data.clientFlags;
-      tiles = document.querySelectorAll("td");
+      tiles = document.querySelectorAll("#gameWindow td");
       data.flagValuesToRemove.forEach(flagValue => {
         tiles[flagValue].setAttribute("rightClicked", false);
         tiles[flagValue].innerHTML = "";
@@ -1222,7 +1239,7 @@ function updateClientBoard(data) {
             break;
         }
       }
-      tiles = document.querySelectorAll("td");
+      tiles = document.querySelectorAll("#gameWindow td");
       gameState.visitedTilesValue.forEach(tileValue => {
         tiles[tileValue].innerHTML = "";
         tiles[tileValue].style.backgroundColor = "#707070";
