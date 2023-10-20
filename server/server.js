@@ -8,12 +8,12 @@ const http = require("http").createServer(app).listen(process.env.PORT || 8080, 
   console.log("Listening on port");
 });
 
-const server = require("websocket").server;
-const socket = new server({ httpServer: http });
+const WebSocketServer  = require("websocket").server;
+const wsServer = new WebSocketServer({ httpServer: http });
 const cors = require("cors");
 app.use(cors());
 
-socket.on("request", (req) => {
+wsServer.on("request", (req) => {
   const connection = req.accept(null, req.origin);
   const clientId = generateClientId();
   const serverId = generateServerId();
@@ -184,11 +184,16 @@ function onMessage(message) {
           }
         }
         console.log(`usernameList for server ${data.serverId} = ${usernameList}`);
-
+        clients[data.clientId].wins = 0;  // reset client wins when they join a new server
+        let otherClientWins = 0;
         for (const clientId in clients) { 
           if (clients[clientId].serverId === data.serverId && clients[clientId].clientId === data.clientId) {
             console.log(`${clients[clientId].username} joined server ${data.serverId}`);
-            // console.log(gameState[data.serverId])
+            for (const clientId in clients) {
+              if (clients[clientId].serverId === data.serverId && clients[clientId].clientId !== data.clientId) {
+                otherClientWins = clients[clientId].wins;
+              }
+            }
             clients[clientId].connection.send(JSON.stringify({
               "method": "joinedServer",
               "serverId": data.serverId,
@@ -208,7 +213,8 @@ function onMessage(message) {
               mineRadiusLB: gameState[data.serverId].mineRadiusLB,
               mineRadiusRB: gameState[data.serverId].mineRadiusRB,
               "sendToServer": false,   
-              "isJoiningClient": true
+              "isJoiningClient": true,
+              otherClientWins: otherClientWins
             }));
           } else if (clients[clientId].serverId === data.serverId && clients[clientId].clientId !== data.clientId) {
             // send this to the other client ALREADY in server
@@ -220,7 +226,8 @@ function onMessage(message) {
               "usernameList": usernameList,
               "player": clients[data.clientId].username,
               "clientFlags": clients[clientId].clientFlags,
-              "isJoiningClient": false
+              "isJoiningClient": false,
+              otherClientWins: clients[data.clientId].wins
             }))
           }
         }
@@ -439,6 +446,18 @@ function onMessage(message) {
           otherClient.connection.send(JSON.stringify({
             "method": "handleGameWon",
             gameOver: data.gameState.gameOver
+          }))
+        }
+      }
+      break;
+    case "updateClientWins":
+      clients[data.clientId].wins = data.wins;
+      for (const client in clients) {
+        if (clients[client].serverId === data.serverId && clients[client].clientId !== data.clientId) {
+          const otherClient = clients[client];
+          otherClient.connection.send(JSON.stringify({
+            "method": "updateClientWins",
+            wins: data.wins
           }))
         }
       }

@@ -48,6 +48,7 @@ let joinServerButton = document.querySelector("#joinServerButton");
 joinServerButton.addEventListener("click", (event) => {
   event.preventDefault();
   let serverCode = document.querySelector("#serverCodeInput").value.trim();
+  wins = 0;   // reset client wins whenever they join a new server
   const payLoad = {
     method: "joinServer",
     clientId: clientId,
@@ -75,8 +76,10 @@ function onMessage(msg) {
       serverCode.innerHTML = serverId;
       let tr = document.createElement("tr");
       tr.classList.add("leaderboard-player");
+      tr.setAttribute("id", "clientUsername");
       let tdPlayer = document.createElement("td");
       let tdPlayerWins = document.createElement("td");
+      tdPlayerWins.classList.add("wins");
       tdPlayer.innerText = data.username;
       tdPlayerWins.innerText = 0;
       tr.appendChild(tdPlayer);
@@ -128,13 +131,15 @@ function onMessage(msg) {
         let tdPlayer = document.createElement("td");
         let tdPlayerWins = document.createElement("td");
         tdPlayer.innerText = data.usernameList[playerName];
-        tdPlayerWins.innerText = 0;
+        tdPlayerWins.classList.add("wins");
+        tdPlayerWins.innerText = data.otherClientWins;  // other client's wins
         tr.appendChild(tdPlayer);
         tr.appendChild(tdPlayerWins);
         leaderboard.append(tr);
         if (data.usernameList[playerName] === clientUsername) {
           tr.setAttribute("id", "clientUsername");
           clientUsernameElement = tr;
+          tdPlayerWins.innerText = wins;
         }
       }
       // rearrange player leaderboard so that the client's username is first
@@ -191,7 +196,8 @@ function onMessage(msg) {
         let tdPlayer = document.createElement("td");
         let tdPlayerWins = document.createElement("td");
         tdPlayer.innerText = data.updatedPlayerList[playerName];
-        tdPlayerWins.innerText = 0;
+        tdPlayerWins.classList.add("wins");
+        tdPlayerWins.innerText = wins;
         tr.appendChild(tdPlayer);
         tr.appendChild(tdPlayerWins);
         leaderboard.append(tr);
@@ -278,7 +284,10 @@ function onMessage(msg) {
       if (data.gameOver == true) {
         if (!spectate) { // player is safe
           console.log("[GAME WON]");
+          wins += 1;
+          document.querySelector("#clientUsername .wins").innerText = wins;
           document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='../img/chill-icon.png' alt='buddy-chill'>";
+          sendClientWinsToServer();
         }
         let tdElements = document.querySelectorAll("#gameWindow td");
         tdElements.forEach(td => {
@@ -286,6 +295,9 @@ function onMessage(msg) {
         });
         createPlayAgainButton();
       }
+      break;
+    case "updateClientWins": 
+      updateClientBoard(data);
       break;
     case "updateClientSpectate":
       if (data.playersSpectating === 2) {
@@ -1047,6 +1059,8 @@ function checkGameWon() {
 function gameWon() {
   gameState.gameOver = true;
   console.log(`[GAME WON]`);
+  wins += 1;
+  document.querySelector("#clientUsername .wins").innerText = wins;
   document.querySelector(".buddyButton").innerHTML = "<img class='buddyImg' src='../img/chill-icon.png' alt='buddy-chill'>";
   let tdElements = document.querySelectorAll("#gameWindow td");
   tdElements.forEach(td => {
@@ -1054,6 +1068,7 @@ function gameWon() {
   });
   createPlayAgainButton();
   sendGameStateToServer();
+  sendClientWinsToServer();
   // handle gameWon() for other client
   if (gameState.multiplayer) {
     if (socket.readyState === WebSocket.OPEN) {
@@ -1101,6 +1116,17 @@ function sendGameStateToServer() {
       gameState: gameState,
       serverId: serverId,
       clientId: clientId
+    }))
+  }
+}
+
+function sendClientWinsToServer() {
+  if (socket.readyState === WebSocket.OPEN) {
+    socket.send(JSON.stringify({
+      method: "updateClientWins",
+      serverId: serverId,
+      clientId: clientId,
+      wins: wins
     }))
   }
 }
@@ -1264,6 +1290,9 @@ function updateClientBoard(data) {
       tiles[tileValue].removeEventListener("click", rightClickHandler);
       scanMineRadius(tiles[tileValue]);      
       })
+      break;
+    case "updateClientWins":
+      document.querySelector(".leaderboard-player:not(#clientUsername) .wins").innerText = data.wins;
       break;
   }
 }
