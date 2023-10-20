@@ -36,6 +36,17 @@ label {
   color: white;
 }
 
+#playerCountBox {
+  position: absolute;
+  right: 0;
+  padding: 10px;
+  background-color: rgba(0,0,0,0.5);
+}
+#playerCountBox * {
+  color: white;
+  font-size: 20px;
+}
+
 select,
 input {
   height: 25px;
@@ -92,7 +103,7 @@ button,
   border-width: 2px;
 }
 
-#gameWindow td {
+td {
   position: relative;
   height: 25px;
   width: 25px;
@@ -109,7 +120,7 @@ button,
   font-family: 'Press Start 2P', cursive;
 }
 
-#gameWindow td:hover {
+td:hover {
   background-color: rgba(200, 200, 200, 1);
 }
 
@@ -221,39 +232,4 @@ img {
 
 #joinServerButton:active span {
   transform: translate(.35px, .35px);
-}
-
-#leaderboard {
-  color: white;
-  position: absolute;
-  right: 0px;
-  top: 0px;
-  /* background-color: rgba(0,0,0,0.5); */
-}
-
-#leaderboard * {
-  font-size: 20px;
-  font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
-}
-
-#leaderboard th, #leaderboard td {
-  padding: 5px;
-  text-align: left;
-}
-
-#leaderboard thead {
-  background-color: rgba(0,0,0,0.6);
-  text-align: left;
-}
-
-#leaderboard th:nth-child(2) {
-  text-align: center; /* Centering the "Wins" header */
-}
-
-#leaderboard tbody .leaderboard-player {
-  background-color: rgba(0,0,0,0.4);
-}
-
-#leaderboard tbody .leaderboard-player td:nth-child(2) {
-  text-align: center; /* Centering the player wins data */
 }

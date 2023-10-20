@@ -8,12 +8,12 @@ const http = require("http").createServer(app).listen(process.env.PORT || 8080, 
   console.log("Listening on port");
 });
 
-const WebSocketServer  = require("websocket").server;
-const wsServer = new WebSocketServer({ httpServer: http });
+const server = require("websocket").server;
+const socket = new server({ httpServer: http });
 const cors = require("cors");
 app.use(cors());
 
-wsServer.on("request", (req) => {
+socket.on("request", (req) => {
   const connection = req.accept(null, req.origin);
   const clientId = generateClientId();
   const serverId = generateServerId();
