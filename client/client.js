@@ -59,9 +59,7 @@ joinServerButton.addEventListener("click", (event) => {
   socket.send(JSON.stringify(payLoad));
 });
 
-socket = new WebSocket("wss://multisweepers.netlify.app");
-socket = new WebSocket("ws://localhost:8080");
-// socket = new WebSocket("ws://multisweepers.alwaysdata.net:80");
+socket = new WebSocket("wss://multisweepers.onrender.com");
 socket.onmessage = onMessage;
 
 function onMessage(msg) {
@@ -102,7 +100,7 @@ function onMessage(msg) {
       const servers = data.list;
       servers.forEach((server) => {
         let li = document.createElement("h1");
-        li.innerHTML = `${server.serverId} (${server.playerCount}/2)`;
+        li.innerHTML = `${server.serverId} [${server.playerCount}/2]`;
         serverList.appendChild(li);
       });
       break;
@@ -532,7 +530,7 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
       randomNum = Math.round(Math.random() * tableSize); // generate random # between [0-tableSize)
     }
     gameState.randomMines.push(randomNum);
-    tiles[randomNum].style.backgroundColor = "red";
+    // tiles[randomNum].style.backgroundColor = "red";
   }
 
   gameState.visitedTilesValue.forEach(tileVal => {

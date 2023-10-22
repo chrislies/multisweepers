@@ -3,15 +3,20 @@ let servers = {};
 let gameState = {};
 
 const express = require("express");
+const https = require("https");
+const WebSocketServer = require("websocket").server;
+
 const app = express();
-const http = require("http").createServer(app).listen(process.env.PORT || 8080, () => {
-  console.log("Listening on port");
+
+const server = https.createServer(app);
+
+const wsServer = new WebSocketServer({
+  httpServer: server,
 });
 
-const WebSocketServer  = require("websocket").server;
-const wsServer = new WebSocketServer({ httpServer: http });
-const cors = require("cors");
-app.use(cors());
+server.listen(process.env.PORT || 8080, () => {
+  console.log("Listening on port");
+});
 
 wsServer.on("request", (req) => {
   const connection = req.accept(null, req.origin);
