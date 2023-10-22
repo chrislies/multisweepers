@@ -15,7 +15,7 @@ const port = process.env.PORT || 8080;
 
 // Use the cors middleware to allow cross-origin requests
 app.use(cors({
-  origin: ["https://multisweepers.netlify.app/", "https://localhost:3000"],
+  origin: "*",
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true,
 }));
