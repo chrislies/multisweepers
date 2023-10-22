@@ -6,5 +6,5 @@
 - HTML, JS, CSS
 
 ### Hosting:
-- Front-end: Netlify
-- Back-end: Render
+- Front-end: [Netlify](https://www.netlify.com/)
+- Back-end: [Render](https://render.com/)
