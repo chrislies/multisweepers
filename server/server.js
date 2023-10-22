@@ -1,14 +1,17 @@
-let clients = {};
-let servers = {};
-let gameState = {};
-
 const express = require("express");
-const https = require("https");
+const http = require("http");
 const WebSocketServer = require("websocket").server;
+const cors = require("cors");
 
 const app = express();
+const server = http.createServer(app);
 
-const server = https.createServer(app);
+// Use the cors middleware to allow cross-origin requests
+app.use(cors({
+  origin: "https://multisweepers.netlify.app",
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  credentials: true,
+}));
 
 const wsServer = new WebSocketServer({
   httpServer: server,
@@ -17,6 +20,10 @@ const wsServer = new WebSocketServer({
 server.listen(process.env.PORT || 8080, () => {
   console.log("Listening on port");
 });
+
+let clients = {};
+let servers = {};
+let gameState = {};
 
 wsServer.on("request", (req) => {
   const connection = req.accept(null, req.origin);
