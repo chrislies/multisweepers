@@ -5,10 +5,17 @@ let gameState = {};
 const express = require("express");
 const https = require("https");
 const WebSocketServer = require("websocket").server;
+const cors = require("cors");
 
 const app = express();
-
 const server = https.createServer(app);
+
+// Use the cors middleware to allow cross-origin requests
+app.use(cors({
+  origin: "https://multisweepers.netlify.app.com",
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  credentials: true,
+}));
 
 const wsServer = new WebSocketServer({
   httpServer: server,
