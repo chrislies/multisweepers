@@ -1,17 +1,10 @@
-let clients = {};
-let servers = {};
-let gameState = {};
-
 const express = require("express");
-const https = require("https");
+const http = require("http");
 const WebSocketServer = require("websocket").server;
 const cors = require("cors");
 
 const app = express();
-const server = https.createServer(app);
-
-// Define the port using the PORT environment variable or a default value
-const port = process.env.PORT || 8080;
+const server = http.createServer(app);
 
 // Use the cors middleware to allow cross-origin requests
 app.use(cors({
@@ -24,9 +17,13 @@ const wsServer = new WebSocketServer({
   httpServer: server,
 });
 
-server.listen(port, () => {
-  console.log("Listening on port " + port);
+server.listen(process.env.PORT || 8080, () => {
+  console.log("Listening on port");
 });
+
+let clients = {};
+let servers = {};
+let gameState = {};
 
 wsServer.on("request", (req) => {
   const connection = req.accept(null, req.origin);
