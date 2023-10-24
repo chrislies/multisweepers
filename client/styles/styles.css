@@ -113,7 +113,7 @@ button {
   grid-template-areas: 
     'header header'
     'sidebar main';
-  min-height: 50vh;
+  /* min-height: 50vh; */
   grid-row-end: auto;
 }
 
@@ -256,20 +256,42 @@ img.flagOnMine {
 
 
 /* Use a media query to add a break point at __ px: */
-@media screen and (min-width: 768px) {
+@media screen and (min-width: 425px) {
   #container {
-    grid-template-columns: 20% 80%;
-    width: 90vw;
+    grid-template-columns: 0% 100%;
+    width: 95vw;
+    min-height: 55vh;
+  }
+  #sidebar * {
+    font-size: 15px;
   }
 }
+@media screen and (min-width: 768px) {
+  #container {
+    grid-template-columns: 15% 85%;
+    width: 95vw;
+    min-height: 55vh;
+  }
+  #sidebar * {
+    font-size: 15px;
+  }
+}
+@media screen and (min-width: 1024px) {
+  #container {
+    grid-template-columns: 15% 85%;
+    width: 80vw;
+    min-height: 55vh;
+  }
 
+  /* reduce leaderboard size */
+}
 @media screen and (min-width: 1440px) {
   #container {
     grid-template-columns: 20% 80%;
     width: 70vw;
+    min-height: 55vh;
   }
 }
-
 @media screen and (min-width: 2560px) {
   #container {
     grid-template-columns: 20% 80%;
