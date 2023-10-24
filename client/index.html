@@ -11,6 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Pacifico&family=Press+Start+2P&display=swap" rel="stylesheet">
+  <script src="https://kit.fontawesome.com/4b802db70b.js" crossorigin="anonymous"></script>
 </head>
 <body>
   <table id="leaderboard">
@@ -21,16 +22,18 @@
       </tr>
     </thead>
     <tbody>
+      <tr>
+      </tr>
     </tbody>
   </table>
   <div class="servers"></div>
-  <div id="header">
-    <h1 id="title">Multisweepers</h1>
-  </div>
   <div id="container">
+    <div id="header">
+      <h1 id="title">Multisweepers</h1>
+    </div>
     <div id="sidebar">
-      <div>
-        <p>Server: <span id="serverCode"></span></p>
+      <div id="serverItem">
+        <p>Server: <span id="serverCode">loading server...</span></p>
       </div>
       <div id="difficultySelection">
         <label><strong>Difficulty:</strong></label>

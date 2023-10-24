@@ -347,7 +347,10 @@ function generateEasy(sendToServer) {
     gw.appendChild(row);
   }
   const container = document.querySelector("#container");
-  container.style.transform = "translate(-50%, -50%) scale(2.2)";
+  // container.style.width = "35vw";
+  // container.style.transform = "translate(-50%, -50%) scale(2.2)";
+  // container.style.gridTemplateColumns = "20% 80%";
+  // gw.style.transform = "scale(100%)"
   createBuddy();
   paintContainerGrids();
   if (sendToServer) {
@@ -398,7 +401,8 @@ function generateMedium(sendToServer) {
     gw.appendChild(row);
   }
   const container = document.querySelector("#container");
-  container.style.transform = "translate(-50%, -50%) scale(1.6)";
+  // container.style.width = "40vw";
+  // container.style.transform = "translate(-50%, -50%) scale(1.6)";
   createBuddy();
   paintContainerGrids();
   if (sendToServer) {
@@ -450,7 +454,10 @@ function generateHard(sendToServer) {
     gw.appendChild(row);
   }
   const container = document.querySelector("#container");
-  container.style.transform = "translate(-50%, -50%) scale(1.6)";
+  // container.style.width = "40vw";
+  // container.style.transform = "translate(-50%, -50%) scale(2)";
+  // container.style.gridTemplateColumns = "0% 100%";
+  // gw.style.transform = "scale(100%)"
   createBuddy();
   paintContainerGrids();
   if (sendToServer) {

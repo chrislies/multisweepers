@@ -11,17 +11,6 @@ body {
   background-color: #79b799;
 }
 
-#header {
-  font-size: 25px;
-  position: absolute;
-  top: 3%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-}
-
 p,
 label,
 input,
@@ -46,73 +35,6 @@ button,
   cursor: pointer;
 }
 
-#container {
-  border: 2px solid black;
-  position: absolute;
-  /* top, right, bottom, left */
-  /* inset: 10% 20% 10% 20%; */
-  top: 50%;
-  /* aligns the top edge to the vertical center of the parent container */
-  left: 50%;
-  /* aligns the left edge to the horizontal center of the parent container */
-  transform: translate(-50%, -50%);
-  /* moves the div back and scales it up */
-  display: grid;
-  grid-template-columns: 20% 80%;
-  /* grid-template-columns: 20% 70% 10%; */
-  /* grid-template-rows: 10% 90%; */
-}
-
-#sidebar * {
-  width: 100%;
-  /* border: 1px solid red; */
-}
-
-#sidebar {
-  display: flex;
-  flex-flow: column wrap;
-  justify-content: center;
-  row-gap: 50px;
-  padding: 5px;
-}
-
-#gameBoard {
-  /* display: flex; */
-  /* flex-flow: column wrap; */
-  /* justify-content: center; */
-  padding: 10px;
-  text-align: center;
-}
-
-#gameWindow {
-  margin: 0 auto;
-  border-spacing: 0;
-  border-style: solid;
-  border-color: black;
-  border-width: 2px;
-}
-
-#gameWindow td {
-  position: relative;
-  height: 25px;
-  width: 25px;
-  text-align: center;
-  background-color: lightgray;
-  border-style: solid;
-  border-color: gray;
-  border-width: 1px;
-  font-size: 90%;
-  font-weight:bold;
-  -webkit-text-stroke-width: .001px;
-  -webkit-text-stroke-color: black;
-  /* font-family: 'Russo One', sans-serif; */
-  font-family: 'Press Start 2P', cursive;
-}
-
-#gameWindow td:hover {
-  background-color: rgba(200, 200, 200, 1);
-}
-
 button {
   /* all: unset; */
   position: relative;
@@ -122,93 +44,11 @@ button {
   border-color: black;
 }
 
-.buddyButton {
-  display: flex;
-  margin: 0 auto;
-  width: 20px;
-  height: 20px;
-  background-color: lightgray;
-  text-align: center;
-  padding: 5px;
-  margin-top: 0;
-  margin-bottom: 10px;
-  /* background: lightgray url(../img/smile-icon.png);
-  background-repeat: no-repeat;
-  background-position: 50%; */
-}
-
-.buddyButton:active {
-  transform: translate(.35px, .35px);
-}
-
-.flagButton {
-  width: 50px;
-  height: 50px;
-  margin-top: 10px;
-  background: lightgray url(../img/flag-icon.png);
-  background-repeat: no-repeat;
-  background-position: 50%;
-}
-
-.flagButton:active {
-  transform: translate(.35px, .35px);
-}
-
-button.flagButton .flagCounter {
-  font-size: 10px;
-  font-weight: 700;
-  color: brown;
-  position: absolute;
-  top: 0px;
-  left: 2px;
-}
-
-img.flagOnMine {
-  position: absolute;
-  top: 30%;
-  left: 20%;
-  max-width: 50%;
-  height: auto;
-  display: block;
-  margin: auto;
-  pointer-events: none;
-}
-
-.playAgainButton {
-  max-width: 80px;
-  background-color: lightgray;
-  text-align: center;
-  padding: 5px;
-  align-items: center;
-  margin-left: 10px;
-  border-radius: 10px;
-}
-
-.playAgainButton:active {
-  transform: translate(.35px, .35px);
-}
-
 #joinServerButton:hover,
 .playAgainButton:hover,
 .buddyButton:hover,
 .flagButton:hover {
   opacity: .75;
-}
-
-.buddyImg {
-  max-width: 25px;
-}
-
-img {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  max-width: 60%;
-  height: auto;
-  display: block;
-  margin: auto;
-  pointer-events: none;
 }
 
 #joinServerButton {
@@ -256,4 +96,175 @@ img {
 
 #leaderboard tbody .leaderboard-player td:nth-child(2) {
   text-align: center; /* Centering the player wins data */
+}
+
+#container {
+  border-bottom: 2px solid black;
+  position: absolute;
+  top: 50%;
+  /* aligns the top edge to the vertical center of the parent container */
+  left: 50%;
+  /* aligns the left edge to the horizontal center of the parent container */
+  transform: translate(-50%, -50%);
+  /* moves the div back and scales it up */
+  display: grid;
+  /* grid-template-columns: 20% 80%; */
+  grid-template-rows: 5% 95%;
+  grid-template-areas: 
+    'header header'
+    'sidebar main';
+  min-height: 50vh;
+  grid-row-end: auto;
+}
+
+#header {
+  font-size: 50%;
+  grid-area: header;
+  justify-self: center; /* Centers item along x-axis */
+  align-self: center; /* Centers item along y-axis */
+  font-family: 'Press Start 2P', cursive;
+}
+
+#sidebar * {
+  width: 100%;
+  font-size: 20px;
+}
+
+#sidebar {
+  grid-area: sidebar;
+  display: grid;
+  grid-template-rows: 1.25fr 2fr 2fr;
+  grid-template-columns: 1fr;
+  align-items: center;
+  padding: 5px;
+  border-top: 2px solid black;
+  border-left: 2px solid black;
+  border-right: 2px solid black;
+}
+
+#gameBoard {
+  grid-area: main;
+  display: grid;
+  /* grid-template-rows: 10% 80% 10%; */
+  grid-template-rows: .20fr 1fr .20fr;
+  grid-template-columns: 100%;
+  grid-auto-flow: column;
+  align-items: center;
+  border-top: 2px solid black;
+  border-right: 2px solid black;
+}
+
+.buddyButton {
+  width: 30px;
+  height: 30px;
+  background-color: #f6cf4c;
+  border-radius: 50%;
+  justify-self: center; /* Centers item along x-axis */
+  align-self: center; /* Centers item along y-axis */
+}
+
+.buddyImg {
+  max-width: 100%;
+}
+
+.buddyButton:active {
+  transform: translate(.35px, .35px);
+}
+
+.flagButton {
+  width: 50px;
+  height: 50px;
+  grid-area: 3 / 4 / 3 / -2;
+  background: lightgray url(../img/flag-icon.png);
+  background-repeat: no-repeat;
+  background-position: 50%;
+  justify-self: center; /* Centers item along x-axis */
+  align-self: center; /* Centers item along y-axis */
+}
+
+.flagButton:active {
+  transform: translate(.35px, .35px);
+}
+
+button.flagButton .flagCounter {
+  font-size: 10px;
+  font-weight: 700;
+  color: brown;
+  position: absolute;
+  top: 0px;
+  left: 2px;
+}
+
+#gameWindow {
+  margin: 0 auto;
+  /* transform: scale(1.6); */
+  border-spacing: 0;
+  border-style: solid;
+  border-color: black;
+  border-width: 2px;
+}
+
+#gameWindow td {
+  position: relative;
+  height: 25px;
+  width: 25px;
+  font-size: 90%;
+  -webkit-text-stroke-width: .1px;
+  -webkit-text-stroke-color: black;
+  text-align: center;
+  background-color: lightgray;
+  border-style: solid;
+  border-color: gray;
+  border-width: 1px;
+  font-weight:bold;
+  /* font-family: 'Russo One', sans-serif; */
+  font-family: 'Press Start 2P', cursive;
+}
+
+#gameWindow td:hover {
+  background-color: rgba(200, 200, 200, 1);
+}
+
+.playAgainButton {
+  grid-area: 3 / 4 / 3 / -2;  /* Next to flag button */
+  max-width: 80px;
+  padding: 5px;
+  background-color: lightgray;
+  text-align: center;
+  align-items: center;
+  margin-left: 60%;
+  border-radius: 10px;
+}
+
+.playAgainButton:active {
+  transform: translate(.35px, .35px);
+}
+
+img {
+  max-width: 60%;
+  pointer-events: none;
+}
+
+img.flagOnMine {
+  position: absolute;
+  top: 30%;
+  left: 20%;
+  transform: translate(-50%, -50%);
+  max-width: 50%;
+  pointer-events: none;
+}
+
+
+/* Use a media query to add a break point at __ px: */
+@media screen and (min-width: 2560px) {
+  #container {
+    grid-template-columns: 20% 80%;
+    /* width: 90vw; */
+  }
+}
+@media screen and (min-width: 1440px) {
+  #container {
+    grid-template-columns: 20% 80%;
+    /* width: 90vw; */
+  }
 }
