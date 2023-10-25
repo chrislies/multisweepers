@@ -44,6 +44,12 @@ let gameState = {
   mineRadiusRB: []
 }
 
+const innerWidth = window.innerWidth;
+const isMobile = innerWidth < 768;
+
+console.log(`isMobile = ${isMobile}`);
+
+
 let joinServerButton = document.querySelector("#joinServerButton");
 joinServerButton.addEventListener("click", (event) => {
   event.preventDefault();
@@ -887,6 +893,7 @@ function paintContainerGrids() {
   const b = bgCol.split(",")[2].split(")")[0];
   sidebar.style.backgroundColor = "rgb(" + (parseInt(r) - 70) + "," + (parseInt(g) - 70) + "," + (parseInt(b) - 70) + ")";
   gameBoard.style.backgroundColor = "rgb(" + (parseInt(r) - 40) + "," + (parseInt(g) - 40) + "," + (parseInt(b) - 40) + ")";
+  document.body.style.backgroundImage = `linear-gradient(to bottom right, ${getComputedStyle(sidebar).backgroundColor}, ${getComputedStyle(gameBoard).backgroundColor})`;
 }
 
 function generateBg() {
