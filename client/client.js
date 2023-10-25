@@ -44,11 +44,11 @@ let gameState = {
   mineRadiusRB: []
 }
 
-const innerWidth = window.innerWidth;
-const isMobile = innerWidth < 768;
-
-console.log(`isMobile = ${isMobile}`);
-
+function isMobile() {
+  let innerWidth = window.innerWidth;
+  return innerWidth < 425;
+}
+console.log(`isMobile = ${isMobile()}`);
 
 let joinServerButton = document.querySelector("#joinServerButton");
 joinServerButton.addEventListener("click", (event) => {
