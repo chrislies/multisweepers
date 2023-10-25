@@ -255,6 +255,9 @@ img.flagOnMine {
   pointer-events: none;
 }
 
+.servers {
+  color: transparent;
+}
 
 /* Use a media query to add a break point at __ px: */
 @media (min-width: 320px) {
