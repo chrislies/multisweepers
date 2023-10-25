@@ -53,6 +53,7 @@ button {
 }
 
 #leaderboard {
+  z-index: 100;
   color: white;
   position: absolute;
   right: 0px;
@@ -320,10 +321,10 @@ img.flagOnMine {
     width: inherit;
   }
   #serverItem {
-    justify-self: start;
+    justify-self: end;
   }
   #joinServerForm {
-    justify-content: end;
+    justify-content: start;
   }
   .buddyButton {
     width: 18px;
@@ -359,6 +360,12 @@ img.flagOnMine {
   #sidebar * {
     font-size: 10px;
   }
+  #serverItem {
+    justify-self: end;
+  }
+  #joinServerForm {
+    justify-content: start;
+  }
   .buddyButton {
     width: 20px;
     height: 20px;
@@ -371,7 +378,6 @@ img.flagOnMine {
     overflow: hidden;
   }
   #leaderboard {
-    z-index: 100;
     -webkit-text-stroke-width: .3px;
     right: 25%;
     font-size: 10px;
@@ -383,6 +389,12 @@ img.flagOnMine {
   }
   #sidebar * {
     font-size: 15px;
+  }
+  #serverItem {
+    justify-self: end;
+  }
+  #joinServerForm {
+    justify-content: start;
   }
   .buddyButton {
     width: 25px;
@@ -407,6 +419,12 @@ img.flagOnMine {
   }
   #sidebar * {
     font-size: 15px;
+  }
+  #serverItem {
+    justify-self: start;
+  }
+  #joinServerForm {
+    justify-content: end;
   }
   .buddyButton {
     width: 25px;
