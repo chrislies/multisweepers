@@ -44,6 +44,12 @@ let gameState = {
   mineRadiusRB: []
 }
 
+function isMobile() {
+  let innerWidth = window.innerWidth;
+  return innerWidth < 425;
+}
+console.log(`isMobile = ${isMobile()}`);
+
 let joinServerButton = document.querySelector("#joinServerButton");
 joinServerButton.addEventListener("click", (event) => {
   event.preventDefault();
@@ -347,7 +353,10 @@ function generateEasy(sendToServer) {
     gw.appendChild(row);
   }
   const container = document.querySelector("#container");
-  container.style.transform = "translate(-50%, -50%) scale(2.2)";
+  // container.style.width = "35vw";
+  // container.style.transform = "translate(-50%, -50%) scale(2.2)";
+  // container.style.gridTemplateColumns = "20% 80%";
+  // gw.style.transform = "scale(100%)"
   createBuddy();
   paintContainerGrids();
   if (sendToServer) {
@@ -398,7 +407,8 @@ function generateMedium(sendToServer) {
     gw.appendChild(row);
   }
   const container = document.querySelector("#container");
-  container.style.transform = "translate(-50%, -50%) scale(1.6)";
+  // container.style.width = "40vw";
+  // container.style.transform = "translate(-50%, -50%) scale(1.6)";
   createBuddy();
   paintContainerGrids();
   if (sendToServer) {
@@ -450,7 +460,10 @@ function generateHard(sendToServer) {
     gw.appendChild(row);
   }
   const container = document.querySelector("#container");
-  container.style.transform = "translate(-50%, -50%) scale(1.6)";
+  // container.style.width = "40vw";
+  // container.style.transform = "translate(-50%, -50%) scale(2)";
+  // container.style.gridTemplateColumns = "0% 100%";
+  // gw.style.transform = "scale(100%)"
   createBuddy();
   paintContainerGrids();
   if (sendToServer) {
@@ -880,6 +893,7 @@ function paintContainerGrids() {
   const b = bgCol.split(",")[2].split(")")[0];
   sidebar.style.backgroundColor = "rgb(" + (parseInt(r) - 70) + "," + (parseInt(g) - 70) + "," + (parseInt(b) - 70) + ")";
   gameBoard.style.backgroundColor = "rgb(" + (parseInt(r) - 40) + "," + (parseInt(g) - 40) + "," + (parseInt(b) - 40) + ")";
+  document.body.style.backgroundImage = `linear-gradient(to bottom right, ${getComputedStyle(sidebar).backgroundColor}, ${getComputedStyle(gameBoard).backgroundColor})`;
 }
 
 function generateBg() {
