@@ -2,7 +2,6 @@ const gw = document.querySelector("#gameWindow");
 const gameBoard = document.querySelector("#gameBoard");
 gw.addEventListener("contextmenu", (event) => {event.preventDefault();})
 gameBoard.addEventListener("contextmenu", (event) => {event.preventDefault();})
-const serverList = document.querySelector(".servers");
 let playerCount = document.querySelector("#playerCount");
 let playerList = document.querySelector("#playerList");
 let leaderboard = document.querySelector("#leaderboard tbody");
@@ -49,6 +48,30 @@ function isMobile() {
   return innerWidth < 425;
 }
 console.log(`isMobile = ${isMobile()}`);
+
+let serverListButton = document.querySelector("#serverListButton");
+let serverList = document.querySelector("#servers");
+
+serverListButton.addEventListener("click", (event) => {
+  serverListButton.classList.toggle("active");
+  serverList.classList.toggle("active");
+})
+
+document.addEventListener("click", (event) => {
+  if (serverList.classList.contains("active") && event.target !== serverListButton && !serverList.contains(event.target)) {
+    serverListButton.classList.remove("active");
+    serverList.classList.remove("active");
+  }
+});
+
+serverList.addEventListener("click", (event) => {
+  document.querySelector("#serverCodeInput").value = event.target.innerText.slice(0,4);
+})
+
+// Prevent clicks inside the server list from closing it
+serverList.addEventListener("click", (event) => {
+  event.stopPropagation();
+});
 
 let joinServerButton = document.querySelector("#joinServerButton");
 joinServerButton.addEventListener("click", (event) => {
