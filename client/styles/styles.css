@@ -88,10 +88,7 @@ button {
 }
 
 #container {
-  border-top: 2px solid black;
-  border-left: 2px solid black;
-  border-right: 2px solid black;
-  border-bottom: 2px solid black;
+  border: 2px solid black;
   position: absolute;
   top: 50%;
   /* aligns the top edge to the vertical center of the parent container */
@@ -304,7 +301,7 @@ img.flagOnMine {
 @media (min-width: 375px) {
   #container {
     width: 100vw;
-    overflow: visible;
+    overflow: hidden;
   }
   #leaderboard {
     z-index: 100;
@@ -347,6 +344,7 @@ img.flagOnMine {
 @media (min-width: 425px) {
   #container {
     width: 100vw;
+    overflow: hidden;
   }
   #leaderboard {
     z-index: 100;
@@ -370,6 +368,7 @@ img.flagOnMine {
 @media (min-width: 768px) {
   #container {
     width: 100vw;
+    overflow: hidden;
   }
   #leaderboard {
     z-index: 100;
@@ -393,6 +392,7 @@ img.flagOnMine {
 @media (min-width: 1024px) {
   #container {
     width: 77vw;
+    overflow: hidden;
   }
   #leaderboard {
     font-size: 8px;
@@ -415,6 +415,7 @@ img.flagOnMine {
 @media (min-width: 1440px) {
   #container {
     width: 60vw;
+    overflow: hidden;
   }
   #leaderboard {
     font-size: 20px;
@@ -437,6 +438,7 @@ img.flagOnMine {
 @media (min-width: 2560px) {
   #container {
     width: 33vw;
+    overflow: hidden;
   }
   #leaderboard {
     font-size: 20px;
