@@ -26,7 +26,6 @@
       </tr>
     </tbody>
   </table>
-  <div class="servers"></div>
   <div id="container">
     <div id="header">
       <!-- <h1 id="title">Multisweepers</h1> -->
@@ -43,6 +42,10 @@
         </select>
       </div>
       <form id="joinServerForm">
+        <div id="serverListContainer">
+          <i id="serverListButton" class="fa-solid fa-caret-down fa-rotate-270" style="color: #000000;"></i>
+          <div id="servers" oncontextmenu="return false;"></div>
+        </div>
         <input type="text" id="serverCodeInput" placeholder="Server ID">
         <button type="submit" id="joinServerButton"><span>Join</span></button>
       </form>

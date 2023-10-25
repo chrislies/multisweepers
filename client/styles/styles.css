@@ -32,7 +32,9 @@ input {
 }
 
 button,
-#joinServerButton {
+#joinServerButton,
+#serverListButton,
+#servers {
   cursor: pointer;
 }
 
@@ -48,7 +50,8 @@ button {
 #joinServerButton:hover,
 .playAgainButton:hover,
 .buddyButton:hover,
-.flagButton:hover {
+.flagButton:hover,
+#serverListButton:hover {
   opacity: .75;
 }
 
@@ -221,7 +224,6 @@ button.flagButton .flagCounter {
   transform: translate(.35px, .35px);
 }
 
-
 #gameWindow td:hover {
   background-color: rgba(200, 200, 200, 1);
 }
@@ -255,8 +257,44 @@ img.flagOnMine {
   pointer-events: none;
 }
 
-.servers {
-  color: transparent;
+#serverListContainer {
+  all: unset;
+  background-color: transparent;
+  margin-top: 4px;
+  height: 17px;
+  width: 13px;
+}
+
+#servers {
+  position: fixed;
+  display: none;
+  user-select: none;
+}
+
+#servers h1 {
+  color: black;
+  transition: color 0.1s; /* smooth transition effect */
+}
+
+#servers h1:hover {
+  color: white;
+  background-color: #1967d2;
+}
+
+#servers.active {
+  display: flex;
+  flex-direction: column;
+  background-color: rgba(256,256,256,.7);
+  margin-top: -1px;
+  margin-left: 14px;
+}
+
+#serverListButton {
+  position: relative;
+}
+
+#serverListButton.active {
+  transform: rotate(360deg);
 }
 
 /* Use a media query to add a break point at __ px: */
@@ -301,7 +339,17 @@ img.flagOnMine {
     width: 120vw; /* Make the child grid wider than the parent container */
     overflow: scroll;
   }
+  #serverListContainer {
+    margin-top: 9px;
+    height: 17px;
+    width: 6px;
+  }
+  #servers.active {
+    margin-top: 7px;
+    margin-left: 7px;
+  }
 }
+
 @media (min-width: 375px) {
   #container {
     width: 100vw;
@@ -343,6 +391,15 @@ img.flagOnMine {
     width: inherit; 
     overflow: visible;
   }
+  #serverListContainer {
+    margin-top: 7px;
+    height: 17px;
+    width: 8px;
+  }
+  #servers.active {
+    margin-top: 8px;
+    margin-left: 9px;
+  }
 }
 
 @media (min-width: 425px) {
@@ -373,6 +430,10 @@ img.flagOnMine {
     width: 20px;
     height: 20px;
   }
+  #servers.active {
+    margin-top: 6px;
+    margin-left: 9px;
+  }
 }
 
 @media (min-width: 768px) {
@@ -402,6 +463,15 @@ img.flagOnMine {
   .buddyButton {
     width: 25px;
     height: 25px;
+  }
+  #serverListContainer {
+    margin-top: 5px;
+    height: 17px;
+    width: 11px;
+  }
+  #servers.active {
+    margin-top: 1px;
+    margin-left: 12px;
   }
 }
 
@@ -457,6 +527,15 @@ img.flagOnMine {
     width: 27px;
     height: 27px;
   }
+  #serverListContainer {
+    margin-top: 4px;
+    height: 17px;
+    width: 12px;
+  }
+  #servers.active {
+    margin-top: -1px;
+    margin-left: 13px;
+  }
 }
 
 @media (min-width: 2560px) {
@@ -481,5 +560,14 @@ img.flagOnMine {
   .buddyButton {
     width: 30px;
     height: 30px;
+  }
+  #serverListContainer {
+    margin-top: 3px;
+    height: 17px;
+    width: 14px;
+  }
+  #servers.active {
+    margin-top: -3px;
+    margin-left: 16px;
   }
 }
