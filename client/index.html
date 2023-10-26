@@ -36,14 +36,14 @@
       </div>
       <div id="difficultySelection">
         <select id="choice">
-          <option value="easy" selected>Easy</option>
-          <option value="medium">Medium</option>
+          <option value="easy">Easy</option>
+          <option value="medium" selected>Medium</option>
           <option value="hard">Hard</option>
         </select>
       </div>
       <form id="joinServerForm">
         <div id="serverListContainer">
-          <i id="serverListButton" class="fa-solid fa-caret-down fa-rotate-270" style="color: #000000;"></i>
+          <i id="serverListButton" class="fa-solid fa-caret-down fa-rotate-270" style="color: #d3d3d3;"></i>
           <div id="servers" oncontextmenu="return false;"></div>
         </div>
         <input type="text" id="serverCodeInput" placeholder="Server ID">
@@ -53,9 +53,6 @@
     <div id="gameBoard">
       <table id="gameWindow"></table>
     </div>
-    <!-- <div class="sideHeader">
-      <h1>Multisweepers</h1>
-    </div> -->
   </div>
   <script src="./client.js" defer></script>
 </body>
