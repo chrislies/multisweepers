@@ -117,8 +117,8 @@ function onMessage(msg) {
       gameState.visitedTilesValue = [];
       gameState.numMines = numMines;
       gameState.randomMines = randomMines;
-      gameState.gameDifficulty = "easy";
-      gameState.buttonFlagCounter = 10;
+      gameState.gameDifficulty = gameState.gameDifficulty;
+      gameState.buttonFlagCounter = gameState.buttonFlagCounter;
       // Send the updated gameState to the server with the function below
       sendGameStateToServer();
       break;
@@ -129,9 +129,13 @@ function onMessage(msg) {
       }
       const servers = data.list;
       servers.forEach((server) => {
-        let li = document.createElement("h1");
-        li.innerHTML = `${server.serverId} [${server.playerCount}/2]`;
-        serverList.appendChild(li);
+        if (server.serverId == serverId) {
+          return;
+        } else {
+          let li = document.createElement("h1");
+          li.innerHTML = `${server.serverId} [${server.playerCount}/2]`;
+          serverList.appendChild(li);
+        }
       });
       break;
     case "alreadyInServer":
@@ -147,7 +151,6 @@ function onMessage(msg) {
       spectate = false;
       serverId = data.serverId; 
       serverCode.innerHTML = data.serverId;
-      // playerCount.innerHTML = data.playerCount;
       // clear existing leaderboard
       while (leaderboard.firstChild) {
         leaderboard.removeChild(leaderboard.firstChild);
@@ -231,6 +234,10 @@ function onMessage(msg) {
         leaderboard.append(tr);
       }
       gameState.multiplayer = false;
+      data.newClientFlags.forEach(flag => {
+        clientFlags.push(flag);
+      })
+      gameState.playersSpectating = data.playersSpectating;
       break;
     case "removedFlagForOtherClient":
       // whenever a client removes other client's flag
@@ -375,18 +382,11 @@ function generateEasy(sendToServer) {
     }
     gw.appendChild(row);
   }
-  const container = document.querySelector("#container");
-  // container.style.width = "35vw";
-  // container.style.transform = "translate(-50%, -50%) scale(2.2)";
-  // container.style.gridTemplateColumns = "20% 80%";
-  // gw.style.transform = "scale(100%)"
   createBuddy();
   generateBg();
   paintContainerGrids();
   if (sendToServer) {
     sendGameStateToServer();
-    // Send the updated gameState to the server and client with the function below
-    // generateGameForOtherClient();
   }
 }
 
@@ -430,15 +430,11 @@ function generateMedium(sendToServer) {
     }
     gw.appendChild(row);
   }
-  const container = document.querySelector("#container");
-  // container.style.width = "40vw";
-  // container.style.transform = "translate(-50%, -50%) scale(1.6)";
   createBuddy();
+  generateBg();
   paintContainerGrids();
   if (sendToServer) {
     sendGameStateToServer();
-    // Send the updated gameState to the server and client with the function below
-    // generateGameForOtherClient();
   }
 }
 
@@ -483,17 +479,11 @@ function generateHard(sendToServer) {
     }
     gw.appendChild(row);
   }
-  const container = document.querySelector("#container");
-  // container.style.width = "40vw";
-  // container.style.transform = "translate(-50%, -50%) scale(2)";
-  // container.style.gridTemplateColumns = "0% 100%";
-  // gw.style.transform = "scale(100%)"
   createBuddy();
+  generateBg();
   paintContainerGrids();
   if (sendToServer) {
     sendGameStateToServer();
-    // Send the updated gameState to the server and client with the function below
-    // generateGameForOtherClient();
   }
 }
 
@@ -933,7 +923,6 @@ function generateBg() {
 const selectDifficulty = document.querySelector("#choice");
 selectDifficulty.addEventListener("change", () => {
   playAgain();
-  generateBg();
 })
 
 function createFlagButton() {
@@ -1139,9 +1128,9 @@ function playAgain() {
     // generateEasy(true);
     generateEasy();
   } else if (selectDifficulty.value === "medium") {
-    generateMedium(true);
+    generateMedium();
   } else {
-    generateHard(true);
+    generateHard();
   }
   generateGameForOtherClient();
 }
@@ -1334,4 +1323,4 @@ function updateClientBoard(data) {
   }
 }
 
-generateEasy(false);
+generateMedium(false);

@@ -1,10 +1,10 @@
 const express = require("express");
-const http = require("http");
+const https = require("https");
 const WebSocketServer = require("websocket").server;
 const cors = require("cors");
 
 const app = express();
-const server = http.createServer(app);
+const server = https.createServer(app);
 
 // Use the cors middleware to allow cross-origin requests
 app.use(cors({
@@ -14,9 +14,20 @@ app.use(cors({
 }));
 
 const wsServer = new WebSocketServer({
-  httpServer: server,
+  httpsServer: server,
 });
+///////////////////////////////////////////////////////////////////////
+// const express = require("express");
+// const http = require("http");
+// const WebSocketServer = require("websocket").server;
 
+// const app = express();
+// const server = http.createServer(app);
+
+// const wsServer = new WebSocketServer({
+//   httpServer: server,
+// });
+///////////////////////////////////////////////////////////////////////
 server.listen(process.env.PORT || 8080, () => {
   console.log("Listening on port");
 });
@@ -93,7 +104,9 @@ wsServer.on("request", (req) => {
       // console.log(`servers[${leftServerId}].clients.length = ${servers[leftServerId].clients.length}`);
     } else {
       console.log(`Client with ID ${clientId} not found in server ${leftServerId}`);
-    }    
+    } 
+    let newClientFlags = clients[clientId].clientFlags;  
+    gameState[leftServerId].playersSpectating -= 1; 
     delete clients[clientId];
     
     // ---------- JUST FOR CHECKING ----------
@@ -105,16 +118,19 @@ wsServer.on("request", (req) => {
     const updatedPlayerList = [];
     for (const clientId in servers[leftServerId].clients) {
       const client = servers[leftServerId].clients[clientId];
-      updatedPlayerList.push(client.username);
+      updatedPlayerList.push(client.username);      
     }
     console.log(`updatedPlayerList = ${updatedPlayerList}`);
     // send the updated player list to the other client in that server
+    // and, if old server has another client, they now own the flags of the client that left
     for (const client of Object.values(clients)) {
       if (client.serverId === leftServerId) {
         client.connection.send(JSON.stringify({
           method: "updatePlayersList",
           updatedPlayerList: updatedPlayerList,
-          playerCount: servers[leftServerId].clients.length
+          playerCount: servers[leftServerId].clients.length,
+          newClientFlags: newClientFlags,
+          playersSpectating: gameState[leftServerId].playersSpectating
         }));
       }    
     }
@@ -520,6 +536,7 @@ function generateClientId() {
 }
 
 function generateServerId() {
+  console.log(servers)
   let id = "";
   const data = "0123456789";
   while (id.length < 4) {
