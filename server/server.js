@@ -1,10 +1,10 @@
 const express = require("express");
-const https = require("https");
+const http = require("http");
 const WebSocketServer = require("websocket").server;
 const cors = require("cors");
 
 const app = express();
-const server = https.createServer(app);
+const server = http.createServer(app);
 
 // Use the cors middleware to allow cross-origin requests
 app.use(cors({
@@ -14,7 +14,7 @@ app.use(cors({
 }));
 
 const wsServer = new WebSocketServer({
-  httpsServer: server,
+  httpServer: server,
 });
 ///////////////////////////////////////////////////////////////////////
 // const express = require("express");
