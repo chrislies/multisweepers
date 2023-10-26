@@ -114,9 +114,9 @@ function onMessage(msg) {
       tr.appendChild(tdPlayerWins);
       document.querySelector("tbody").appendChild(tr);
       clientUsername = data.username;
-      gameState.visitedTilesValue = [];
-      gameState.numMines = numMines;
-      gameState.randomMines = randomMines;
+      gameState.visitedTilesValue = gameState.visitedTilesValue;
+      gameState.numMines = gameState.numMines;
+      gameState.randomMines = gameState.randomMines;
       gameState.gameDifficulty = gameState.gameDifficulty;
       gameState.buttonFlagCounter = gameState.buttonFlagCounter;
       // Send the updated gameState to the server with the function below
