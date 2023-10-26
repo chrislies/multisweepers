@@ -9,7 +9,6 @@
 
 body {
   height: 100dvh;
-  background-color: #79b799;
 }
 
 p,
@@ -93,6 +92,8 @@ button {
 
 #container {
   border: 2px solid black;
+  border-radius: 7px;
+  box-shadow: 7px 7px 17px black;
   position: absolute;
   top: 50%;
   /* aligns the top edge to the vertical center of the parent container */
@@ -123,10 +124,9 @@ button {
 }
 
 #difficultySelection {
-  width: 40%;
+  max-width: 40%;
   justify-self: center;
 }
-
 
 #joinServerForm  {
   display: flex;
@@ -321,9 +321,11 @@ img.flagOnMine {
   }
   #serverItem {
     justify-self: end;
+    margin-left: 5px;
   }
   #joinServerForm {
     justify-content: start;
+    margin-right: 5px;
   }
   .buddyButton {
     width: 16px;

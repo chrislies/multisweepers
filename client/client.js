@@ -381,6 +381,7 @@ function generateEasy(sendToServer) {
   // container.style.gridTemplateColumns = "20% 80%";
   // gw.style.transform = "scale(100%)"
   createBuddy();
+  generateBg();
   paintContainerGrids();
   if (sendToServer) {
     sendGameStateToServer();
@@ -914,9 +915,9 @@ function paintContainerGrids() {
   const r = bgCol.split(",")[0].split("(")[1];
   const g = bgCol.split(",")[1];
   const b = bgCol.split(",")[2].split(")")[0];
-  sidebar.style.backgroundColor = "rgb(" + (parseInt(r) - 70) + "," + (parseInt(g) - 70) + "," + (parseInt(b) - 70) + ")";
-  gameBoard.style.backgroundColor = "rgb(" + (parseInt(r) - 40) + "," + (parseInt(g) - 40) + "," + (parseInt(b) - 40) + ")";
-  document.body.style.backgroundImage = `linear-gradient(to bottom right, ${getComputedStyle(sidebar).backgroundColor}, ${getComputedStyle(gameBoard).backgroundColor})`;
+  sidebar.style.backgroundColor = "rgb(" + (parseInt(r) - 60) + "," + (parseInt(g) - 60) + "," + (parseInt(b) - 60) + ")";
+  gameBoard.style.backgroundColor = "rgb(" + (parseInt(r) - 15) + "," + (parseInt(g) - 15) + "," + (parseInt(b) - 15) + ")";
+  document.body.style.backgroundImage = `radial-gradient(${getComputedStyle(gameBoard).backgroundColor} 20%, ${getComputedStyle(sidebar).backgroundColor})`;
 }
 
 function generateBg() {
