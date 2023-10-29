@@ -17,18 +17,9 @@ let spectate = false;
 let buttonFlagCounter = 0;
 let wins = 0;
 
-let numMines = 0;
-let visitedTilesValue = [];
-let flaggedTilesValue = [];
-let randomMines = [];
-let possibleMove = [];
-let mineRadiusNB = [];
-let mineRadiusLB = [];
-let mineRadiusRB = [];
-let difficulty = "";
-
 let gameState = {
   multiplayer: false,
+  enableJoining: true,
   gameOver: false,
   playersSpectating: 0,
   visitedTilesValue: [],
@@ -45,7 +36,7 @@ let gameState = {
 
 function isMobile() {
   let innerWidth = window.innerWidth;
-  return innerWidth < 425;
+  return innerWidth <= 768;
 }
 console.log(`isMobile = ${isMobile()}`);
 
@@ -65,7 +56,12 @@ document.addEventListener("click", (event) => {
 });
 
 serverList.addEventListener("click", (event) => {
-  document.querySelector("#serverCodeInput").value = event.target.innerText.slice(0,4);
+  if (Number.isInteger(parseInt(event.target.innerText))) {
+    document.querySelector("#serverCodeInput").value = event.target.innerText.slice(0,4);
+  } else {
+    serverListButton.classList.remove("active");
+    serverList.classList.remove("active");
+  }
 })
 
 // Prevent clicks inside the server list from closing it
@@ -73,9 +69,23 @@ serverList.addEventListener("click", (event) => {
   event.stopPropagation();
 });
 
+let enableJoinSwitch = document.querySelector("#enableJoinSwitch input");
+enableJoinSwitch.addEventListener("click", (event) => {
+  if (event.target.checked) {
+    gameState.enableJoining = true;
+  } else {  // unchecked enable joining 
+    gameState.enableJoining = false;
+  }
+  sendGameStateToServer();
+})
+
 let joinServerButton = document.querySelector("#joinServerButton");
 joinServerButton.addEventListener("click", (event) => {
   event.preventDefault();
+  if (enableJoinSwitch.checked == false) {
+    alert("Enable multiplayer to join other servers!");
+    return;
+  }
   let serverCode = document.querySelector("#serverCodeInput").value.trim();
   wins = 0;   // reset client wins whenever they join a new server
   const payLoad = {
@@ -106,6 +116,7 @@ function onMessage(msg) {
       tr.classList.add("leaderboard-player");
       tr.setAttribute("id", "clientUsername");
       let tdPlayer = document.createElement("td");
+      tdPlayer.classList.add("name");
       let tdPlayerWins = document.createElement("td");
       tdPlayerWins.classList.add("wins");
       tdPlayer.innerText = data.username;
@@ -128,10 +139,13 @@ function onMessage(msg) {
         serverList.removeChild(serverList.lastChild);
       }
       const servers = data.list;
-      servers.forEach((server) => {
-        if (server.serverId == serverId) {
+      servers.forEach((server) => {   
+        if (server.serverId == serverId && servers.length === 1) {
+          let li = document.createElement("h1");
+          li.innerHTML = "No other servers"
+          serverList.appendChild(li);
           return;
-        } else {
+        } else if (server.serverId != serverId && servers.length > 1) {  
           let li = document.createElement("h1");
           li.innerHTML = `${server.serverId} [${server.playerCount}/2]`;
           serverList.appendChild(li);
@@ -139,14 +153,17 @@ function onMessage(msg) {
       });
       break;
     case "alreadyInServer":
-      console.log(`Already in server "${data.serverId}"`);
+      alert(`Already in server "${data.serverId}"`);
       break;
     case "serverIsFull":
-      console.log(`Server "${data.serverId}" is full!`)
+      alert(`Server "${data.serverId}" is full!`)
+      break;
+    case "serverDisabledJoining":
+      alert(`Server "${data.serverId}" disabled multiplayer!`)
       break;
     case "joinedServer":
       console.log(`Player ${data.player} joined server "${data.serverId}"`);
-      console.log(data)
+      // console.log(data)
       gameState.multiplayer = true;
       spectate = false;
       serverId = data.serverId; 
@@ -161,6 +178,7 @@ function onMessage(msg) {
         tr.classList.add("leaderboard-player");
         let tdPlayer = document.createElement("td");
         let tdPlayerWins = document.createElement("td");
+        tdPlayer.classList.add("name");
         tdPlayer.innerText = data.usernameList[playerName];
         tdPlayerWins.classList.add("wins");
         tdPlayerWins.innerText = data.otherClientWins;  // other client's wins
@@ -213,7 +231,7 @@ function onMessage(msg) {
       }
       break;
     case "serverDNE":
-      console.log(`Server "${data.serverId}" does not exist!`);
+      alert(`Server "${data.serverId}" does not exist!`);
       break;
     case "updatePlayersList": // when a user DISCONNECTS/LEAVES from a full server
       // clear the existing player list/leaderboard
@@ -226,6 +244,7 @@ function onMessage(msg) {
         tr.classList.add("leaderboard-player");
         let tdPlayer = document.createElement("td");
         let tdPlayerWins = document.createElement("td");
+        tdPlayer.classList.add("name");
         tdPlayer.innerText = data.updatedPlayerList[playerName];
         tdPlayerWins.classList.add("wins");
         tdPlayerWins.innerText = wins;
@@ -254,6 +273,7 @@ function onMessage(msg) {
     case "updateGameState": 
       // console.log(`Updating game state for player ${data.otherClient}`);
       gameState.gameOver = data.gameOver;
+      gameState.enableJoining = data.enableJoining;
       gameState.playersSpectating = data.playersSpectating;
       gameState.visitedTilesValue = data.visitedTilesValue;
       gameState.flaggedTilesValue = data.flaggedTilesValue;
@@ -264,6 +284,9 @@ function onMessage(msg) {
       gameState.mineRadiusNB = data.mineRadiusNB;
       gameState.mineRadiusLB = data.mineRadiusLB;
       gameState.mineRadiusRB = data.mineRadiusRB;
+
+      gameState.enableJoining == true ? enableJoinSwitch.checked = true : enableJoinSwitch.checked = false;
+      
       if (gameState.gameOver == true && gameState.playersSpectating === 2) {
         gameState.randomMines.forEach(td => {
           tiles[td].innerHTML = "<img src='../img/bomb-icon.png' alt='bomb'>";
@@ -597,6 +620,9 @@ function initialClick() { // clear x surrounding tiles upon inital click on one 
   // add "leftClick" event listener ONLY IF tile has not been visited
   tiles.forEach(td => {
     td.removeEventListener("click", initialClick);
+    if (isMobile()) {
+      td.addEventListener("click", mouseDownHandler);
+    }
     if (!gameState.visitedTilesValue.includes(parseInt(td.dataset.value))) {
       td.addEventListener("click", leftClick);
     }
@@ -771,7 +797,7 @@ const mouseDownHandler = (event) => {
     rightClicked = true;
   }
 
-  if (leftClicked && rightClicked || event.button === 1) {  // chord the adjacent tiles
+  if (leftClicked && rightClicked || event.button === 1 || isMobile()) {  // chord the adjacent tiles
     let currTile = event.target;
     if (currTile.innerText === "") {
       return;
@@ -929,7 +955,7 @@ function createFlagButton() {
   const gameBoard = document.querySelector("#gameBoard");
   const fButton = document.createElement("button");
   const fCounter = document.createElement("span");
-  const fCounterValue = document.createTextNode(numMines);
+  const fCounterValue = document.createTextNode(gameState.numMines);
   fCounter.appendChild(fCounterValue);
   fButton.appendChild(fCounter);
   gameBoard.append(fButton);
@@ -1278,18 +1304,16 @@ function updateClientBoard(data) {
       break;
     case "updateGameState_InitialClick":
       // console.log(`update board w/ ${data.method} for ${clientUsername}`);
-      if (difficulty !== data.gameDifficulty) {
-        switch (data.gameDifficulty) {
-          case "easy":
-            generateEasy(data.sendToServer);
-            break;
-          case "medium":
-            generateMedium(data.sendToServer);
-            break;
-          case "hard":
-            generateHard(data.sendToServer);
-            break;
-        }
+      switch (data.gameDifficulty) {
+        case "easy":
+          generateEasy(data.sendToServer);
+          break;
+        case "medium":
+          generateMedium(data.sendToServer);
+          break;
+        case "hard":
+          generateHard(data.sendToServer);
+          break;
       }
       tiles = document.querySelectorAll("#gameWindow td");
       gameState.visitedTilesValue.forEach(tileValue => {

@@ -68,6 +68,7 @@ wsServer.on("request", (req) => {
   };
   gameState[serverId] = {
     gameOver: false,
+    enableJoining: true,
     playersSpectating: 0,
     visitedTilesValue: visitedTilesValue,
     flaggedTilesValue: flaggedTilesValue,
@@ -106,7 +107,9 @@ wsServer.on("request", (req) => {
       console.log(`Client with ID ${clientId} not found in server ${leftServerId}`);
     } 
     let newClientFlags = clients[clientId].clientFlags;  
-    gameState[leftServerId].playersSpectating -= 1; 
+    if (gameState[leftServerId].playersSpectating > 0) {
+      gameState[leftServerId].playersSpectating -= 1; 
+    }
     delete clients[clientId];
     
     // ---------- JUST FOR CHECKING ----------
@@ -145,32 +148,13 @@ wsServer.on("request", (req) => {
 function onMessage(message) {
   const data = JSON.parse(message.utf8Data);
   switch (data.method) {
-    case "instantiate":
-      console.log("server.js, case 'instantiate'");
-      const player = {
-        clientId: data.clientId,
-        wins: 0,
-        oofs: 0
-      };
-      const serverId = generateServerId();
-      servers[serverId] = {
-        serverId: serverId,
-        clients: [clients[data.clientId]]
-      };
-      const payLoad = {
-        method: "instantiated",
-        server: servers[serverId]
-      };
-      clients[data.clientId].connection.send(JSON.stringify(payLoad));
-      sendAvailableServers();
-      break;
     case "joinServer":
       if (servers[data.serverId]) {  // Server exists
         // Prevent user from joining own's server
         if (clients[data.clientId].serverId === servers[data.serverId].serverId) {
           clients[data.clientId].connection.send(JSON.stringify({
-          "method": "alreadyInServer",
-          "serverId": data.serverId
+            "method": "alreadyInServer",
+            "serverId": data.serverId
           }))
           break;
         }
@@ -186,21 +170,21 @@ function onMessage(message) {
           break;
         }
 
+        // Prevent user from joining a server that disabled mulitplayer
+        if (gameState[data.serverId].enableJoining == false) {
+          clients[data.clientId].connection.send(JSON.stringify({
+            "method": "serverDisabledJoining",
+            "serverId": data.serverId
+          }))
+          break;
+        }
+
         // update client's serverId with new server
         // const oldServerId = clients[data.clientId].serverId;
         servers[data.oldServerId].clients.length -= 1;
         clients[data.clientId].serverId = data.serverId;
 
         console.log(`${data.username} left server ${data.oldServerId} to join server ${data.serverId}`);
-
-        // const client = {
-        //   "clientId": data.clientId,
-        //   "username": data.username,
-        //   "wins": 0,
-        //   "oofs": 0,
-        //   "connection": clients[data.clientId].connection // Get the client's connection
-        // };
-        // servers[data.serverId].clients.push(client);
 
         servers[data.serverId].clients.push(clients[data.clientId]);
 
@@ -349,6 +333,7 @@ function onMessage(message) {
       clients[data.clientId].clientFlags = clients[data.clientId].clientFlags;
       // console.log(`${clients[data.clientId].username}'s flags: ${clients[data.clientId].clientFlags}`);
       gameState[data.serverId].gameOver = data.gameState.gameOver;
+      gameState[data.serverId].enableJoining = data.gameState.enableJoining;
       gameState[data.serverId].playersSpectating = data.gameState.playersSpectating;
       gameState[data.serverId].visitedTilesValue = data.gameState.visitedTilesValue;
       gameState[data.serverId].flaggedTilesValue = data.gameState.flaggedTilesValue;
@@ -369,6 +354,7 @@ function onMessage(message) {
             "method": "updateGameState",
             "otherClient": otherClient.username,
             "gameOver": gameState[data.serverId].gameOver,
+            "enableJoining": gameState[data.serverId].enableJoining,
             playerOneFlags: clients[data.clientId].clientFlags,
             playersSpectating: gameState[data.serverId].playersSpectating,
             visitedTilesValue: gameState[data.serverId].visitedTilesValue,
@@ -536,7 +522,7 @@ function generateClientId() {
 }
 
 function generateServerId() {
-  console.log(servers)
+  // console.log(servers)
   let id = "";
   const data = "0123456789";
   while (id.length < 4) {
