@@ -303,87 +303,67 @@ img.flagOnMine {
   transform: rotate(360deg);
 }
 
-.button-cover,
-.knobs,
-.layer {
+#enableJoinSwitch {
+  --width: 50px;
+  --height: calc(var(--width) / 2);
+  --border-radius: calc(var(--height) / 7);
+
+  display: inline-block;
+  cursor: pointer;
+}
+
+.toggle__input {
+  display: none;
+}
+
+.toggle__fill {
+  position: relative;
+  width: var(--width);
+  height: calc(var(--height)); /* Adjust the height as needed */
+  border-radius: var(--border-radius);
+  background: #dddddd;
+  transition: background 0.3s;
+}
+
+.toggle__input:checked ~ .toggle__fill {
+  background: #4bdb63;
+}
+
+.toggle__fill::after {
+  content: "";
   position: absolute;
   top: 0;
-  right: 0;
-  bottom: 0;
   left: 0;
-}
-.button {
-  position: relative;
-  width: 70px;
-  height: 28px;
-  margin: 0 auto;
-}
-.button.r,
-.button.r .layer {
-  border-radius: 100px;
-}
-.button.b2 {
-  border-radius: 2px;
-}
-.checkbox {
-  position: relative;
-  width: 100%;
   height: 100%;
-  padding: 0;
-  margin: 0;
-  opacity: 0;
-  cursor: pointer;
-  z-index: 3;
+  width: var(--height);
+  background: #ffffff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.25);
+  border-radius: var(--border-radius);
+  transition: transform 0.2s;
 }
-.knobs {
-  z-index: 2;
+
+.toggle__input:checked ~ .toggle__fill::after {
+  transform: translateX(var(--height));
 }
-.layer {
-  width: 100%;
-  background-color: #fcebeb;  /*single player*/
-  transition: 0.3s ease all;
-  z-index: 1;
-}
-#button .knobs:before,
-#button .knobs:after,
-#button .knobs span {
-  position: absolute;
-  top: 5px;
-  height: 18px;
-  padding: 9px;
-  border-radius: 2px;
-  transition: 0.3s ease all;
-}
-#button .knobs:before,
-#button .knobs:after {
-  color: #4e4e4e;
-  z-index: 1;
-}
-#button .knobs span {
-  width: 40%;
-  right: 37px;
-  background-color: #f44336; /*single player*/
-  z-index: 2;  
-}
-#button .checkbox:checked + .knobs span {
-/*   left: 4px; */
-  right: 4px;  
-  background-color: #03a9f4; /*multiplayer*/
-}
-#button .checkbox:checked ~ .layer {
-  background-color: #ebf7fc; /*multiplayer*/
-}
+
 .layer * {
-/*   border: 1px solid black; */
+  /* border: 1px solid black; */
   text-align: center;
-  width: 50%;
-  height: 60%;
+  width: 100%;
+  /* Adjust the height to center the content vertically */
+  height: 100%;
+  display: flex !important;
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
+  font-size: calc(var(--width) * .2); /* Adjust the factor (0.1) as needed */
 }
+
 .layer {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  border: 1px solid black;
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
+  width: 100%;
+  height: 100%;
 }
 
 /* Use a media query to add a break point at __ px: */
@@ -394,7 +374,7 @@ img.flagOnMine {
   }
   #leaderboard {
     z-index: 100;
-    right: 18%;
+    right: 0%;
     font-size: 8px;
   }
   #gameWindow td {
@@ -440,32 +420,6 @@ img.flagOnMine {
     margin-top: 7px;
     margin-left: 7px;
   }
-  .button {
-    position: relative;
-    width: 40px;
-    height: 20px;
-    margin: 0 auto;
-  }
-  .knobs {
-    margin-top: -1px;
-    height: 87%;
-  }
-  #button .knobs:before,
-  #button .knobs:after,
-  #button .knobs span {
-    position: absolute;
-    border-radius: 2px;
-    transition: 0.3s ease all;
-  }
-  #button .knobs span {
-    right: 20px;
-    background-color: #f44336; /*single player*/
-    z-index: 2;  
-  }
-  #button .checkbox:checked + .knobs span {
-    right: 3px;  
-    background-color: #03a9f4; /*multiplayer*/
-  }
 }
 
 @media (min-width: 375px) {
@@ -475,7 +429,7 @@ img.flagOnMine {
   }
   #leaderboard {
     z-index: 100;
-    right: 18%;
+    right: 0%;
     font-size: 8px;
   }
   #gameWindow td {
@@ -519,32 +473,6 @@ img.flagOnMine {
     margin-top: 8px;
     margin-left: 9px;
   }
-  .button {
-    position: relative;
-    width: 40px;
-    height: 20px;
-    margin: 0 auto;
-  }
-  .knobs {
-    margin-top: -1px;
-    height: 87%;
-  }
-  #button .knobs:before,
-  #button .knobs:after,
-  #button .knobs span {
-    position: absolute;
-    border-radius: 2px;
-    transition: 0.3s ease all;
-  }
-  #button .knobs span {
-    right: 20px;
-    background-color: #f44336; /*single player*/
-    z-index: 2;  
-  }
-  #button .checkbox:checked + .knobs span {
-    right: 3px;  
-    background-color: #03a9f4; /*multiplayer*/
-  }
 }
 
 @media (min-width: 425px) {
@@ -554,7 +482,7 @@ img.flagOnMine {
   }
   #leaderboard {
     z-index: 100;
-    right: 18%;
+    right: 0%;
     font-size: 9px;
   }
   #gameWindow td {
@@ -580,32 +508,6 @@ img.flagOnMine {
     margin-top: 6px;
     margin-left: 9px;
   }
-  .button {
-    position: relative;
-    width: 40px;
-    height: 20px;
-    margin: 0 auto;
-  }
-  .knobs {
-    margin-top: -1px;
-    height: 87%;
-  }
-  #button .knobs:before,
-  #button .knobs:after,
-  #button .knobs span {
-    position: absolute;
-    border-radius: 2px;
-    transition: 0.3s ease all;
-  }
-  #button .knobs span {
-    right: 20px;
-    background-color: #f44336; /*single player*/
-    z-index: 2;  
-  }
-  #button .checkbox:checked + .knobs span {
-    right: 3px;  
-    background-color: #03a9f4; /*multiplayer*/
-  }
 }
 
 @media (min-width: 768px) {
@@ -615,7 +517,7 @@ img.flagOnMine {
   }
   #leaderboard {
     -webkit-text-stroke-width: .3px;
-    right: 25%;
+    right: 0%;
     font-size: 10px;
   }
   #gameWindow td {
@@ -645,34 +547,9 @@ img.flagOnMine {
     margin-top: 1px;
     margin-left: 12px;
   }
-  .button {
-    position: relative;
-    width: 70px;
-    height: 28px;
-    margin: 0 auto;
-  }
-  #button .knobs:before,
-  #button .knobs:after,
-  #button .knobs span {
-    position: absolute;
-    top: 6px;
-    height: 100%;
-    border-radius: 2px;
-    transition: 0.3s ease all;
-  }
-  #button .knobs span {
-    width: 40%;
-    right: 37px;
-    background-color: #f44336; /*single player*/
-    z-index: 2;  
-  }
-  #button .checkbox:checked + .knobs span {
-    right: 4px;  
-    background-color: #03a9f4; /*multiplayer*/
-  }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1020px) {
   #container {
     width: 77vw;
     overflow: hidden;
@@ -702,9 +579,72 @@ img.flagOnMine {
   }
 }
 
+@media (min-width: 1100px) {
+  #container {
+    width: 78vw;
+    overflow: hidden;
+  }
+  #leaderboard {
+    font-size: 8px;
+    right: 0;
+  }
+  #gameWindow td {
+    font-size: 100%;
+    -webkit-text-stroke-width: .3px;
+    height: 25px;
+    width: 25px;
+  }
+  #sidebar * {
+    font-size: 15px;
+  }
+  #serverItem {
+    justify-self: start;
+  }
+  #joinServerForm {
+    justify-content: end;
+  }
+  .buddyButton {
+    width: 25px;
+    height: 25px;
+  }
+}
+
 @media (min-width: 1440px) {
   #container {
-    width: 70vw;
+    width: 64vw;
+    overflow: hidden;
+  }
+  #leaderboard {
+    font-size: 17px;
+    right: 0;
+  }
+  #gameWindow td {
+    font-size: 110%;
+    -webkit-text-stroke-width: .3px;
+    height: 27px;
+    width: 27px;
+  }
+  #sidebar * {
+    font-size: 17px;
+  }
+  .buddyButton {
+    width: 27px;
+    height: 27px;
+  }
+  #serverListContainer {
+    margin-top: 4px;
+    height: 17px;
+    width: 12px;
+  }
+  #servers.active {
+    margin-top: -1px;
+    margin-left: 13px;
+  }
+}
+
+@media (min-width: 1920px) {
+  #container {
+    width: 48vw;
     overflow: hidden;
   }
   #leaderboard {
@@ -737,7 +677,7 @@ img.flagOnMine {
 
 @media (min-width: 2560px) {
   #container {
-    width: 47vw;
+    width: 40vw;
     overflow: hidden;
     transform: translate(-50%, -50%) scale(1.35);
   }

@@ -99,7 +99,7 @@ joinServerButton.addEventListener("click", (event) => {
 });
 
 socket = new WebSocket("wss://multisweepers.onrender.com");
-// socket = new WebSocket("ws://localhost:8080");
+socket = new WebSocket("ws://localhost:8080");
 socket.onmessage = onMessage;
 
 function onMessage(msg) {
