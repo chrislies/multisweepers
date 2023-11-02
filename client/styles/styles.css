@@ -90,6 +90,10 @@ button {
   text-align: center; /* Centering the player wins data */
 }
 
+#clientUsername * {
+  font-weight: bold;
+}
+
 #container {
   border: 2px solid black;
   border-radius: 7px;
