@@ -290,9 +290,9 @@ function onMessage(msg) {
       if (gameState.gameOver == true && gameState.playersSpectating === 2) {
         gameState.randomMines.forEach(td => {
           tiles[td].innerHTML = "<img src='../img/bomb-icon.png' alt='bomb'>";
-          tiles[td].style.backgroundColor = "brown";
+          tiles[td].style.backgroundColor = "#830000";
           if (tiles[td].getAttribute("rightClicked") === "true") {
-            tiles[td].innerHTML += "<img class='flagOnMine' src='../img/flag-icon.png' alt='flag'>";
+            clientFlags.includes(parseInt(tiles[td].dataset.value)) ? tiles[td].innerHTML += "<img class='flagOnMine' src='../img/flag-icon.png' alt='flag'>" : tiles[td].innerHTML += "<img class='flagOnMine' src='../img/blueflag-icon.png' alt='flag'>";
           }
         });
         createPlayAgainButton();
@@ -336,7 +336,7 @@ function onMessage(msg) {
     case "foundMine": 
       let mine = document.querySelector(`[data-value="${data.mineValue}"]`);
       mine.innerHTML = "<img src='../img/bomb-icon.png' alt='bomb'>";
-      mine.style.backgroundColor = "brown";
+      mine.style.backgroundColor = "#830000";
       break;
     case "handleGameWon":
       if (data.gameOver == true) {
@@ -891,7 +891,7 @@ const rightClickHandler = (event) => {
       gameState.flaggedTilesValue.push(parseInt(currTile.dataset.value));
       clientFlags.push(parseInt(currTile.dataset.value));
     } else {
-      if (currTile.style.backgroundColor === "brown") { // check if the tile has an exposed mine (caused by other client)
+      if (currTile.style.backgroundColor === "#830000") { // check if the tile has an exposed mine (caused by other client)
         currTile.innerHTML = "<img src='../img/bomb-icon.png' alt='bomb'>";
       } else {
         currTile.innerHTML = "";
@@ -1007,7 +1007,7 @@ function setFlagHandler() {
       gameState.flaggedTilesValue.push(parseInt(currTile.dataset.value));
       clientFlags.push(parseInt(currTile.dataset.value));
     } else {
-      if (currTile.style.backgroundColor === "brown") { // check if the tile has an exposed mine (caused by other client)
+      if (currTile.style.backgroundColor === "#830000") { // check if the tile has an exposed mine (caused by other client)
         currTile.innerHTML = "<img src='../img/bomb-icon.png' alt='bomb'>";
       } else {
         currTile.innerHTML = "";
@@ -1078,7 +1078,7 @@ function gameLost(tileValue) {
   if (gameState.multiplayer && gameState.playersSpectating === 1) {
     // if other client still able to play, relay the single mine to them 
     tiles[tileValue].innerHTML = "<img src='../img/bomb-icon.png' alt='bomb'>";
-    tiles[tileValue].style.backgroundColor = "brown";
+    tiles[tileValue].style.backgroundColor = "#830000";
     if (socket.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify({
         method: "foundMine",
@@ -1091,9 +1091,9 @@ function gameLost(tileValue) {
     gameState.gameOver = true;
     gameState.randomMines.forEach(td => {
       tiles[td].innerHTML = "<img src='../img/bomb-icon.png' alt='bomb'>";
-      tiles[td].style.backgroundColor = "brown";
+      tiles[td].style.backgroundColor = "#830000";
       if (tiles[td].getAttribute("rightClicked") === "true") {
-        tiles[td].innerHTML += "<img class='flagOnMine' src='../img/flag-icon.png' alt='flag'>";
+        clientFlags.includes(parseInt(tiles[td].dataset.value)) ? tiles[td].innerHTML += "<img class='flagOnMine' src='../img/flag-icon.png' alt='flag'>" : tiles[td].innerHTML += "<img class='flagOnMine' src='../img/blueflag-icon.png' alt='flag'>";
       }
     });
     createPlayAgainButton();
@@ -1274,7 +1274,7 @@ function updateClientBoard(data) {
           td.setAttribute("rightClicked", true);
         } else {
           td.setAttribute("rightClicked", false);
-          if (td.style.backgroundColor === "brown") {
+          if (td.style.backgroundColor === "#830000") {
             td.innerHTML = "<img src='../img/bomb-icon.png' alt='bomb'>";
           } else {
             td.innerHTML = "";
