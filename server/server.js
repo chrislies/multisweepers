@@ -7,11 +7,13 @@ const app = express();
 const server = http.createServer(app);
 
 // Use the cors middleware to allow cross-origin requests
-app.use(cors({
-  origin: "https://multisweepers.netlify.app",
-  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: "https://multisweepers.netlify.app",
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    credentials: true,
+  })
+);
 
 const wsServer = new WebSocketServer({
   httpServer: server,
@@ -59,12 +61,12 @@ wsServer.on("request", (req) => {
     connection: connection,
     clientFlags: clientFlags,
     spectate: false,
-    wins: 0
+    wins: 0,
   };
   servers[serverId] = {
     serverId: serverId,
     clients: [clients[clientId]],
-    gameState: gameState
+    gameState: gameState,
   };
   gameState[serverId] = {
     gameOver: false,
@@ -79,15 +81,15 @@ wsServer.on("request", (req) => {
     possibleMove: possibleMove,
     mineRadiusNB: mineRadiusNB,
     mineRadiusLB: mineRadiusLB,
-    mineRadiusRB: mineRadiusRB
-  }
+    mineRadiusRB: mineRadiusRB,
+  };
   connection.send(
     JSON.stringify({
       method: "connected",
       clientId: clientId,
       serverId: serverId,
       username: username,
-      playerCount: servers[serverId].clients.length
+      playerCount: servers[serverId].clients.length,
     })
   );
   sendAvailableServers(); // send available servers to all clients
@@ -96,46 +98,56 @@ wsServer.on("request", (req) => {
   // Handle client disconnect
   connection.on("close", (reasonCode, description) => {
     const leftServerId = clients[clientId].serverId;
-    console.log(`Player "${clients[clientId].username}" disconnected from server ${leftServerId}. Reason: ${description}`);
+    console.log(
+      `Player "${clients[clientId].username}" disconnected from server ${leftServerId}. Reason: ${description}`
+    );
     // Find the index of the disconnected client in the server's clients array
-    const clientIndex = servers[leftServerId].clients.findIndex(client => client.clientId === clientId);
+    const clientIndex = servers[leftServerId].clients.findIndex(
+      (client) => client.clientId === clientId
+    );
     if (clientIndex !== -1) {
       // Remove the client from the server's clients array
       servers[leftServerId].clients.splice(clientIndex, 1);
       // console.log(`servers[${leftServerId}].clients.length = ${servers[leftServerId].clients.length}`);
     } else {
-      console.log(`Client with ID ${clientId} not found in server ${leftServerId}`);
-    } 
-    let newClientFlags = clients[clientId].clientFlags;  
+      console.log(
+        `Client with ID ${clientId} not found in server ${leftServerId}`
+      );
+    }
+    let newClientFlags = clients[clientId].clientFlags;
     if (gameState[leftServerId].playersSpectating > 0) {
-      gameState[leftServerId].playersSpectating -= 1; 
+      gameState[leftServerId].playersSpectating -= 1;
     }
     delete clients[clientId];
-    
+
     // ---------- JUST FOR CHECKING ----------
-    console.log(`remaining servers:`)
+    console.log(`remaining servers:`);
     for (s in servers) {
-      console.log(`servers[${s}].clients.length = ${servers[s].clients.length}`);
+      console.log(
+        `servers[${s}].clients.length = ${servers[s].clients.length}`
+      );
     }
     // ---------- JUST FOR CHECKING ----------
     const updatedPlayerList = [];
     for (const clientId in servers[leftServerId].clients) {
       const client = servers[leftServerId].clients[clientId];
-      updatedPlayerList.push(client.username);      
+      updatedPlayerList.push(client.username);
     }
     console.log(`updatedPlayerList = ${updatedPlayerList}`);
     // send the updated player list to the other client in that server
     // and, if old server has another client, they now own the flags of the client that left
     for (const client of Object.values(clients)) {
       if (client.serverId === leftServerId) {
-        client.connection.send(JSON.stringify({
-          method: "updatePlayersList",
-          updatedPlayerList: updatedPlayerList,
-          playerCount: servers[leftServerId].clients.length,
-          newClientFlags: newClientFlags,
-          playersSpectating: gameState[leftServerId].playersSpectating
-        }));
-      }    
+        client.connection.send(
+          JSON.stringify({
+            method: "updatePlayersList",
+            updatedPlayerList: updatedPlayerList,
+            playerCount: servers[leftServerId].clients.length,
+            newClientFlags: newClientFlags,
+            playersSpectating: gameState[leftServerId].playersSpectating,
+          })
+        );
+      }
     }
     // If the server is now empty, remove it
     if (servers[serverId].clients.length === 0) {
@@ -143,39 +155,47 @@ wsServer.on("request", (req) => {
     }
     sendAvailableServers();
   });
-  
 });
 function onMessage(message) {
   const data = JSON.parse(message.utf8Data);
   switch (data.method) {
     case "joinServer":
-      if (servers[data.serverId]) {  // Server exists
+      if (servers[data.serverId]) {
+        // Server exists
         // Prevent user from joining own's server
-        if (clients[data.clientId].serverId === servers[data.serverId].serverId) {
-          clients[data.clientId].connection.send(JSON.stringify({
-            "method": "alreadyInServer",
-            "serverId": data.serverId
-          }))
+        if (
+          clients[data.clientId].serverId === servers[data.serverId].serverId
+        ) {
+          clients[data.clientId].connection.send(
+            JSON.stringify({
+              method: "alreadyInServer",
+              serverId: data.serverId,
+            })
+          );
           break;
         }
 
         // Prevent user from joining a full server
         if (servers[data.serverId].clients.length === 2) {
           if (clients[data.clientId]) {
-            clients[data.clientId].connection.send(JSON.stringify({
-              "method": "serverIsFull",
-              "serverId": data.serverId
-            }));
+            clients[data.clientId].connection.send(
+              JSON.stringify({
+                method: "serverIsFull",
+                serverId: data.serverId,
+              })
+            );
           }
           break;
         }
 
         // Prevent user from joining a server that disabled mulitplayer
         if (gameState[data.serverId].enableJoining == false) {
-          clients[data.clientId].connection.send(JSON.stringify({
-            "method": "serverDisabledJoining",
-            "serverId": data.serverId
-          }))
+          clients[data.clientId].connection.send(
+            JSON.stringify({
+              method: "serverDisabledJoining",
+              serverId: data.serverId,
+            })
+          );
           break;
         }
 
@@ -184,7 +204,9 @@ function onMessage(message) {
         servers[data.oldServerId].clients.length -= 1;
         clients[data.clientId].serverId = data.serverId;
 
-        console.log(`${data.username} left server ${data.oldServerId} to join server ${data.serverId}`);
+        console.log(
+          `${data.username} left server ${data.oldServerId} to join server ${data.serverId}`
+        );
 
         servers[data.serverId].clients.push(clients[data.clientId]);
 
@@ -195,52 +217,71 @@ function onMessage(message) {
             usernameList.push(clients[client].username);
           }
         }
-        console.log(`usernameList for server ${data.serverId} = ${usernameList}`);
-        clients[data.clientId].wins = 0;  // reset client wins when they join a new server
+        console.log(
+          `usernameList for server ${data.serverId} = ${usernameList}`
+        );
+        clients[data.clientId].wins = 0; // reset client wins when they join a new server
         let otherClientWins = 0;
-        for (const clientId in clients) { 
-          if (clients[clientId].serverId === data.serverId && clients[clientId].clientId === data.clientId) {
-            console.log(`${clients[clientId].username} joined server ${data.serverId}`);
+        for (const clientId in clients) {
+          if (
+            clients[clientId].serverId === data.serverId &&
+            clients[clientId].clientId === data.clientId
+          ) {
+            console.log(
+              `${clients[clientId].username} joined server ${data.serverId}`
+            );
             for (const clientId in clients) {
-              if (clients[clientId].serverId === data.serverId && clients[clientId].clientId !== data.clientId) {
+              if (
+                clients[clientId].serverId === data.serverId &&
+                clients[clientId].clientId !== data.clientId
+              ) {
                 otherClientWins = clients[clientId].wins;
               }
             }
-            clients[clientId].connection.send(JSON.stringify({
-              "method": "joinedServer",
-              "serverId": data.serverId,
-              playerCount: Object.keys(servers[data.serverId].clients).length,
-              usernameList: usernameList,
-              "player": clients[data.clientId].username,
-              clientFlags: [],
-              playersSpectating: gameState[data.serverId].playersSpectating,
-              "gameDifficulty": gameState[data.serverId].gameDifficulty,
-              visitedTilesValue: gameState[data.serverId].visitedTilesValue,
-              flaggedTilesValue: gameState[data.serverId].flaggedTilesValue,
-              buttonFlagCounter: gameState[data.serverId].buttonFlagCounter,
-              randomMines: gameState[data.serverId].randomMines,
-              numMines: gameState[data.serverId].numMines,
-              possibleMove: gameState[data.serverId].possibleMove,
-              mineRadiusNB: gameState[data.serverId].mineRadiusNB,
-              mineRadiusLB: gameState[data.serverId].mineRadiusLB,
-              mineRadiusRB: gameState[data.serverId].mineRadiusRB,
-              "sendToServer": false,   
-              "isJoiningClient": true,
-              otherClientWins: otherClientWins
-            }));
-          } else if (clients[clientId].serverId === data.serverId && clients[clientId].clientId !== data.clientId) {
+            clients[clientId].connection.send(
+              JSON.stringify({
+                method: "joinedServer",
+                serverId: data.serverId,
+                playerCount: Object.keys(servers[data.serverId].clients).length,
+                usernameList: usernameList,
+                player: clients[data.clientId].username,
+                clientFlags: [],
+                playersSpectating: gameState[data.serverId].playersSpectating,
+                gameDifficulty: gameState[data.serverId].gameDifficulty,
+                visitedTilesValue: gameState[data.serverId].visitedTilesValue,
+                flaggedTilesValue: gameState[data.serverId].flaggedTilesValue,
+                buttonFlagCounter: gameState[data.serverId].buttonFlagCounter,
+                randomMines: gameState[data.serverId].randomMines,
+                numMines: gameState[data.serverId].numMines,
+                possibleMove: gameState[data.serverId].possibleMove,
+                mineRadiusNB: gameState[data.serverId].mineRadiusNB,
+                mineRadiusLB: gameState[data.serverId].mineRadiusLB,
+                mineRadiusRB: gameState[data.serverId].mineRadiusRB,
+                sendToServer: false,
+                isJoiningClient: true,
+                otherClientWins: otherClientWins,
+              })
+            );
+          } else if (
+            clients[clientId].serverId === data.serverId &&
+            clients[clientId].clientId !== data.clientId
+          ) {
             // send this to the other client ALREADY in server
-            console.log(`Player: ${clients[clientId].username} is other player in server ${data.serverId}`);
-            clients[clientId].connection.send(JSON.stringify({
-              "method": "joinedServer",
-              "serverId": data.serverId,
-              "playerCount": Object.keys(servers[data.serverId].clients).length,
-              "usernameList": usernameList,
-              "player": clients[data.clientId].username,
-              "clientFlags": clients[clientId].clientFlags,
-              "isJoiningClient": false,
-              otherClientWins: clients[data.clientId].wins
-            }))
+            console.log(
+              `Player: ${clients[clientId].username} is other player in server ${data.serverId}`
+            );
+            clients[clientId].connection.send(
+              JSON.stringify({
+                method: "joinedServer",
+                serverId: data.serverId,
+                playerCount: Object.keys(servers[data.serverId].clients).length,
+                usernameList: usernameList,
+                player: clients[data.clientId].username,
+                clientFlags: clients[clientId].clientFlags,
+                isJoiningClient: false,
+                otherClientWins: clients[data.clientId].wins,
+              })
+            );
           }
         }
 
@@ -251,62 +292,84 @@ function onMessage(message) {
             updatedPlayerList.push(clients[clientId].username);
           }
         }
-        console.log(`updatedPlayerList for server ${data.oldServerId} = ${updatedPlayerList}`);
+        console.log(
+          `updatedPlayerList for server ${data.oldServerId} = ${updatedPlayerList}`
+        );
         // send the updated player list to the other client in that server
         for (const clientId in clients) {
           if (clients[clientId].serverId === data.oldServerId) {
-            clients[clientId].connection.send(JSON.stringify({
-              method: "updatePlayersList",
-              updatedPlayerList: updatedPlayerList,
-              playerCount: servers[data.oldServerId].clients.length
-            }))
+            clients[clientId].connection.send(
+              JSON.stringify({
+                method: "updatePlayersList",
+                updatedPlayerList: updatedPlayerList,
+                playerCount: servers[data.oldServerId].clients.length,
+              })
+            );
           }
         }
-        sendAvailableServers();   // update and remove the server from the serversList since server is now full
+        sendAvailableServers(); // update and remove the server from the serversList since server is now full
       } else {
         // Server DNE!
         if (clients[data.clientId]) {
-          clients[data.clientId].connection.send(JSON.stringify({
-            "method": "serverDNE",
-            "serverId": data.serverId
-          }));
+          clients[data.clientId].connection.send(
+            JSON.stringify({
+              method: "serverDNE",
+              serverId: data.serverId,
+            })
+          );
         }
       }
       break;
     case "removeFlagForOtherClient":
       // when a flag is removed via right click
       for (const client in clients) {
-        if (clients[client].serverId === data.serverId && clients[client].clientId !== data.clientId) {
+        if (
+          clients[client].serverId === data.serverId &&
+          clients[client].clientId !== data.clientId
+        ) {
           const otherClient = clients[client];
           // console.log(`remove flag ${data.flagValueToRemove} from player ${otherClient.username}`)
           // console.log(`nonupdated list   = ${otherClient.clientFlags}`)
-          let flagIndexToRemove = otherClient.clientFlags.indexOf(data.flagValueToRemove);
+          let flagIndexToRemove = otherClient.clientFlags.indexOf(
+            data.flagValueToRemove
+          );
           // console.log(`flagIndexToRemove: ${flagIndexToRemove}`);
           otherClient.clientFlags.splice(flagIndexToRemove, 1);
           // console.log(`updated flag list = ${otherClient.clientFlags}`)
-          otherClient.connection.send(JSON.stringify({
-            "method": "removedFlagForOtherClient",
-            "clientFlags": otherClient.clientFlags,
-            "flagValueToRemove": data.flagValueToRemove,
-            "buttonFlagCounter": data.buttonFlagCounter
-          }))
+          otherClient.connection.send(
+            JSON.stringify({
+              method: "removedFlagForOtherClient",
+              clientFlags: otherClient.clientFlags,
+              flagValueToRemove: data.flagValueToRemove,
+              buttonFlagCounter: data.buttonFlagCounter,
+            })
+          );
         }
       }
       break;
     case "removeFlagsForOtherClient":
       for (const client in clients) {
-        if (clients[client].serverId === data.serverId && clients[client].clientId !== data.clientId) {
+        if (
+          clients[client].serverId === data.serverId &&
+          clients[client].clientId !== data.clientId
+        ) {
           const otherClient = clients[client];
-          console.log(`remove flags ${data.flagValuesToRemove} from player ${otherClient.username}`)
+          console.log(
+            `remove flags ${data.flagValuesToRemove} from player ${otherClient.username}`
+          );
           // console.log(`nonupdated list   = ${otherClient.clientFlags}`)
-          otherClient.clientFlags = otherClient.clientFlags.filter(flag => !data.flagValuesToRemove.includes(flag));
+          otherClient.clientFlags = otherClient.clientFlags.filter(
+            (flag) => !data.flagValuesToRemove.includes(flag)
+          );
           // console.log(`updated flag list = ${otherClient.clientFlags}`)
-          otherClient.connection.send(JSON.stringify({
-            "method": "removedFlagsForOtherClient",
-            "clientFlags": otherClient.clientFlags,
-            "flagValuesToRemove": data.flagValuesToRemove,
-            "buttonFlagCounter": data.buttonFlagCounter
-          }))
+          otherClient.connection.send(
+            JSON.stringify({
+              method: "removedFlagsForOtherClient",
+              clientFlags: otherClient.clientFlags,
+              flagValuesToRemove: data.flagValuesToRemove,
+              buttonFlagCounter: data.buttonFlagCounter,
+            })
+          );
         }
       }
 
@@ -318,14 +381,19 @@ function onMessage(message) {
       // console.log(`data.serverFlags = ${data.serverFlags}`)
       // console.log(`gameState[data.serverId].flaggedTilesValue = ${gameState[data.serverId].flaggedTilesValue}`)
       for (const client in clients) {
-        if (clients[client].serverId === data.serverId && clients[client].clientId !== data.clientId) {
+        if (
+          clients[client].serverId === data.serverId &&
+          clients[client].clientId !== data.clientId
+        ) {
           const otherClient = clients[client];
-          otherClient.connection.send(JSON.stringify({
-            "method": "updateFlagsForOtherClient",
-            "otherClientFlags": data.clientFlags,
-            "serverFlags": data.serverFlags,
-            "buttonFlagCounter": data.buttonFlagCounter
-          }))
+          otherClient.connection.send(
+            JSON.stringify({
+              method: "updateFlagsForOtherClient",
+              otherClientFlags: data.clientFlags,
+              serverFlags: data.serverFlags,
+              buttonFlagCounter: data.buttonFlagCounter,
+            })
+          );
         }
       }
       break;
@@ -334,13 +402,17 @@ function onMessage(message) {
       // console.log(`${clients[data.clientId].username}'s flags: ${clients[data.clientId].clientFlags}`);
       gameState[data.serverId].gameOver = data.gameState.gameOver;
       gameState[data.serverId].enableJoining = data.gameState.enableJoining;
-      gameState[data.serverId].playersSpectating = data.gameState.playersSpectating;
-      gameState[data.serverId].visitedTilesValue = data.gameState.visitedTilesValue;
-      gameState[data.serverId].flaggedTilesValue = data.gameState.flaggedTilesValue;
-      gameState[data.serverId].buttonFlagCounter = data.gameState.buttonFlagCounter;
+      gameState[data.serverId].playersSpectating =
+        data.gameState.playersSpectating;
+      gameState[data.serverId].visitedTilesValue =
+        data.gameState.visitedTilesValue;
+      gameState[data.serverId].flaggedTilesValue =
+        data.gameState.flaggedTilesValue;
+      gameState[data.serverId].buttonFlagCounter =
+        data.gameState.buttonFlagCounter;
       gameState[data.serverId].numMines = data.gameState.numMines;
       gameState[data.serverId].randomMines = data.gameState.randomMines;
-      gameState[data.serverId].gameDifficulty = data.gameState.gameDifficulty; 
+      gameState[data.serverId].gameDifficulty = data.gameState.gameDifficulty;
       gameState[data.serverId].possibleMove = data.gameState.possibleMove;
       gameState[data.serverId].mineRadiusNB = data.gameState.mineRadiusNB;
       gameState[data.serverId].mineRadiusLB = data.gameState.mineRadiusLB;
@@ -348,32 +420,38 @@ function onMessage(message) {
 
       // update the game state for the other player
       for (const client in clients) {
-        if (clients[client].serverId === data.serverId && clients[client].clientId !== data.clientId) {
+        if (
+          clients[client].serverId === data.serverId &&
+          clients[client].clientId !== data.clientId
+        ) {
           const otherClient = clients[client];
-          otherClient.connection.send(JSON.stringify({
-            "method": "updateGameState",
-            "otherClient": otherClient.username,
-            "gameOver": gameState[data.serverId].gameOver,
-            "enableJoining": gameState[data.serverId].enableJoining,
-            playerOneFlags: clients[data.clientId].clientFlags,
-            playersSpectating: gameState[data.serverId].playersSpectating,
-            visitedTilesValue: gameState[data.serverId].visitedTilesValue,
-            flaggedTilesValue: gameState[data.serverId].flaggedTilesValue,
-            buttonFlagCounter: gameState[data.serverId].buttonFlagCounter,
-            numMines: gameState[data.serverId].numMines,
-            randomMines: gameState[data.serverId].randomMines,
-            "gameDifficulty": gameState[data.serverId].gameDifficulty,
-            possibleMove: gameState[data.serverId].possibleMove,
-            mineRadiusNB: gameState[data.serverId].mineRadiusNB,
-            mineRadiusLB: gameState[data.serverId].mineRadiusLB,
-            mineRadiusRB: gameState[data.serverId].mineRadiusRB
-          }));
+          otherClient.connection.send(
+            JSON.stringify({
+              method: "updateGameState",
+              otherClient: otherClient.username,
+              gameOver: gameState[data.serverId].gameOver,
+              enableJoining: gameState[data.serverId].enableJoining,
+              playerOneFlags: clients[data.clientId].clientFlags,
+              playersSpectating: gameState[data.serverId].playersSpectating,
+              visitedTilesValue: gameState[data.serverId].visitedTilesValue,
+              flaggedTilesValue: gameState[data.serverId].flaggedTilesValue,
+              buttonFlagCounter: gameState[data.serverId].buttonFlagCounter,
+              numMines: gameState[data.serverId].numMines,
+              randomMines: gameState[data.serverId].randomMines,
+              gameDifficulty: gameState[data.serverId].gameDifficulty,
+              possibleMove: gameState[data.serverId].possibleMove,
+              mineRadiusNB: gameState[data.serverId].mineRadiusNB,
+              mineRadiusLB: gameState[data.serverId].mineRadiusLB,
+              mineRadiusRB: gameState[data.serverId].mineRadiusRB,
+            })
+          );
         }
       }
       break;
     case "updateGameState_InitialClick":
       // update the game state for the other player when initialClick() executes
-      gameState[data.serverId].visitedTilesValue = data.gameState.visitedTilesValue;
+      gameState[data.serverId].visitedTilesValue =
+        data.gameState.visitedTilesValue;
       gameState[data.serverId].numMines = data.gameState.numMines;
       gameState[data.serverId].randomMines = data.gameState.randomMines;
       gameState[data.serverId].possibleMove = data.gameState.possibleMove;
@@ -381,33 +459,44 @@ function onMessage(message) {
       gameState[data.serverId].mineRadiusLB = data.gameState.mineRadiusLB;
       gameState[data.serverId].mineRadiusRB = data.gameState.mineRadiusRB;
       for (const client in clients) {
-        if (clients[client].serverId === data.serverId && clients[client].clientId !== data.clientId) {
+        if (
+          clients[client].serverId === data.serverId &&
+          clients[client].clientId !== data.clientId
+        ) {
           const otherClient = clients[client];
-          otherClient.connection.send(JSON.stringify({
-            "method": "updateGameState_InitialClick",
-            "otherClient": otherClient.username,
-            "visitedTilesValue": gameState[data.serverId].visitedTilesValue,
-            // "flaggedTilesValue": gameState[data.serverId].flaggedTilesValue,
-            "numMines": gameState[data.serverId].numMines,
-            "randomMines": gameState[data.serverId].randomMines,
-            "possibleMove": gameState[data.serverId].possibleMove,
-            "mineRadiusNB": gameState[data.serverId].mineRadiusNB,
-            "mineRadiusLB": gameState[data.serverId].mineRadiusLB,
-            "mineRadiusRB": gameState[data.serverId].mineRadiusRB
-          }))
+          otherClient.connection.send(
+            JSON.stringify({
+              method: "updateGameState_InitialClick",
+              otherClient: otherClient.username,
+              visitedTilesValue: gameState[data.serverId].visitedTilesValue,
+              // "flaggedTilesValue": gameState[data.serverId].flaggedTilesValue,
+              numMines: gameState[data.serverId].numMines,
+              randomMines: gameState[data.serverId].randomMines,
+              possibleMove: gameState[data.serverId].possibleMove,
+              mineRadiusNB: gameState[data.serverId].mineRadiusNB,
+              mineRadiusLB: gameState[data.serverId].mineRadiusLB,
+              mineRadiusRB: gameState[data.serverId].mineRadiusRB,
+            })
+          );
         }
       }
       break;
     case "updateVisitedTilesForOtherClient":
-      gameState[data.serverId].visitedTilesValue = data.gameState.visitedTilesValue;
+      gameState[data.serverId].visitedTilesValue =
+        data.gameState.visitedTilesValue;
       for (const client in clients) {
-        if (clients[client].serverId === data.serverId && clients[client].clientId !== data.clientId) {
+        if (
+          clients[client].serverId === data.serverId &&
+          clients[client].clientId !== data.clientId
+        ) {
           const otherClient = clients[client];
-          otherClient.connection.send(JSON.stringify({
-            "method": "updateVisitedTilesForOtherClient",
-            "otherClient": otherClient.username,
-            "visitedTilesValue": gameState[data.serverId].visitedTilesValue
-          }))
+          otherClient.connection.send(
+            JSON.stringify({
+              method: "updateVisitedTilesForOtherClient",
+              otherClient: otherClient.username,
+              visitedTilesValue: gameState[data.serverId].visitedTilesValue,
+            })
+          );
         }
       }
       break;
@@ -423,60 +512,82 @@ function onMessage(message) {
       gameState[data.serverId].mineRadiusRB = [];
       for (const client in clients) {
         if (clients[client].serverId === data.serverId) {
-          clients[client].connection.send(JSON.stringify({
-            method: "clearGameState",
-            gameState: gameState[data.serverId]
-          }))
+          clients[client].connection.send(
+            JSON.stringify({
+              method: "clearGameState",
+              gameState: gameState[data.serverId],
+            })
+          );
         }
       }
-      break;  
+      break;
     case "generateGameForOtherClient":
       for (const client in clients) {
-        if (clients[client].serverId === data.serverId && clients[client].clientId !== data.clientId) {
+        if (
+          clients[client].serverId === data.serverId &&
+          clients[client].clientId !== data.clientId
+        ) {
           const otherClient = clients[client];
-          otherClient.connection.send(JSON.stringify({
-            "method": "generateGameForOtherClient",
-            "gameDifficulty": data.gameState.gameDifficulty
-          }))
+          otherClient.connection.send(
+            JSON.stringify({
+              method: "generateGameForOtherClient",
+              gameDifficulty: data.gameState.gameDifficulty,
+            })
+          );
         }
       }
       break;
     case "foundMine":
       for (const client in clients) {
-        if (clients[client].serverId === data.serverId && clients[client].clientId !== data.clientId) {
+        if (
+          clients[client].serverId === data.serverId &&
+          clients[client].clientId !== data.clientId
+        ) {
           const otherClient = clients[client];
-          otherClient.connection.send(JSON.stringify({
-            "method": "foundMine",
-            mineValue: data.mineValue
-          }))
+          otherClient.connection.send(
+            JSON.stringify({
+              method: "foundMine",
+              mineValue: data.mineValue,
+            })
+          );
         }
       }
       break;
     case "handleGameWon":
       gameState[data.serverId].gameOver = data.gameState.gameOver;
       for (const client in clients) {
-        if (clients[client].serverId === data.serverId && clients[client].clientId !== data.clientId) {
+        if (
+          clients[client].serverId === data.serverId &&
+          clients[client].clientId !== data.clientId
+        ) {
           const otherClient = clients[client];
-          otherClient.connection.send(JSON.stringify({
-            "method": "handleGameWon",
-            gameOver: data.gameState.gameOver
-          }))
+          otherClient.connection.send(
+            JSON.stringify({
+              method: "handleGameWon",
+              gameOver: data.gameState.gameOver,
+            })
+          );
         }
       }
       break;
     case "updateClientWins":
       clients[data.clientId].wins = data.wins;
       for (const client in clients) {
-        if (clients[client].serverId === data.serverId && clients[client].clientId !== data.clientId) {
+        if (
+          clients[client].serverId === data.serverId &&
+          clients[client].clientId !== data.clientId
+        ) {
           const otherClient = clients[client];
-          otherClient.connection.send(JSON.stringify({
-            "method": "updateClientWins",
-            wins: data.wins
-          }))
+          otherClient.connection.send(
+            JSON.stringify({
+              method: "updateClientWins",
+              wins: data.wins,
+            })
+          );
         }
       }
       break;
-    }
+  }
 }
 
 function sendAvailableServers() {
@@ -488,7 +599,7 @@ function sendAvailableServers() {
       console.log(`serverId = ${serverId}`);
       serversList.push({
         serverId: serverId,
-        playerCount: servers[serverId].clients.length
+        playerCount: servers[serverId].clients.length,
       });
     }
   }
@@ -497,16 +608,104 @@ function sendAvailableServers() {
     clients[clientId].connection.send(
       JSON.stringify({
         method: "updateServersList",
-        list: serversList
+        list: serversList,
       })
     );
   }
 }
 
 function generateName() {
-  const adjectives = ["Joyful","Samurai","Warrior","Friendly","Cheerful","Delightful","Hungry","Ninja","Silly","Wonderful","Fantastic","Amazing","Enthusiastic","Trusting","Courageous","Optimistic","Talented","Funny","Hopeful","Charismatic","Genuine","Creative","Confident","Radiant","Splendid","Harmonious","Intelligent","Dynamic","Vibrant","Brilliant","Excited","Jubilant","Awesome","Happy","Strong","Brave","Witty","Charming","Eager","Caring","Lucky","Jovial","Honest","Polite","Fearless","Sincere","Ecstatic","Zealous","Earnest","Relaxed","Mindful","Energetic"];
-  const animals = ["Serpent","Hippo","Giraffe","Bunny","Turtle","Tortoise","Rabbit","Mouse","Cat","Tiger","Puppy","Lion","Elephant","Dolphin","Koala","Cheetah","Panda","Gorilla","Penguin","Flamingo","Zebra","Lemur","Sloth","Ostrich","Raccoon","Meerkat","Peacock","Hyena","Monkey","Capybara","Goose"];
-  const name = adjectives[Math.floor(Math.random() * adjectives.length)] + " " + animals[Math.floor(Math.random() * animals.length)];
+  const adjectives = [
+    "Joyful",
+    "Samurai",
+    "Warrior",
+    "Friendly",
+    "Cheerful",
+    "Delightful",
+    "Hungry",
+    "Ninja",
+    "Silly",
+    "Wonderful",
+    "Fantastic",
+    "Amazing",
+    "Enthusiastic",
+    "Trusting",
+    "Courageous",
+    "Optimistic",
+    "Talented",
+    "Funny",
+    "Hopeful",
+    "Charismatic",
+    "Genuine",
+    "Creative",
+    "Confident",
+    "Radiant",
+    "Splendid",
+    "Harmonious",
+    "Intelligent",
+    "Dynamic",
+    "Vibrant",
+    "Brilliant",
+    "Excited",
+    "Jubilant",
+    "Awesome",
+    "Happy",
+    "Strong",
+    "Brave",
+    "Witty",
+    "Charming",
+    "Eager",
+    "Caring",
+    "Lucky",
+    "Jovial",
+    "Honest",
+    "Polite",
+    "Fearless",
+    "Sincere",
+    "Ecstatic",
+    "Zealous",
+    "Earnest",
+    "Relaxed",
+    "Mindful",
+    "Energetic",
+  ];
+  const animals = [
+    "Serpent",
+    "Hippo",
+    "Giraffe",
+    "Bunny",
+    "Turtle",
+    "Tortoise",
+    "Rabbit",
+    "Mouse",
+    "Cat",
+    "Tiger",
+    "Puppy",
+    "Lion",
+    "Elephant",
+    "Dolphin",
+    "Koala",
+    "Cheetah",
+    "Panda",
+    "Gorilla",
+    "Penguin",
+    "Flamingo",
+    "Zebra",
+    "Lemur",
+    "Sloth",
+    "Ostrich",
+    "Raccoon",
+    "Meerkat",
+    "Peacock",
+    "Hyena",
+    "Monkey",
+    "Capybara",
+    "Goose",
+  ];
+  const name =
+    adjectives[Math.floor(Math.random() * adjectives.length)] +
+    " " +
+    animals[Math.floor(Math.random() * animals.length)];
   // const alphabet = ["Alpha","Bravo","Charlie","Delta","Echo","Foxtrot","Golf","Hotel","India","Juliett","Kilo","Lima","Mike","November","Oscar","Papa","Quebec","Romeo","Sierra","Tango","Uniform","Victor","Whiskey","X-ray","Yankee","Zulu"];
   // const name = alphabet[Math.floor(Math.random() * alphabet.length)];
   return name;
