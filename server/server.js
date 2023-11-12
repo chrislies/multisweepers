@@ -1,34 +1,34 @@
-const express = require("express");
-const http = require("http");
-const WebSocketServer = require("websocket").server;
-const cors = require("cors");
-
-const app = express();
-const server = http.createServer(app);
-
-// Use the cors middleware to allow cross-origin requests
-app.use(
-  cors({
-    origin: "https://multisweepers.netlify.app",
-    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-    credentials: true,
-  })
-);
-
-const wsServer = new WebSocketServer({
-  httpServer: server,
-});
-///////////////////////////////////////////////////////////////////////
 // const express = require("express");
 // const http = require("http");
 // const WebSocketServer = require("websocket").server;
+// const cors = require("cors");
 
 // const app = express();
 // const server = http.createServer(app);
 
+// // Use the cors middleware to allow cross-origin requests
+// app.use(
+//   cors({
+//     origin: "https://multisweepers.netlify.app",
+//     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+//     credentials: true,
+//   })
+// );
+
 // const wsServer = new WebSocketServer({
 //   httpServer: server,
 // });
+///////////////////////////////////////////////////////////////////////
+const express = require("express");
+const http = require("http");
+const WebSocketServer = require("websocket").server;
+
+const app = express();
+const server = http.createServer(app);
+
+const wsServer = new WebSocketServer({
+  httpServer: server,
+});
 ///////////////////////////////////////////////////////////////////////
 server.listen(process.env.PORT || 8080, () => {
   console.log("Listening on port");

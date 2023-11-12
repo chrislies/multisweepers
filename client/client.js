@@ -108,8 +108,39 @@ joinServerButton.addEventListener("click", (event) => {
   socket.send(JSON.stringify(payLoad));
 });
 
+const chatBtn = document.querySelector(".chatButton");
+const chatGUI = document.querySelector(".chatGUI");
+const minimizeChatBtn = document.querySelector(".minimizeChatButton");
+const chatBox = document.querySelector(".chatBox");
+const chatBoxBtn = document.querySelector("#chatBoxButton");
+const chatBoxMessages = document.querySelector(".chatBoxMessages");
+const chatBoxInput = document.querySelector("#chatBoxInput");
+
+chatBoxBtn.addEventListener("click", (event) => {
+  event.preventDefault();
+  if (chatBoxInput.value != "") {
+    let chatMsg = chatBoxInput.value;
+    chatBoxInput.value = "";
+    chatBoxInput.focus();
+    let chatMsgDiv = document.createElement("div");
+    chatMsgDiv.classList.add("chatMessage");
+    chatMsgDiv.innerHTML = chatMsg;
+    chatBoxMessages.appendChild(chatMsgDiv);
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+});
+
+function toggleChatGUI() {
+  chatBtn.classList.toggle("active");
+  chatGUI.style.display = chatGUI.style.display === "none" ? "flex" : "none";
+}
+
+chatBtn.addEventListener("click", toggleChatGUI);
+minimizeChatBtn.addEventListener("click", toggleChatGUI);
+
 socket = new WebSocket("wss://multisweepers.onrender.com");
-// socket = new WebSocket("ws://localhost:8080");
+socket = new WebSocket("ws://localhost:8080");
 socket.onmessage = onMessage;
 
 function onMessage(msg) {
@@ -1050,6 +1081,7 @@ const rightClickHandler = (event) => {
 function paintContainerGrids() {
   const sidebar = document.querySelector("#sidebar");
   const gameBoard = document.querySelector("#gameBoard");
+  const chatBoxHeader = document.querySelector(".header");
   gameBoard.onselectstart = function () {
     // prevent gameBoard contents from being highlighted
     return false;
@@ -1075,6 +1107,7 @@ function paintContainerGrids() {
     "," +
     (parseInt(b) - 15) +
     ")";
+  chatBoxHeader.style.backgroundColor = gameBoard.style.backgroundColor;
   document.body.style.backgroundImage = `radial-gradient(${
     getComputedStyle(gameBoard).backgroundColor
   } 20%, ${getComputedStyle(sidebar).backgroundColor})`;
