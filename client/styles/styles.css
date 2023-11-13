@@ -534,7 +534,6 @@ img.flagOnMine {
 }
 
 .chatButton:active {
-  /* background-color: gray; */
   opacity: 1;
   transform: translate(0px, 0.5px);
 }
@@ -807,7 +806,7 @@ img.flagOnMine {
 @media (min-width: 1440px) and (max-width: 1920px) {
   #container {
     width: 59vw;
-    transform: translate(-50%, -50%) scale(1.2);
+    transform: translate(-50%, -50%) scale(1.02);
     overflow: hidden;
   }
   #leaderboard {
