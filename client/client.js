@@ -115,25 +115,41 @@ const chatBox = document.querySelector(".chatBox");
 const chatBoxBtn = document.querySelector("#chatBoxButton");
 const chatBoxMessages = document.querySelector(".chatBoxMessages");
 const chatBoxInput = document.querySelector("#chatBoxInput");
+const chatNotifyIcon = document.querySelector(".chatNotifyIcon");
+let chatNotifyCounter = 0;
 
 chatBoxBtn.addEventListener("click", (event) => {
   event.preventDefault();
-  if (chatBoxInput.value != "") {
+  if (chatBoxInput.value.trim() != "") {
     let chatMsg = chatBoxInput.value;
     chatBoxInput.value = "";
     chatBoxInput.focus();
-    let chatMsgDiv = document.createElement("div");
-    chatMsgDiv.classList.add("chatMessage");
-    chatMsgDiv.innerHTML = chatMsg;
-    chatBoxMessages.appendChild(chatMsgDiv);
+    let chatMsgLi = document.createElement("li");
+    chatMsgLi.classList.add("chatMessage", "client");
+    chatMsgLi.innerText = chatMsg;
+    chatBoxMessages.appendChild(chatMsgLi);
+    chatBox.scrollTop = chatBox.scrollHeight; // Scroll to most recent chat message
 
-    chatBox.scrollTop = chatBox.scrollHeight;
+    // update chat message to the server and send to other client (if there exists)
+    if (socket.readyState === WebSocket.OPEN) {
+      socket.send(
+        JSON.stringify({
+          method: "storeChatMessage",
+          chatMessage: chatMsg,
+          serverId: serverId,
+          clientId: clientId,
+        })
+      );
+    }
   }
 });
 
 function toggleChatGUI() {
   chatBtn.classList.toggle("active");
   chatGUI.style.display = chatGUI.style.display === "none" ? "flex" : "none";
+  chatNotifyCounter = 0; // Reset chat notify icon counter
+  chatNotifyIcon.style.display = "none";
+  chatBox.scrollTop = chatBox.scrollHeight; // Scroll to most recent chat message
 }
 
 chatBtn.addEventListener("click", toggleChatGUI);
@@ -173,6 +189,10 @@ function onMessage(msg) {
       gameState.buttonFlagCounter = gameState.buttonFlagCounter;
       // Send the updated gameState to the server with the function below
       sendGameStateToServer();
+      chatMsgLi = document.createElement("li");
+      chatMsgLi.classList.add("chatMessage", "status");
+      chatMsgLi.innerHTML = `${clientUsername} <strong class=joined>joined</strong> server ${serverId}`;
+      chatBoxMessages.appendChild(chatMsgLi);
       break;
     case "updateServersList":
       // Clear the existing server list
@@ -209,6 +229,13 @@ function onMessage(msg) {
       spectate = false;
       serverId = data.serverId;
       serverCode.innerHTML = data.serverId;
+
+      // log stuts to the chat box
+      // chatMsgLi = document.createElement("li");
+      // chatMsgLi.classList.add("chatMessage", "status");
+      // chatMsgLi.innerHTML = `${data.player} <strong class=joined>joined</strong> server ${data.serverId}`;
+      // chatBoxMessages.appendChild(chatMsgLi);
+
       // clear existing leaderboard
       while (leaderboard.firstChild) {
         leaderboard.removeChild(leaderboard.firstChild);
@@ -274,6 +301,9 @@ function onMessage(msg) {
       break;
     case "serverDNE":
       alert(`Server "${data.serverId}" does not exist!`);
+      break;
+    case "updateChat":
+      updateChat(data);
       break;
     case "updatePlayersList": // when a user DISCONNECTS/LEAVES from a full server
       // clear the existing player list/leaderboard
@@ -1082,6 +1112,7 @@ function paintContainerGrids() {
   const sidebar = document.querySelector("#sidebar");
   const gameBoard = document.querySelector("#gameBoard");
   const chatBoxHeader = document.querySelector(".header");
+  const chatButton = document.querySelector(".chatButton");
   gameBoard.onselectstart = function () {
     // prevent gameBoard contents from being highlighted
     return false;
@@ -1108,6 +1139,7 @@ function paintContainerGrids() {
     (parseInt(b) - 15) +
     ")";
   chatBoxHeader.style.backgroundColor = gameBoard.style.backgroundColor;
+  chatButton.style.backgroundColor = gameBoard.style.backgroundColor;
   document.body.style.backgroundImage = `radial-gradient(${
     getComputedStyle(gameBoard).backgroundColor
   } 20%, ${getComputedStyle(sidebar).backgroundColor})`;
@@ -1577,6 +1609,51 @@ function updateClientBoard(data) {
         ".leaderboard-player:not(#clientUsername) .wins"
       ).innerText = data.wins;
       break;
+  }
+}
+
+// update the chat box
+function updateChat(data) {
+  switch (data.status) {
+    case "clearChatMessages":
+      // Clears client's chat messages when they join another server
+      while (chatBoxMessages.firstChild) {
+        chatBoxMessages.removeChild(chatBoxMessages.firstChild);
+      }
+      chatMsgLi = document.createElement("li");
+      chatMsgLi.classList.add("chatMessage", "status");
+      chatMsgLi.innerHTML = `${data.player} <strong class=joined>joined</strong> server ${data.serverId}`;
+      chatBoxMessages.appendChild(chatMsgLi);
+      break;
+    case "newClientJoined":
+      chatMsgLi = document.createElement("li");
+      chatMsgLi.classList.add("chatMessage", "status");
+      chatMsgLi.innerHTML = `${data.player} <strong class=joined>joined</strong> server ${data.serverId}`;
+      chatBoxMessages.appendChild(chatMsgLi);
+      break;
+    case "otherClientLeft":
+      chatMsgLi = document.createElement("li");
+      chatMsgLi.classList.add("chatMessage", "status");
+      chatMsgLi.innerHTML = `${data.player} <strong class=left>left</strong> server ${data.serverId}`;
+      chatBoxMessages.appendChild(chatMsgLi);
+      break;
+    case "otherClientMessage":
+      // Updates client's chatGUI when another user chats
+      chatMsgLi = document.createElement("li");
+      chatMsgLi.classList.add("chatMessage", "otherClient");
+      chatMsgLi.innerText = data.chatMessage;
+      chatBoxMessages.appendChild(chatMsgLi);
+      break;
+  }
+  // Update chatNotifyIcon if chatGUI is closed/hidden
+  if (chatGUI.style.display === "none") {
+    chatNotifyCounter += 1;
+    chatNotifyIcon.style.display = "flex";
+    if (chatNotifyCounter < 100) {
+      chatNotifyIcon.innerHTML = chatNotifyCounter;
+    } else {
+      chatNotifyIcon.innerHTML = "99+";
+    }
   }
 }
 

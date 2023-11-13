@@ -54,6 +54,7 @@ wsServer.on("request", (req) => {
   let mineRadiusNB = [];
   let mineRadiusLB = [];
   let mineRadiusRB = [];
+  let clientMessages = [];
   clients[clientId] = {
     clientId: clientId,
     serverId: serverId,
@@ -62,6 +63,7 @@ wsServer.on("request", (req) => {
     clientFlags: clientFlags,
     spectate: false,
     wins: 0,
+    clientMessages: clientMessages,
   };
   servers[serverId] = {
     serverId: serverId,
@@ -98,9 +100,10 @@ wsServer.on("request", (req) => {
   // Handle client disconnect
   connection.on("close", (reasonCode, description) => {
     const leftServerId = clients[clientId].serverId;
-    console.log(
-      `Player "${clients[clientId].username}" disconnected from server ${leftServerId}. Reason: ${description}`
-    );
+    const leftClientUsername = clients[clientId].username;
+    // console.log(
+    //   `Player "${clients[clientId].username}" disconnected from server ${leftServerId}. Reason: ${description}`
+    // );
     // Find the index of the disconnected client in the server's clients array
     const clientIndex = servers[leftServerId].clients.findIndex(
       (client) => client.clientId === clientId
@@ -121,19 +124,19 @@ wsServer.on("request", (req) => {
     delete clients[clientId];
 
     // ---------- JUST FOR CHECKING ----------
-    console.log(`remaining servers:`);
-    for (s in servers) {
-      console.log(
-        `servers[${s}].clients.length = ${servers[s].clients.length}`
-      );
-    }
+    // console.log(`remaining servers:`);
+    // for (s in servers) {
+    //   console.log(
+    //     `servers[${s}].clients.length = ${servers[s].clients.length}`
+    //   );
+    // }
     // ---------- JUST FOR CHECKING ----------
     const updatedPlayerList = [];
     for (const clientId in servers[leftServerId].clients) {
       const client = servers[leftServerId].clients[clientId];
       updatedPlayerList.push(client.username);
     }
-    console.log(`updatedPlayerList = ${updatedPlayerList}`);
+    // console.log(`updatedPlayerList = ${updatedPlayerList}`);
     // send the updated player list to the other client in that server
     // and, if old server has another client, they now own the flags of the client that left
     for (const client of Object.values(clients)) {
@@ -145,6 +148,14 @@ wsServer.on("request", (req) => {
             playerCount: servers[leftServerId].clients.length,
             newClientFlags: newClientFlags,
             playersSpectating: gameState[leftServerId].playersSpectating,
+          })
+        );
+        client.connection.send(
+          JSON.stringify({
+            method: "updateChat",
+            status: "otherClientLeft",
+            player: leftClientUsername,
+            serverId: leftServerId,
           })
         );
       }
@@ -204,9 +215,9 @@ function onMessage(message) {
         servers[data.oldServerId].clients.length -= 1;
         clients[data.clientId].serverId = data.serverId;
 
-        console.log(
-          `${data.username} left server ${data.oldServerId} to join server ${data.serverId}`
-        );
+        // console.log(
+        //   `${data.username} left server ${data.oldServerId} to join server ${data.serverId}`
+        // );
 
         servers[data.serverId].clients.push(clients[data.clientId]);
 
@@ -217,9 +228,9 @@ function onMessage(message) {
             usernameList.push(clients[client].username);
           }
         }
-        console.log(
-          `usernameList for server ${data.serverId} = ${usernameList}`
-        );
+        // console.log(
+        //   `usernameList for server ${data.serverId} = ${usernameList}`
+        // );
         clients[data.clientId].wins = 0; // reset client wins when they join a new server
         let otherClientWins = 0;
         for (const clientId in clients) {
@@ -227,9 +238,9 @@ function onMessage(message) {
             clients[clientId].serverId === data.serverId &&
             clients[clientId].clientId === data.clientId
           ) {
-            console.log(
-              `${clients[clientId].username} joined server ${data.serverId}`
-            );
+            // console.log(
+            //   `${clients[clientId].username} joined server ${data.serverId}`
+            // );
             for (const clientId in clients) {
               if (
                 clients[clientId].serverId === data.serverId &&
@@ -262,14 +273,24 @@ function onMessage(message) {
                 otherClientWins: otherClientWins,
               })
             );
+            // clear chat messages for the user that is joining new server
+            clients[clientId].clientMessages = [];
+            clients[clientId].connection.send(
+              JSON.stringify({
+                method: "updateChat",
+                status: "clearChatMessages",
+                player: clients[data.clientId].username,
+                serverId: data.serverId,
+              })
+            );
           } else if (
             clients[clientId].serverId === data.serverId &&
             clients[clientId].clientId !== data.clientId
           ) {
             // send this to the other client ALREADY in server
-            console.log(
-              `Player: ${clients[clientId].username} is other player in server ${data.serverId}`
-            );
+            // console.log(
+            //   `Player: ${clients[clientId].username} is other player in server ${data.serverId}`
+            // );
             clients[clientId].connection.send(
               JSON.stringify({
                 method: "joinedServer",
@@ -282,6 +303,14 @@ function onMessage(message) {
                 otherClientWins: clients[data.clientId].wins,
               })
             );
+            clients[clientId].connection.send(
+              JSON.stringify({
+                method: "updateChat",
+                status: "newClientJoined",
+                serverId: data.serverId,
+                player: data.username,
+              })
+            );
           }
         }
 
@@ -292,9 +321,9 @@ function onMessage(message) {
             updatedPlayerList.push(clients[clientId].username);
           }
         }
-        console.log(
-          `updatedPlayerList for server ${data.oldServerId} = ${updatedPlayerList}`
-        );
+        // console.log(
+        //   `updatedPlayerList for server ${data.oldServerId} = ${updatedPlayerList}`
+        // );
         // send the updated player list to the other client in that server
         for (const clientId in clients) {
           if (clients[clientId].serverId === data.oldServerId) {
@@ -354,9 +383,9 @@ function onMessage(message) {
           clients[client].clientId !== data.clientId
         ) {
           const otherClient = clients[client];
-          console.log(
-            `remove flags ${data.flagValuesToRemove} from player ${otherClient.username}`
-          );
+          // console.log(
+          //   `remove flags ${data.flagValuesToRemove} from player ${otherClient.username}`
+          // );
           // console.log(`nonupdated list   = ${otherClient.clientFlags}`)
           otherClient.clientFlags = otherClient.clientFlags.filter(
             (flag) => !data.flagValuesToRemove.includes(flag)
@@ -587,6 +616,24 @@ function onMessage(message) {
         }
       }
       break;
+    case "storeChatMessage":
+      clients[data.clientId].clientMessages.push(data.chatMessage);
+      for (const client in clients) {
+        if (
+          clients[client].serverId === data.serverId &&
+          clients[client].clientId !== data.clientId
+        ) {
+          const otherClient = clients[client];
+          otherClient.connection.send(
+            JSON.stringify({
+              method: "updateChat",
+              status: "otherClientMessage",
+              chatMessage: data.chatMessage,
+            })
+          );
+        }
+      }
+      break;
   }
 }
 
@@ -596,7 +643,9 @@ function sendAvailableServers() {
   console.log("Servers online:");
   for (const serverId in servers) {
     if (servers[serverId].clients.length !== 0) {
-      console.log(`serverId = ${serverId}`);
+      console.log(
+        `serverId = ${serverId}; clients = ${servers[serverId].clients.length}`
+      );
       serversList.push({
         serverId: serverId,
         playerCount: servers[serverId].clients.length,
