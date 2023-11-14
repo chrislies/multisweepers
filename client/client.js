@@ -42,7 +42,7 @@ function isMobile() {
   let innerWidth = window.innerWidth;
   return innerWidth <= 768;
 }
-console.log(`isMobile = ${isMobile()}`);
+// console.log(`isMobile = ${isMobile()}`);
 
 let serverListButton = document.querySelector("#serverListButton");
 let serverList = document.querySelector("#servers");
