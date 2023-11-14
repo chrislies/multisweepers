@@ -34,6 +34,7 @@ button,
 #serverListButton,
 #servers {
   cursor: pointer;
+  color: black;
 }
 
 button {
@@ -515,6 +516,8 @@ img.flagOnMine {
 #chatBoxButton {
   padding-left: 7px;
   padding-right: 7px;
+  background-color: rgb(165, 165, 165);
+  color: black;
 }
 
 .chatButton {

@@ -1643,6 +1643,7 @@ function updateChat(data) {
       chatMsgLi.classList.add("chatMessage", "otherClient");
       chatMsgLi.innerText = data.chatMessage;
       chatBoxMessages.appendChild(chatMsgLi);
+      chatBox.scrollTop = chatBox.scrollHeight; // Scroll to most recent chat message
       break;
   }
   // Update chatNotifyIcon if chatGUI is closed/hidden
