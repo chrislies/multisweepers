@@ -314,6 +314,7 @@ function onMessage(msg) {
       for (const playerName in data.updatedPlayerList) {
         let tr = document.createElement("tr");
         tr.classList.add("leaderboard-player");
+        tr.setAttribute("id", "clientUsername");
         let tdPlayer = document.createElement("td");
         let tdPlayerWins = document.createElement("td");
         tdPlayer.classList.add("name");
@@ -696,7 +697,7 @@ function initialClick() {
       randomNum = Math.round(Math.random() * tableSize); // generate random # between [0-tableSize)
     }
     gameState.randomMines.push(randomNum);
-    // tiles[randomNum].style.backgroundColor = "red";
+    tiles[randomNum].style.backgroundColor = "red";
   }
 
   gameState.visitedTilesValue.forEach((tileVal) => {
