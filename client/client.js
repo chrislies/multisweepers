@@ -697,7 +697,7 @@ function initialClick() {
       randomNum = Math.round(Math.random() * tableSize); // generate random # between [0-tableSize)
     }
     gameState.randomMines.push(randomNum);
-    tiles[randomNum].style.backgroundColor = "red";
+    // tiles[randomNum].style.backgroundColor = "red";
   }
 
   gameState.visitedTilesValue.forEach((tileVal) => {
